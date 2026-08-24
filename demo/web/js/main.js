@@ -200,7 +200,7 @@ function tick(dt, doRender = true) {
     T.crtCanvas.draw(crtMode, crtT);
     T.crtTex.needsUpdate = true;
     if (dynamics.lights.crtGlow) {
-      const flick = crtMode === "footage" ? 2.2 + Math.random() * 0.9 : 1.0 + Math.random() * 0.25;
+      const flick = crtMode === "footage" ? 1.1 + Math.random() * 0.45 : 0.55 + Math.random() * 0.15;
       dynamics.lights.crtGlow.intensity = flick;
       dynamics.lights.crtGlow.color.setHex(crtMode === "footage" ? 0xc8b06a : 0x9fb4a2);
     }
@@ -328,6 +328,16 @@ window.__H00 = {
   toggleAnno: () => { anno.visible = !anno.visible; },
   rendererInfo: () => renderer.info.render,
   crtMode: () => crtMode,
+  raycastCenter: (nx = 0, ny = 0) => {
+    const rc = new THREE.Raycaster();
+    rc.setFromCamera(new THREE.Vector2(nx, ny), camera);
+    const hits = rc.intersectObjects(scene.children, true).slice(0, 3);
+    return hits.map((h) => ({
+      dist: +h.distance.toFixed(2),
+      point: [+h.point.x.toFixed(2), +h.point.y.toFixed(2), +h.point.z.toFixed(2)],
+      mat: h.object.material && h.object.material.uuid ? Object.keys(M).find((k) => M[k] === h.object.material) || h.object.material.type : "?",
+    }));
+  },
 };
 
 // ---------- 启动 ----------

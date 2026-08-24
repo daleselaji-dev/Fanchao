@@ -798,6 +798,9 @@ export function buildMaterials(renderer) {
   T.crtCanvas = crt;
   T.crtTex = new THREE.CanvasTexture(crt.canvas);
   T.crtTex.colorSpace = THREE.SRGBColorSpace;
+  // 每 1/12s 重画的动态纹理：禁 mipmap（NPOT+频繁上传在软渲染下出坏 mip，且省带宽）
+  T.crtTex.generateMipmaps = false;
+  T.crtTex.minFilter = THREE.LinearFilter;
   M.crtScreen = new THREE.MeshBasicMaterial({ map: T.crtTex });
   M.crtShell = std({ color: 0x8e8874, roughness: 0.6, envMapIntensity: 0.3 });
 

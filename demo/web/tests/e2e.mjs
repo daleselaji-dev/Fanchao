@@ -69,6 +69,7 @@ await page.evaluate(() => {
 const shot = async (name, look) => {
   await page.evaluate(([look]) => {
     if (look) window.__bot.lookAt(look[0], look[1], look[2] || 0);
+    window.__H00.step(1 / 60);   // 让相机吃到新朝向
     window.__H00.render();
   }, [look]);
   await snap(page, `${SHOTS}/${name}.png`);

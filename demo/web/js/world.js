@@ -384,10 +384,10 @@ export function buildWorld(scene, M, T) {
     B.add(M.woodDark, boxG(2.4, 0.06, 1.1, 2, 1), 4.6, 0.76, 19.75);
     B.add(M.woodDark, boxG(0.55, 0.72, 1.0, 0.5, 0.7), 3.6, 0.36, 19.75);
     B.add(M.woodDark, boxG(0.55, 0.72, 1.0, 0.5, 0.7), 5.6, 0.36, 19.75);
-    // 卡座（面板朝东，玩家从门进来看到正面）
-    B.add(M.plasticBlack, boxG(0.62, 0.16, 0.42, 1, 1), 4.35, 0.87, 19.7);
-    B.add(M.deckFace, planeG(0.6, 0.15), 4.35, 0.87, 19.48, 0, Math.PI);
-    // CRT 监视器（在卡座上方的架子上，屏幕朝东南门口）
+    // 卡座（面板朝东，玩家站归档点看到正面）
+    B.add(M.plasticBlack, boxG(0.42, 0.16, 0.62, 1, 1), 4.35, 0.87, 19.7);
+    B.add(M.deckFace, planeG(0.6, 0.15), 4.565, 0.87, 19.7, 0, Math.PI / 2);
+    // CRT 监视器（卡座上方，屏幕朝东偏南——面向归档点与操作椅）
     const crtGroup = new THREE.Group();
     const shell = new THREE.Mesh(boxG(0.52, 0.42, 0.46, 1, 1), M.crtShell);
     const screen = new THREE.Mesh(planeG(0.38, 0.29), M.crtScreen);
@@ -395,7 +395,7 @@ export function buildWorld(scene, M, T) {
     shell.castShadow = true;
     crtGroup.add(shell, screen);
     crtGroup.position.set(4.35, 1.32, 19.7);
-    crtGroup.rotation.y = Math.PI - 0.45;
+    crtGroup.rotation.y = Math.PI / 2 - 0.15;
     scene.add(crtGroup);
     dynamics.crt = { group: crtGroup, screen };
     // 台灯（暖光池）
@@ -590,9 +590,9 @@ export function buildWorld(scene, M, T) {
     addPoint(0x49c96e, 2.6, 4.0, 18, 2.4, 10.5);
   }
 
-  // C：台灯暖池 + CRT 荧光
-  addPoint(0xffc37c, 20, 7.5, 5.84, 1.16, 19.78, { shadow: true });
-  dynamics.lights.crtGlow = addPoint(0x9fb4a2, 2.6, 4.0, 4.8, 1.45, 20.2);
+  // C：台灯暖池 + CRT 荧光（强度别把近处道具削成色块——NoToneMapping 会硬剪裁）
+  addPoint(0xffc37c, 5.5, 6.0, 5.84, 1.2, 19.78, { shadow: true });
+  dynamics.lights.crtGlow = addPoint(0x9fb4a2, 1.4, 4.0, 5.0, 1.4, 19.85);
   // C 天花死灯管
   tube(8, 21.5, 2.64, "off");
 
