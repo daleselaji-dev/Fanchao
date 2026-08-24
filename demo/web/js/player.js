@@ -43,7 +43,10 @@ export function createPlayer(camera, dom) {
   let handMeshes = null;
   function buildHand(M) {
     // 右手自然下垂持带：只在画面右下角露出一角（第一人称的身体在场感）
-    const sleeve = new THREE.Mesh(new THREE.BoxGeometry(0.085, 0.2, 0.09), M.jacket);
+    // 袖口离镜头近，同款工装布在近距+灯下会亮成蓝块——单独压暗
+    const sleeveMat = M.jacket.clone();
+    sleeveMat.color.setScalar(0.5);
+    const sleeve = new THREE.Mesh(new THREE.BoxGeometry(0.085, 0.2, 0.09), sleeveMat);
     sleeve.position.set(0.27, -0.34, -0.38);
     sleeve.rotation.set(-0.5, 0.15, -0.15);
     const palm = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.09, 0.055), M.skin);

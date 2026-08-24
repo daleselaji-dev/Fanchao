@@ -89,8 +89,8 @@ export function texTileWall(heightM, { grimeAmt = 1, wainscot = 1.25 } = {}) {
       const trimRow = Math.abs(ty - wainRow) < T * 0.6;
       let col;
       if (trimRow) col = `hsl(${ri(160, 170)},${ri(22, 28)}%,${ri(16, 20)}%)`;         // 深绿压边
-      else if (lowPart) col = `hsl(${ri(158, 168)},${ri(18, 25)}%,${ri(30, 37)}%)`;    // 绿墙裙
-      else col = `hsl(${ri(43, 52)},${ri(9, 15)}%,${ri(84, 90)}%)`;                    // 白瓷砖
+      else if (lowPart) col = `hsl(${ri(158, 168)},${ri(18, 25)}%,${ri(28, 35)}%)`;    // 绿墙裙
+      else col = `hsl(${ri(42, 52)},${ri(12, 20)}%,${ri(72, 84)}%)`;                   // 旧白瓷砖（发黄、亮度不齐）
       x.fillStyle = col;
       x.fillRect(tx + 2, ty + 2, T - 4, T - 4);
       // 高光边（釉面感）
@@ -98,17 +98,17 @@ export function texTileWall(heightM, { grimeAmt = 1, wainscot = 1.25 } = {}) {
       x.fillRect(tx + 2, ty + 2, T - 4, 3);
       x.fillStyle = "rgba(0,0,0,0.10)";
       x.fillRect(tx + 2, ty + T - 5, T - 4, 3);
-      if (rnd() < 0.03) { // 裂/污砖
-        x.fillStyle = "rgba(60,50,35,0.25)";
+      if (rnd() < 0.06) { // 裂/污砖
+        x.fillStyle = "rgba(60,50,35,0.3)";
         x.fillRect(tx + 2, ty + 2, T - 4, T - 4);
       }
     }
   }
   // 天花线附近积尘 + 墙脚泛碱
-  streaks(x, w, h, 26 * grimeAmt, 0, h * 0.35, "rgba(70,62,44,@A)", 0.10);
-  streaks(x, w, h, 18 * grimeAmt, h - h * 0.22, h * 0.22, "rgba(52,48,36,@A)", 0.16);
-  blotches(x, w, h, 10 * grimeAmt, "rgba(80,70,50,@A)", 0.07, 90);
-  grime(x, w, h, 2400 * grimeAmt, 0.05);
+  streaks(x, w, h, 34 * grimeAmt, 0, h * 0.35, "rgba(70,62,44,@A)", 0.12);
+  streaks(x, w, h, 26 * grimeAmt, h - h * 0.22, h * 0.22, "rgba(52,48,36,@A)", 0.2);
+  blotches(x, w, h, 14 * grimeAmt, "rgba(80,70,50,@A)", 0.10, 90);
+  grime(x, w, h, 3200 * grimeAmt, 0.06);
   return c;
 }
 
@@ -218,18 +218,28 @@ export function texClothRed() {
   srand(6606);
   const s = 256;
   const c = makeCanvas(s, s); const x = c.getContext("2d");
-  x.fillStyle = "#9c1f1a"; x.fillRect(0, 0, s, s);
+  // 压低饱和：留住绿/蓝通道，灯下才能看见布纹（纯红会剪裁成色块）
+  x.fillStyle = "#7c2a24"; x.fillRect(0, 0, s, s);
+  // 大块缎面光泽带（斜向，模拟布料受光起伏）
+  for (let i = 0; i < 7; i++) {
+    const g = x.createLinearGradient(rr(-60, s), rr(-60, s), rr(0, s + 60), rr(0, s + 60));
+    g.addColorStop(0, "rgba(0,0,0,0)");
+    g.addColorStop(0.5, `rgba(${ri(150, 190)},${ri(70, 95)},${ri(60, 80)},${rr(0.10, 0.2)})`);
+    g.addColorStop(1, "rgba(0,0,0,0)");
+    x.fillStyle = g; x.fillRect(0, 0, s, s);
+  }
   // 缎面横丝
   for (let i = 0; i < 220; i++) {
-    x.fillStyle = `rgba(${ri(190, 235)},${ri(50, 80)},${ri(45, 70)},${rr(0.03, 0.1)})`;
+    x.fillStyle = `rgba(${ri(150, 200)},${ri(62, 92)},${ri(52, 80)},${rr(0.03, 0.1)})`;
     x.fillRect(0, rr(0, s), s, rr(0.6, 1.6));
   }
   // 折叠压痕（婚宴桌布从库房拿出来都是井字折痕）
-  x.fillStyle = "rgba(60,10,8,0.28)";
-  for (const p of [0.25, 0.5, 0.75]) { x.fillRect(0, s * p, s, 2); x.fillRect(s * p, 0, 2, s); }
-  x.fillStyle = "rgba(255,180,160,0.10)";
-  for (const p of [0.25, 0.5, 0.75]) { x.fillRect(0, s * p + 2, s, 1.4); x.fillRect(s * p + 2, 0, 1.4, s); }
-  blotches(x, s, s, 6, "rgba(40,8,8,@A)", 0.16, 40);
+  x.fillStyle = "rgba(46,12,10,0.4)";
+  for (const p of [0.25, 0.5, 0.75]) { x.fillRect(0, s * p, s, 2.6); x.fillRect(s * p, 0, 2.6, s); }
+  x.fillStyle = "rgba(230,180,160,0.12)";
+  for (const p of [0.25, 0.5, 0.75]) { x.fillRect(0, s * p + 2.6, s, 1.4); x.fillRect(s * p + 2.6, 0, 1.4, s); }
+  blotches(x, s, s, 9, "rgba(36,10,9,@A)", 0.2, 44);
+  grime(x, s, s, 320, 0.05);
   return c;
 }
 
@@ -240,14 +250,19 @@ export function texPleats() {
   const c = makeCanvas(s, s); const x = c.getContext("2d");
   for (let tx = 0; tx < s; tx += 16) {
     const g = x.createLinearGradient(tx, 0, tx + 16, 0);
-    g.addColorStop(0, "#5e100e");
-    g.addColorStop(0.45, "#a82420");
-    g.addColorStop(0.75, "#c53a30");
-    g.addColorStop(1, "#701512");
+    g.addColorStop(0, "#48100e");
+    g.addColorStop(0.45, "#84271f");
+    g.addColorStop(0.75, "#9e3a2c");
+    g.addColorStop(1, "#571713");
     x.fillStyle = g;
     x.fillRect(tx, 0, 16, s);
   }
-  grime(x, s, s, 260, 0.05);
+  // 下摆吸灰（挨地的桌裙一晚上就是这样）
+  const hem = x.createLinearGradient(0, s * 0.72, 0, s);
+  hem.addColorStop(0, "rgba(30,20,16,0)");
+  hem.addColorStop(1, "rgba(30,20,16,0.4)");
+  x.fillStyle = hem; x.fillRect(0, s * 0.72, s, s * 0.28);
+  grime(x, s, s, 420, 0.07);
   return c;
 }
 

@@ -9,7 +9,7 @@
 import * as THREE from "three";
 import { mergeGeometries } from "../lib/BufferGeometryUtils.js";
 import {
-  ROOMS, LOW_ZONE, PRESS_MARKS, ARCHIVE_POINT, floorHeightAt,
+  ROOMS, LOW_ZONE, PRESS_MARKS, ARCHIVE_POINT, TABLES, floorHeightAt,
 } from "./contract.js";
 import { srand, rnd } from "./materials.js";
 
@@ -224,8 +224,8 @@ export function buildWorld(scene, M, T) {
     B.add(M.enamelGrey, boxG(0.8, 0.75, 0.55, 1, 1), 3.1, 0.375, 3.0);  // 功放柜
     B.add(M.plasticBlack, boxG(0.7, 0.08, 0.45, 1, 1), 3.1, 0.79, 3.0); // 调音台
   }
-  // 圆桌 ×3（红布 + 桌裙 + 收场中的台面）
-  const tableSpots = [[9, 5], [20, 4.2], [29, 5.6]];
+  // 圆桌（合同 TABLES 驱动：红布 + 桌裙 + 收场中的台面）
+  const tableSpots = TABLES.map((t) => [t.x, t.z]);
   for (const [tx, tz] of tableSpots) {
     B.add(M.pleats, cylG(1.06, 1.06, 0.74, 20, 6, 1), tx, 0.37, tz);
     const top = new THREE.CylinderGeometry(1.12, 1.12, 0.045, 20);
@@ -249,8 +249,9 @@ export function buildWorld(scene, M, T) {
       const cd = rr(1.45, 1.8);
       const cx = tx + Math.cos(a) * cd, cz = tz + Math.sin(a) * cd;
       const face = a + Math.PI + rr(-0.5, 0.5);
-      B.add(M.pleats, boxG(0.44, 0.47, 0.44, 1.4, 0.7), cx, 0.235, cz, -face);
-      B.add(M.clothRed, boxG(0.44, 0.55, 0.06, 1.4, 0.8), cx + Math.cos(a) * 0.2, 0.74, cz + Math.sin(a) * 0.2, -face);
+      // 椅套：上窄下宽的四棱台（布罩下摆外扩），不是方盒
+      B.add(M.pleats, cylG(0.26, 0.33, 0.5, 4, 1.4, 0.7), cx, 0.25, cz, -face + Math.PI / 4);
+      B.add(M.clothRed, boxG(0.42, 0.55, 0.06, 1.4, 0.8), cx + Math.cos(a) * 0.2, 0.76, cz + Math.sin(a) * 0.2, -face);
       cC(cx, cz, 0.26);
     }
   }
@@ -274,12 +275,22 @@ export function buildWorld(scene, M, T) {
   B.add(M.wood, cylG(0.9, 0.9, 0.05, 18), 34.6, 0.92, 5.4, 0, 0, Math.PI / 2 - 0.18);
   B.add(M.wood, cylG(0.9, 0.9, 0.05, 18), 34.52, 0.92, 5.6, 0, 0, Math.PI / 2 - 0.24);
   cR(34.1, 4.6, 1.3, 1.6);
-  // 北墙窗（夜色 + 厚红帘，帘基本拉上）
+  // 北墙窗（夜色 + 厚红帘，帘基本拉上；竖褶才像挂着的布）
   for (const wx of [14, 22, 30]) {
     B.add(M.plasticBlack, planeG(1.6, 1.8), wx, 2.5, 1.57);
-    B.add(M.clothRed, boxG(1.1, 2.2, 0.14, 1.2, 1.4), wx - 0.9, 2.3, 1.68);
-    B.add(M.clothRed, boxG(1.1, 2.2, 0.14, 1.2, 1.4), wx + 0.9, 2.3, 1.68);
+    B.add(M.pleats, boxG(1.1, 2.2, 0.14, 1.2, 1.4), wx - 0.9, 2.3, 1.68);
+    B.add(M.pleats, boxG(1.1, 2.2, 0.14, 1.2, 1.4), wx + 0.9, 2.3, 1.68);
     B.add(M.wood, cylG(0.03, 0.03, 2.6, 8), wx, 3.46, 1.7, 0, 0, Math.PI / 2);
+  }
+  // 地面收场杂物：散落餐巾、汽水瓶筐、双喜烟盒
+  for (let i = 0; i < 9; i++) {
+    const nx = rr(6, 31), nz = rr(3, 8.4);
+    B.add(M.porcelain, planeG(rr(0.16, 0.26), rr(0.14, 0.2)), nx, 0.021, nz, 0, -Math.PI / 2, rr(0, 6.3));
+  }
+  for (const [bx, bz] of [[4.2, 6.9], [32.6, 6.2]]) {
+    B.add(M.plasticBeige, boxG(0.52, 0.3, 0.36, 1, 0.4), bx, 0.15, bz, rr(-0.4, 0.4));
+    for (let i = 0; i < 5; i++) B.add(M.plasticBlack, cylG(0.035, 0.032, 0.24, 7), bx + rr(-0.16, 0.16), 0.42, bz + rr(-0.1, 0.1));
+    cC(bx, bz, 0.4);
   }
 
   // ============ A/B 双开弹簧门（常开，固定在 B 侧墙上）============
@@ -376,6 +387,16 @@ export function buildWorld(scene, M, T) {
   B.add(M.enamelGrey, boxG(30, 0.06, 0.3, 15, 0.3), 18.5, 2.86, 13.2);
   B.add(M.rubber, cylG(0.035, 0.035, 30, 8, 8, 1), 18.5, 2.92, 13.55, 0, 0, Math.PI / 2);
   B.add(M.rubber, cylG(0.022, 0.022, 30, 8, 8, 1), 18.5, 2.9, 12.9, 0, 0, Math.PI / 2);
+  // 通风主管（矩形铁皮风道 + 吊杆 + 下垂百叶口）—— 天花不再是黑洞
+  B.add(M.enamelGrey, boxG(30, 0.4, 0.6, 12, 0.5), 18.5, 2.6, 14.35);
+  for (let hx = 5; hx <= 33; hx += 3.5) {
+    B.add(M.enamelGrey, boxG(0.03, 0.22, 0.03, 0.1, 0.2), hx, 2.9, 14.18);
+    B.add(M.enamelGrey, boxG(0.03, 0.22, 0.03, 0.1, 0.2), hx, 2.9, 14.52);
+  }
+  for (const vx of [9, 18.5, 28]) {
+    B.add(M.enamelGrey, boxG(0.5, 0.18, 0.5, 0.4, 0.2), vx, 2.31, 14.35);
+    B.add(M.plasticBlack, planeG(0.42, 0.42), vx, 2.21, 14.35, 0, Math.PI / 2);
+  }
 
   // ============ C 录像/广播室 ============
   srand(510044);

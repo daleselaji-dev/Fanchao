@@ -64,6 +64,7 @@ export function createEntity(scene, M) {
   hair.position.set(0, 0.085, -0.018);
   // 前侧复眼壳：覆盖面部的干燥半壳
   const shellMat = M.compound.clone();
+  shellMat.emissiveMap = shellMat.map;   // 证据窗口里按复眼纹理发微光（干壳反光，不是灯泡）
   const shell = new THREE.Mesh(
     new THREE.SphereGeometry(0.088, 14, 12, -Math.PI / 2.6, Math.PI / 1.35, Math.PI * 0.18, Math.PI * 0.62),
     shellMat
@@ -123,6 +124,7 @@ export function createEntity(scene, M) {
   let walkPhase = 0;
   let prevX = null, prevZ = null;
   let workT = 0;
+  let waitT = 0;
   let evidenceBlend = 0;   // 0..1 抬头侧转
   let breathe = 0;
 
@@ -142,6 +144,7 @@ export function createEntity(scene, M) {
     const speed = Math.hypot(dx, dz) / Math.max(1e-4, dt);
     breathe += dt;
 
+    if (simE.mode !== "WAIT") waitT = 0;
     if (simE.mode === "MOVE" && speed > 0.05) {
       walkPhase += Math.hypot(dx, dz) * 4.4;
       const s = Math.sin(walkPhase), c = Math.cos(walkPhase);
@@ -155,13 +158,15 @@ export function createEntity(scene, M) {
       torso.rotation.z = -s * 0.02;
       workT = 0;
     } else if (simE.mode === "WAIT") {
-      // 等待：完全停住，只剩呼吸。它不看你。
+      // 等待：停住，只剩呼吸。开头一个小欠身（还在上班的人的礼数），然后不看你。
+      waitT += dt;
+      const bow = Math.max(0, Math.sin(Math.min(Math.PI, waitT * 2.6))) * 0.1;
       const b = Math.sin(breathe * 1.4) * 0.006;
       legL.rotation.x *= 0.9; legR.rotation.x *= 0.9;
       legL.userData.knee.rotation.x *= 0.9; legR.userData.knee.rotation.x *= 0.9;
       hips.position.y = 0.96 + b;
       hips.rotation.z *= 0.9;
-      torso.rotation.x = 0.08 + b * 0.5;
+      torso.rotation.x = 0.08 + bow + b * 0.5;
       torso.rotation.z *= 0.9;
     } else {
       // WORK：普通工作动作
@@ -205,7 +210,7 @@ export function createEntity(scene, M) {
     evidenceBlend += (targetBlend - evidenceBlend) * Math.min(1, dt * (targetBlend ? 6 : 3));
     headG.rotation.x = 0.42 - evidenceBlend * 0.5;
     headG.rotation.y = evidenceBlend * 0.85;
-    shellMat.emissive.setScalar(evidenceBlend * 0.16);
+    shellMat.emissive.setScalar(evidenceBlend * 0.75);
 
     // 影子跟随
     blob.position.y = 0.02;

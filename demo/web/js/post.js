@@ -45,13 +45,13 @@ void main() {
   // 轻微径向色差
   vec2 d = uv - 0.5;
   float r2 = dot(d, d);
-  float ca = (0.0016 + uJack * 0.004) * r2 * 18.0;
+  float ca = (0.0010 + uJack * 0.004) * r2 * 18.0;
   vec3 col;
   col.r = texture2D(tDiffuse, uv + d * ca).r;
   col.g = texture2D(tDiffuse, uv).g;
   col.b = texture2D(tDiffuse, uv - d * ca).b;
 
-  // 曝光（软滚肩，防高光死白）
+  // HDR 软滚肩：>1 的高光能量（半浮点 RT 保留）滚进白区，不再剪成色块
   col = vec3(1.0) - exp(-col * uExposure);
 
   // 色阶：阴影压进灰绿，中间调偏暖，高光略奶
@@ -87,10 +87,12 @@ void main() {
 }`;
 
 export function createPost(renderer) {
+  // 半浮点线性 RT：保留 >1 的高光能量，交给 shader 软滚肩（8 位会先剪裁成色块）
   const rt = new THREE.WebGLRenderTarget(1280, 720, {
     minFilter: THREE.LinearFilter,
     magFilter: THREE.LinearFilter,
-    colorSpace: THREE.SRGBColorSpace,
+    type: THREE.HalfFloatType,
+    colorSpace: THREE.LinearSRGBColorSpace,
   });
   const quadScene = new THREE.Scene();
   const quadCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
