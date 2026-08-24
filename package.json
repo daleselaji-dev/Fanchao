@@ -7,7 +7,7 @@
     "doc": "docs"
   },
   "scripts": {
-    "test": "node --test demo/web/tests/",
+    "test": "node --test demo/web/tests/*.test.mjs",
     "e2e": "node demo/web/tests/e2e.mjs"
   },
   "repository": {

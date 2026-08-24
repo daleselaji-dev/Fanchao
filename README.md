@@ -4,60 +4,61 @@
 
 2001 年前后中国北方沿海小镇的恐怖游戏项目。小镇没有被淹没，公共系统照常营业；但干燥的日常空间开始承受一个不可见的深度界面。恐怖不来自跳脸和追击，而来自动作、职责与位置被旧伤、压力和深度重新规定。
 
-当前垂直切片：**H00-R0《婚宴后场：返席》**——玩家是婚宴后场临时录像/服务人员，任务是把婚宴录像带插回 C 房间卡座并按 `REC/PAUSE` 归档；一个"返席人"沿旧后勤路线 D→B→C门外→E→D 回返，不追逐、不推挤。
+当前垂直切片：**H00-R0《婚宴后场：返席》**——玩家是婚宴后场临时录像/服务人员，任务是把婚宴录像带插回 C 房间卡座并按 `REC/PAUSE` 归档；一个「返席人」沿旧后勤路线 D→B→C门外→E→D 回返，不追逐、不推挤。
+
+`demo/web/` 是可在浏览器直接游玩的第一人称实时 3D Demo（Three.js），画面与手感对标 PS3《死魂曲：血之诅咒》的低照度实机气质。行为灰盒 v1 保留在 `demo/web-graybox/`。
 
 ## 快速开始：打开 Demo
 
-**Web 行为灰盒**（零依赖，任何现代浏览器）：
-
 ```bash
-# 直接双击 demo/web/index.html，或：
 python3 -m http.server 8000
 # 打开 http://localhost:8000/demo/web/
 ```
 
-`WASD` 移动 · `E` 归档 · `R` 复位 · `V` 设计标注层 · `M` 声音
+无构建、无外网依赖（Three.js 已 vendor）。操作：鼠标转向 · `WASD` 移动 · `E` 归档 · 按住 `Q` 借视 · `R` 复位 · `V` 标注 · `M` 声音。建议耳机。运行细节见 [demo/web/README.md](demo/web/README.md)。
 
-**UE 5.8 主线**：源码在 `demo/ue/H00_Source/`（需装有 UE 5.8 的机器；当前状态见下方"实现状态"）。
+先读这个：**[docs/demo-v1-walkthrough.md](docs/demo-v1-walkthrough.md)** —— 含空间闭环、节拍、完成门自检与实机截图。
 
-先读这个：**[docs/demo-v1-walkthrough.md](docs/demo-v1-walkthrough.md)** —— 含俯视地图、节拍分镜、机制图与概念帧，不翻旧包即可看懂。
+```bash
+npm test                 # 状态机 10 项
+npm run e2e              # headless Chrome 实机通关（需本机 Chrome）
+```
+
+**UE 5.8 主线**：源码在 `demo/ue/H00_Source/`（需装有 UE 5.8 的机器；本云端未复跑）。
 
 ## 仓库结构
 
 ```text
 docs/                        当前执行基线文档
-  demo-workflow-plan.md      Demo 工作流与可执行计划（Gate、里程碑、增删决策及理由）
-  tech-route.md              技术路线 v1.0（UE5.8 主线 + Web 并行切片 + 实现状态诚实表）
-  demo-v1-walkthrough.md     Demo v1 审阅指南（嵌入全部截图）
+  demo-v1-walkthrough.md     审阅指南（3D 升格点 + 死魂曲完成门）
+  h00-r0-e2e-record.md       端到端实机验证记录
+  demo-workflow-plan.md      Demo 工作流与可执行计划
+  tech-route.md              技术路线
 demo/
-  web/                       H00-R0 Web 行为灰盒（可玩，验证行为合同）
-  ue/H00_Source/             UE 5.8 独立工程源码（官方主线，运行时生成灰盒空间）
-assets/
-  maps/                      俯视空间与行为地图（SVG+PNG）
-  screenshots/               九张节拍/机制运行截图（可用脚本复现）
-  storyboard/                六段节拍分镜 + 机制说明图
-  concept/                   三张概念目标帧（现实底片/受压证据/M01 侧向复眼）
-  graybox-renders/           2026-08-04 Blender 灰盒渲染（Round 3 历史证据）
-tools/                       地图/分镜/截图生成脚本（headless Chrome）
-archive/                     交接包完整解压（只读历史层，保留原始中文路径）
-返潮_项目设定与Demo交接包_2026-08-05.zip   原始交接包（archive/ 的来源）
+  web/                       H00-R0 第一人称实时 3D 最终 Demo（可玩）
+  web-graybox/               行为灰盒 v1（历史参照）
+  ue/H00_Source/             UE 5.8 独立工程源码
+assets/screenshots/          灰盒节拍图 + final3d_*.jpg 实机截图
+archive/                     交接包完整解压（只读历史层）
 ```
 
 ## 技术路线（一页结论）
 
-- **官方主线**：H00 独立 **Unreal 5.8** 灰盒工程（路径 A），空间由 C++ 运行时生成，不依赖旧泥滩工程。
-- **并行切片**：`demo/web` 只验证行为合同（空间闭环、归档、航点、让行、复位），不承担美术 Gate。
-- **历史冻结**：Mudflat 泥滩工程为技术证据不再叠加；Godot 混合 2.5D 复判属旧周期，已归档（理由见 [docs/demo-workflow-plan.md](docs/demo-workflow-plan.md) §5-D1）。
-- **资产纪律**：Hunyuan3D/ComfyUI 在 M01 形体 Gate 通过前不安装；正式资产必须带来源、许可证与 Gate 记录。
+- **本次可玩交付**：浏览器实时 3D（`demo/web`）。云端没有 Unreal，不以「等 UE」代替可玩切片。
+- **后续正式资产落点**：H00 独立 **Unreal 5.8** 工程（路径 A），空间由 C++ 运行时生成。
+- **历史冻结**：Mudflat 泥滩工程为技术证据不再叠加；灰盒 v1 只作行为合同参照。
 
 ## 实现状态（诚实标注）
 
 | 项 | 状态 |
 | --- | --- |
-| Web 行为灰盒（行为合同全项） | PASS（本仓库可运行、截图可复现） |
-| UE 5.8 编译 + 状态机/航点/归档/复位 | PASS（2026-08-04 原开发机历史证据；未在本环境复跑） |
-| UE 可见画面 | FAIL → 待复验（历史黑屏已修复但未截图，= 下一里程碑 M2） |
-| 2001 时代底片 / 异常材质 / 正式 M01 资产 | NOT RUN（按 Gate 冻结） |
+| Web 第一人称 3D Demo（行为合同 + 实时场景） | PASS（`npm test` 10/10；e2e 27/27，主路径 61.4s） |
+| Web 行为灰盒 v1 | PASS（保留于 `demo/web-graybox/`） |
+| 2001 底片 / 程序化材质 / 空间音频 | PASS（Web 管线内；零外链素材） |
+| 程序化人形 + 侧向复眼证据 | PASS（Web 管线内；非照片级高模） |
+| UE 5.8 可见画面 | 未在本环境复验（无 UE） |
+
+相对 PS3《死魂曲》实机：气氛、灯光、颗粒与行为合同已立住；实体仍是程序化低模，正式角色/场景资产仍按 Gate 冻结。
 
 ## 核心禁止项（永久）
 
