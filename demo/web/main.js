@@ -679,6 +679,7 @@ window.addEventListener("pointerdown", () => {
 function applySceneParams() {
   const q = new URLSearchParams(location.search);
   if (!q.size) return;
+  if (q.get("bare")) document.body.classList.add("bare"); // 只留画布（分镜截图用）
   const num = k => q.has(k) ? parseFloat(q.get(k)) : null;
   if (num("px") !== null) { state.player.x = num("px"); state.player.y = num("py") ?? state.player.y; }
   if (num("pa") !== null) state.player.a = num("pa");
@@ -692,6 +693,7 @@ function applySceneParams() {
     state.entity.next = (i + 1) % ROUTE.length;
     state.entity.mode = "MOVE";
     state.entity.pauseRemaining = 0;
+    state.entity.actLabel = "";
   }
   if (q.get("entwork")) { state.entity.mode = "WORK"; state.entity.actLabel = q.get("entwork"); }
   if (q.get("wait")) { state.entity.mode = "WAIT"; }

@@ -158,3 +158,8 @@ body {
   padding: 8px 20px 12px;
   line-height: 1.6;
 }
+
+/* bare 模式：只保留画布，供分镜/文档截图 */
+body.bare #topbar, body.bare #side, body.bare #contract-bar { display: none; }
+body.bare #layout { padding: 0; }
+body.bare #stage { border: none; border-radius: 0; }
