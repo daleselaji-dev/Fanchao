@@ -115,7 +115,8 @@ export const ROUTE = [
   { x: 29.5, z: 17.6, pause: 0 },
 ];
 
-export const PLAYER_START = { x: 6.5, z: 7.8 };
+// 出生朝向 -1.25：开场静帧顺着 A 厅纵深看过圆桌与吊灯，直到远端服务门
+export const PLAYER_START = { x: 6.5, z: 7.8, yaw: -1.25 };
 export const ARCHIVE_POINT = { x: 5.5, z: 19.75 };
 export const ARCHIVE_RADIUS = 2.4;   // 对齐 UE 240UU
 export const PLAYER_SPEED = 3.6;     // 对齐 UE 360UU/s

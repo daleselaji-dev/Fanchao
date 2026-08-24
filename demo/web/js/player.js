@@ -6,11 +6,11 @@
  * 数值合同：最大速度 3.6 m/s（对齐 UE 360UU/s），由 sim 裁决碰撞。
  */
 import * as THREE from "three";
-import { EYE_HEIGHT, floorHeightAt } from "./contract.js";
+import { EYE_HEIGHT, floorHeightAt, PLAYER_START } from "./contract.js";
 
 export function createPlayer(camera, dom) {
   const state = {
-    yaw: Math.PI,          // 初始面向南（后场方向的门在南侧）
+    yaw: PLAYER_START.yaw, // 开场静帧：顺着 A 厅纵深看向远端服务门
     pitch: 0,
     move: { f: 0, s: 0 },  // 平滑后的前/侧输入
     bobPhase: 0,

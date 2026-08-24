@@ -34,11 +34,14 @@ float hash(vec2 p) {
 void main() {
   vec2 uv = vUv;
 
-  // 借视：行撕裂 + 水平抖动
+  // 借视：行撕裂 + 水平抖动 + 场同步偶发滑移
   if (uJack > 0.001) {
     float band = floor(uv.y * 90.0);
-    float tear = (hash(vec2(band, floor(uTime * 24.0))) - 0.5) * 0.012 * uJack;
+    float tear = (hash(vec2(band, floor(uTime * 24.0))) - 0.5) * 0.016 * uJack;
     float roll = sin(uv.y * 3.0 + uTime * 1.7) * 0.002 * uJack;
+    float vh = hash(vec2(floor(uTime * 6.0), 7.7));
+    float vslip = step(0.84, vh) * (vh - 0.84) * 0.5 * uJack;
+    uv.y = fract(uv.y + vslip);
     uv.x += tear + roll;
   }
 
@@ -66,13 +69,15 @@ void main() {
   // 黑位轻抬（CRT 时代黑不到底）
   col = col * 0.96 + 0.018;
 
-  // 借视：更狠的去饱和与对比 + 信号噪声
+  // 借视：接入的是别人的眼睛——重脱色、信号噪声、扫描线、整体压暗
   if (uJack > 0.001) {
-    col = mix(col, vec3(dot(col, vec3(0.34, 0.5, 0.16))), 0.55 * uJack);
+    col = mix(col, vec3(dot(col, vec3(0.34, 0.5, 0.16))), 0.82 * uJack);
     float n = hash(uv * uRes * 0.4 + vec2(uTime * 63.0, uTime * 41.0));
-    col += (n - 0.5) * 0.16 * uJack;
+    col += (n - 0.5) * 0.26 * uJack;
     float drop = step(0.985, hash(vec2(floor(uv.y * 160.0), floor(uTime * 30.0))));
     col *= 1.0 - drop * 0.7 * uJack;
+    float scan = 0.5 + 0.5 * sin(uv.y * uRes.y * 2.4);
+    col *= 1.0 - uJack * (0.16 * scan + 0.12);
   }
 
   // 胶片颗粒（暗部更重）

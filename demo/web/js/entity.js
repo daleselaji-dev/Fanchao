@@ -220,8 +220,9 @@ export function createEntity(scene, M) {
     headG.rotation.y = evidenceBlend * 1.15;
     headG.rotation.z = -evidenceBlend * 0.12;
     torso.rotation.y = evidenceBlend * 0.35;
-    // 4~5 米外它只有十来个像素——发光必须强到「脸上有东西泛微光」能隔着巷子读出来
-    shellMat.emissive.setScalar(evidenceBlend * 2.2);
+    // 4~5 米外它只有十来个像素——发光必须强到「脸上有东西泛微光」能隔着巷子读出来。
+    // 色温压冷：暖调贴图 × 偏青绿的发光 → 骨灰色矿物微光，不是橙色灯泡。
+    shellMat.emissive.setRGB(evidenceBlend * 1.6, evidenceBlend * 2.15, evidenceBlend * 2.05);
 
     // 影子跟随
     blob.position.y = 0.02;

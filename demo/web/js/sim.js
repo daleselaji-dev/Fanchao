@@ -16,7 +16,7 @@ export function createSim() {
   return {
     t: 0,
     clockStarted: false,
-    player: { x: PLAYER_START.x, z: PLAYER_START.z, yaw: Math.PI, speed: 0 },
+    player: { x: PLAYER_START.x, z: PLAYER_START.z, yaw: PLAYER_START.yaw, speed: 0 },
     archived: false,
     archivedAt: -99,
     completed: false,
