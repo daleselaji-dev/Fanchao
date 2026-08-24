@@ -9,7 +9,7 @@ from pathlib import Path
 from urllib.parse import urlencode
 
 ROOT = Path(__file__).resolve().parent.parent
-PAGE = (ROOT / "demo/web/index.html").as_uri()
+PAGE = (ROOT / "demo/web-graybox/index.html").as_uri()
 OUT = ROOT / "assets/storyboard"
 
 PANELS = [
@@ -80,7 +80,7 @@ def main():
       .cap span {{ font-size:12.5px; line-height:1.65; color:#b3ab97; }}
     </style></head><body><div id="wrap">
       <h1>H00-R0《婚宴后场：返席》60–90 秒节拍分镜（行为灰盒）</h1>
-      <p class="sub">画面取自 demo/web 可运行原型的确定性场景（tools/gen_storyboard.py 可复现）。合同来源：archive/02_当前Demo_H00-R0/原始评审/Round2。禁止项：无跳脸、无冲刺追击、无碰撞推回、无可见海水、无蓝色滤镜。</p>
+      <p class="sub">画面取自 demo/web-graybox 可运行原型的确定性场景（tools/gen_storyboard.py 可复现）。合同来源：archive/02_当前Demo_H00-R0/原始评审/Round2。禁止项：无跳脸、无冲刺追击、无碰撞推回、无可见海水、无蓝色滤镜。</p>
       <div id="grid">{''.join(cells)}</div>
     </div></body></html>"""
     page = tmp / "storyboard.html"

@@ -2,8 +2,8 @@
 """批量截取 H00-R0 Web 行为灰盒的节拍场景图。
 
 用法：python3 tools/capture_screenshots.py
-依赖：本机安装 Chrome/Chromium（headless），仓库内 demo/web 可直接以 file:// 打开。
-场景通过 URL 参数复现（见 demo/web/main.js 的 applySceneParams），保证截图可复现。
+依赖：本机安装 Chrome/Chromium（headless），仓库内 demo/web-graybox 可直接以 file:// 打开。
+场景通过 URL 参数复现（见 demo/web-graybox/main.js 的 applySceneParams），保证截图可复现。
 """
 import subprocess
 import sys
@@ -11,7 +11,7 @@ from pathlib import Path
 from urllib.parse import urlencode
 
 ROOT = Path(__file__).resolve().parent.parent
-PAGE = (ROOT / "demo/web/index.html").as_uri()
+PAGE = (ROOT / "demo/web-graybox/index.html").as_uri()
 OUT = ROOT / "assets/screenshots"
 
 CHROME_CANDIDATES = ["google-chrome", "chromium", "chromium-browser"]

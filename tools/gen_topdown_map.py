@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """生成 H00-R0 俯视空间与行为地图（SVG + PNG）。
 
-几何数据与 demo/web/main.js 保持一致（米制，y 向下）。
+几何数据与 demo/web-graybox/main.js 保持一致（米制，y 向下）。
 输出：assets/maps/h00_r0_topdown.svg 与 .png
 """
 import subprocess
@@ -74,7 +74,7 @@ def main():
     e.append('<defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#d8d0bd"/></marker></defs>')
     e.append(f'<rect width="{W}" height="{H}" fill="#171512"/>')
     e.append(f'<text x="30" y="42" fill="#e8e0cc" font-size="26" font-weight="bold" {FONT}>H00-R0《婚宴后场：返席》俯视空间与行为地图 v1</text>')
-    e.append(f'<text x="30" y="72" fill="#8f8878" font-size="15" {FONT}>空间闭环：A→B→C→(E/D)→B→A　·　实体旧后勤路线：D→B→C门外→E→D　·　几何与 demo/web 运行时一致（单位：米）</text>')
+    e.append(f'<text x="30" y="72" fill="#8f8878" font-size="15" {FONT}>空间闭环：A→B→C→(E/D)→B→A　·　实体旧后勤路线：D→B→C门外→E→D　·　几何与 demo/web-graybox 运行时一致（单位：米）</text>')
 
     for name, note, x, y, w, h, c in ROOMS:
         e.append(f'<rect x="{X(x):.0f}" y="{Y(y):.0f}" width="{w*S:.0f}" height="{h*S:.0f}" fill="{c}"/>')

@@ -38,7 +38,7 @@ def main():
     e.append('<defs><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#d8d0bd"/></marker></defs>')
     e.append(f'<rect width="{W}" height="{H}" fill="#171512"/>')
     e.append(f'<text x="30" y="44" fill="#e8e0cc" font-size="24" font-weight="bold" font-family="{FONT}">H00-R0 机制说明：实体回返 · 让行 · 侧向证据 · 玩家任务</text>')
-    e.append(f'<text x="30" y="72" fill="#8f8878" font-size="14" font-family="{FONT}">来源：Round 2 行为合同 + demo/ue/H00_Source 代码事实；与 demo/web 运行时一致</text>')
+    e.append(f'<text x="30" y="72" fill="#8f8878" font-size="14" font-family="{FONT}">来源：Round 2 行为合同 + demo/ue/H00_Source 代码事实；与 demo/web-graybox 运行时一致</text>')
 
     # —— 左列：实体状态机 ——
     e.append(f'<text x="30" y="122" fill="#9ab07f" font-size="17" font-weight="bold" font-family="{FONT}">① 实体“返席人”状态机（无追逐、无冲刺、无推回）</text>')
@@ -87,7 +87,7 @@ def main():
     for i, ln in enumerate([
         "恐怖来源：不是怪物追人，而是“一个普通岗位的动作被旧伤、压力和位置重新规定”。玩家改变的不是实体行为，而是自己与这条旧路线交叉的时机与代价。",
         "低处 = 同一不可见高度的后果区：伴奏变厚变远（无水声、无滤镜），门框下部/柜脚留有干燥受压痕。异常由多种材料与声学共同证明，不靠单一贴条。",
-        "本图描述的所有规则均可在 demo/web 中操作复现；UE 5.8 主线的对应实现见 demo/ue/H00_Source。"]):
+        "本图描述的所有规则均可在 demo/web-graybox 中操作复现；UE 5.8 主线的对应实现见 demo/ue/H00_Source。"]):
         e.append(f'<text x="46" y="{798 + i * 24}" fill="#b3ab97" font-size="13" font-family="{FONT}">{ln}</text>')
 
     e.append("</svg>")
