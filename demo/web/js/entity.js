@@ -208,9 +208,12 @@ export function createEntity(scene, M) {
     // 证据窗口：抬头 + 向左侧转，让前侧短暂进入侧向视线
     const targetBlend = evidenceActive > 0 ? 1 : 0;
     evidenceBlend += (targetBlend - evidenceBlend) * Math.min(1, dt * (targetBlend ? 6 : 3));
+    // 向右侧转（进 E 门时面向南，右侧=西=巷里蹲守的玩家方向）+ 轻微歪头
     headG.rotation.x = 0.42 - evidenceBlend * 0.5;
-    headG.rotation.y = evidenceBlend * 0.85;
-    shellMat.emissive.setScalar(evidenceBlend * 0.75);
+    headG.rotation.y = -evidenceBlend * 0.85;
+    headG.rotation.z = evidenceBlend * 0.14;
+    // 4~5 米外它只有十来个像素——发光必须强到「脸上有东西泛微光」能隔着巷子读出来
+    shellMat.emissive.setScalar(evidenceBlend * 1.6);
 
     // 影子跟随
     blob.position.y = 0.02;

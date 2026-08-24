@@ -231,16 +231,26 @@ export function buildWorld(scene, M, T) {
     const top = new THREE.CylinderGeometry(1.12, 1.12, 0.045, 20);
     scaleUV(top, 2, 2);
     B.add(M.clothRed, top, tx, 0.765, tz);
+    // 台布垂边（软化桌沿的硬圆柱线）
+    B.add(M.clothRed, cylG(1.13, 1.07, 0.14, 20, 6, 0.5), tx, 0.68, tz);
+    // 玻璃转盘 + 中央残局
+    B.add(M.porcelain, cylG(0.52, 0.52, 0.018, 18, 2, 0.2), tx, 0.8, tz);
+    B.add(M.enamelGrey, cylG(0.16, 0.18, 0.05, 12), tx + rr(-0.1, 0.1), 0.82, tz + rr(-0.1, 0.1));
     // 台面收场残局：碗碟堆、酒瓶、杯
-    const n = 5 + Math.floor(rnd() * 4);
+    const n = 8 + Math.floor(rnd() * 5);
     for (let i = 0; i < n; i++) {
       const a = rnd() * Math.PI * 2, r0 = rr(0.2, 0.85);
       const px = tx + Math.cos(a) * r0, pz = tz + Math.sin(a) * r0;
       const kind = rnd();
-      if (kind < 0.42) B.add(M.porcelain, cylG(0.075, 0.05, rr(0.03, 0.11), 10), px, 0.79 + 0.05, pz);
-      else if (kind < 0.62) B.add(M.porcelain, cylG(0.1, 0.1, 0.022, 12), px, 0.8, pz);
-      else if (kind < 0.82) B.add(M.chrome, cylG(0.028, 0.028, rr(0.08, 0.12), 8), px, 0.85, pz);
-      else B.add(M.plasticBlack, cylG(0.038, 0.034, 0.26, 8), px, 0.9, pz); // 酒瓶
+      if (kind < 0.4) B.add(M.porcelain, cylG(0.075, 0.05, rr(0.03, 0.11), 10), px, 0.79 + 0.05, pz);
+      else if (kind < 0.6) B.add(M.porcelain, cylG(0.1, 0.1, 0.022, 12), px, 0.8, pz);
+      else if (kind < 0.76) B.add(M.chrome, cylG(0.028, 0.028, rr(0.08, 0.12), 8), px, 0.85, pz);
+      else if (kind < 0.94) { // 绿玻璃啤酒瓶（瓶身+瓶颈）
+        B.add(M.glassGreen, cylG(0.037, 0.033, 0.24, 8), px, 0.91, pz);
+        B.add(M.glassGreen, cylG(0.012, 0.03, 0.06, 8), px, 1.06, pz);
+      } else { // 倒了一支，没人扶
+        B.add(M.glassGreen, cylG(0.035, 0.035, 0.26, 8), px, 0.825, pz, 0, 0, Math.PI / 2);
+      }
     }
     // 椅子（红椅套，收场：部分歪斜/离位）
     const chairs = 7 + Math.floor(rnd() * 2);
@@ -250,7 +260,7 @@ export function buildWorld(scene, M, T) {
       const cx = tx + Math.cos(a) * cd, cz = tz + Math.sin(a) * cd;
       const face = a + Math.PI + rr(-0.5, 0.5);
       // 椅套：上窄下宽的四棱台（布罩下摆外扩），不是方盒
-      B.add(M.pleats, cylG(0.26, 0.33, 0.5, 4, 1.4, 0.7), cx, 0.25, cz, -face + Math.PI / 4);
+      B.add(M.pleats, cylG(0.26, 0.33, 0.5, 4, 5, 0.7), cx, 0.25, cz, -face + Math.PI / 4);
       B.add(M.clothRed, boxG(0.42, 0.55, 0.06, 1.4, 0.8), cx + Math.cos(a) * 0.2, 0.76, cz + Math.sin(a) * 0.2, -face);
       cC(cx, cz, 0.26);
     }
@@ -275,13 +285,25 @@ export function buildWorld(scene, M, T) {
   B.add(M.wood, cylG(0.9, 0.9, 0.05, 18), 34.6, 0.92, 5.4, 0, 0, Math.PI / 2 - 0.18);
   B.add(M.wood, cylG(0.9, 0.9, 0.05, 18), 34.52, 0.92, 5.6, 0, 0, Math.PI / 2 - 0.24);
   cR(34.1, 4.6, 1.3, 1.6);
-  // 北墙窗（夜色 + 厚红帘，帘基本拉上；竖褶才像挂着的布）
-  for (const wx of [14, 22, 30]) {
-    B.add(M.plasticBlack, planeG(1.6, 1.8), wx, 2.5, 1.57);
-    B.add(M.pleats, boxG(1.1, 2.2, 0.14, 1.2, 1.4), wx - 0.9, 2.3, 1.68);
-    B.add(M.pleats, boxG(1.1, 2.2, 0.14, 1.2, 1.4), wx + 0.9, 2.3, 1.68);
-    B.add(M.wood, cylG(0.03, 0.03, 2.6, 8), wx, 3.46, 1.7, 0, 0, Math.PI / 2);
-  }
+  // 北墙窗：木框 + 中梃 + 窗台板 + 夜玻璃（有环境反光），帘一侧收拢一侧半拉——收场时没人会拉整齐
+  [14, 22, 30].forEach((wx, wi) => {
+    // 墙体是 0.1 厚的盒（内表面 z=1.6），窗组件必须整体在 1.6 之外
+    B.add(M.wood, boxG(3.0, 0.12, 0.14, 2.4, 0.12), wx, 3.5, 1.68);
+    B.add(M.wood, boxG(3.0, 0.09, 0.24, 2.4, 0.12), wx, 1.5, 1.72);
+    B.add(M.wood, boxG(0.11, 2.0, 0.13, 0.12, 1.6), wx - 1.45, 2.5, 1.68);
+    B.add(M.wood, boxG(0.11, 2.0, 0.13, 0.12, 1.6), wx + 1.45, 2.5, 1.68);
+    B.add(M.wood, boxG(0.06, 1.95, 0.09, 0.08, 1.6), wx, 2.5, 1.66);
+    B.add(M.wood, boxG(2.8, 0.06, 0.09, 2.2, 0.08), wx, 2.5, 1.66);
+    B.add(M.glassNight, planeG(2.8, 1.95), wx, 2.5, 1.615);
+    // 帘：左侧收成一束，右侧半拉（每扇拉的程度不一样）
+    const drawn = [0.5, 0.9, 0.68][wi];
+    B.add(M.pleats, boxG(0.5, 2.3, 0.22, 0.55, 1.45), wx - 1.42, 2.28, 1.88);
+    B.add(M.pleats, boxG(2.0 * drawn, 2.24, 0.14, 2.0 * drawn, 1.42), wx + 1.5 - 1.0 * drawn, 2.3, 1.84);
+    B.add(M.wood, cylG(0.03, 0.03, 3.2, 8), wx, 3.62, 1.88, 0, 0, Math.PI / 2);
+  });
+  // 窗间墙婚宴符号：红纸囍字（贴在上半墙的大面积空白里）
+  B.add(M.happiness, planeG(0.85, 0.85), 18, 2.65, 1.615);
+  B.add(M.happiness, planeG(0.85, 0.85), 26, 2.65, 1.615);
   // 地面收场杂物：散落餐巾、汽水瓶筐、双喜烟盒
   for (let i = 0; i < 9; i++) {
     const nx = rr(6, 31), nz = rr(3, 8.4);
@@ -448,19 +470,38 @@ export function buildWorld(scene, M, T) {
     B.add(M.cardboard2, boxG(0.7, 0.5, 0.6, 1, 1), 10.2, 0.25, 24.6, 0.2);
     B.add(M.cardboard1, boxG(0.6, 0.45, 0.55, 1, 1), 10.25, 0.72, 24.6, -0.1);
     cR(9.8, 24.2, 1.0, 0.9);
+    // 电器待机指示灯（黑暗里仍活着的设备）
+    const led = (hex, x, y, z) => NB.add(new THREE.MeshBasicMaterial({ color: hex }), boxG(0.014, 0.014, 0.006, 0.1, 0.1), x, y, z);
+    led(0xc23a22, 4.583, 0.83, 19.62);   // 卡座电源
+    led(0x3f9e4d, 4.583, 1.13, 19.9);    // CRT 待机
+    led(0xc23a22, 33.7, 1.85, 10.285);   // B 配电箱
   }
 
   // ============ E 洗涤/器材间 ============
   srand(510055);
   {
-    // 洗涤台（干的——你听不到一滴水）
-    B.add(M.steelDull, boxG(5.5, 0.85, 1.2, 4, 0.8), 17.25, 0.425, 24.2);
-    B.add(M.steel, boxG(5.56, 0.05, 1.26, 4, 1), 17.25, 0.875, 24.2);
+    // 洗涤台（贴南墙，干的——你听不到一滴水）
+    B.add(M.steelDull, boxG(5.5, 0.85, 1.2, 4, 0.8), 17.25, 0.425, 24.8);
+    B.add(M.steel, boxG(5.56, 0.05, 1.26, 4, 1), 17.25, 0.875, 24.8);
     for (const bx2 of [15.6, 17.25, 18.9]) {
-      B.add(M.plasticBlack, boxG(1.0, 0.02, 0.7, 1, 0.7), bx2, 0.87, 24.15);
-      B.add(M.chrome, cylG(0.018, 0.018, 0.3, 8), bx2 - 0.2, 1.05, 24.55, 0, 0, 0);
-      B.add(M.chrome, cylG(0.016, 0.016, 0.22, 8), bx2 - 0.2, 1.16, 24.45, Math.PI / 2.4, 0, 0);
+      B.add(M.plasticBlack, boxG(1.0, 0.02, 0.7, 1, 0.7), bx2, 0.87, 24.75);
+      // 龙头：靠墙立管 + 横向出水嘴（弯管朝盆）
+      B.add(M.chrome, cylG(0.018, 0.018, 0.3, 8), bx2 - 0.2, 1.04, 25.32);
+      B.add(M.chrome, cylG(0.016, 0.016, 0.24, 8), bx2 - 0.2, 1.18, 25.18, 0, Math.PI / 2, 0);
+      B.add(M.chrome, cylG(0.015, 0.015, 0.07, 8), bx2 - 0.2, 1.15, 25.06);
     }
+    // 柜门缝 + 横条拉手（正面别是一整块铁板）
+    for (let i = 0; i < 4; i++) {
+      const dxx = 15.15 + i * 1.36;
+      B.add(M.plasticBlack, boxG(0.02, 0.62, 0.015, 0.03, 0.5), dxx, 0.44, 24.195);
+      B.add(M.chrome, boxG(0.11, 0.024, 0.022, 0.1, 0.05), dxx - 0.32, 0.62, 24.185);
+    }
+    // 台面上：倒扣碗堆、塑料盆（都是干的）
+    for (const [sx3, sz3, n3] of [[16.5, 24.95, 5], [16.85, 24.68, 3], [19.35, 24.95, 4]]) {
+      for (let i = 0; i < n3; i++) B.add(M.porcelain, cylG(0.085, 0.055, 0.05, 10), sx3, 0.928 + i * 0.038, sz3);
+    }
+    B.add(M.plasticBeige, cylG(0.19, 0.15, 0.13, 12), 14.9, 0.968, 24.7);
+    B.add(M.plasticBeige, cylG(0.16, 0.13, 0.11, 12), 19.9, 0.958, 24.85);
     // 沥水架：斜靠的托盘与蒸屉
     B.add(M.enamelGreen, boxG(1.0, 1.7, 3.4, 1, 1.4), 22.9, 0.85, 21.1);
     for (let i = 0; i < 6; i++) {
@@ -474,13 +515,13 @@ export function buildWorld(scene, M, T) {
     }
     B.add(M.wood, cylG(0.02, 0.02, 1.5, 6), 13.85, 0.8, 23.8, 0, 0, 0.22);
     B.add(M.clothRed, boxG(0.12, 0.3, 0.1, 0.2, 0.3), 13.98, 0.16, 23.86);
-    // 毛巾杆 + 挂布
-    B.add(M.chrome, cylG(0.015, 0.015, 1.4, 8), 17.2, 1.5, 24.9, 0, 0, Math.PI / 2);
-    B.add(M.porcelain, boxG(0.4, 0.5, 0.02, 0.4, 0.5), 16.8, 1.26, 24.88);
-    B.add(M.clothRed, boxG(0.36, 0.44, 0.02, 0.3, 0.4), 17.6, 1.29, 24.88);
+    // 毛巾杆 + 挂布（贴墙）
+    B.add(M.chrome, cylG(0.015, 0.015, 1.4, 8), 17.2, 1.5, 25.33, 0, 0, Math.PI / 2);
+    B.add(M.porcelain, boxG(0.4, 0.5, 0.02, 0.4, 0.5), 16.8, 1.26, 25.31);
+    B.add(M.clothRed, boxG(0.36, 0.44, 0.02, 0.3, 0.4), 17.6, 1.29, 25.31);
     // 墙面搁板 + 皂盒（无水渍）
-    B.add(M.wood, boxG(2.4, 0.04, 0.3, 2, 0.3), 20.5, 1.7, 25.32);
-    for (let i = 0; i < 4; i++) B.add(M.plasticBeige, boxG(0.24, 0.18, 0.16, 0.3, 0.2), 19.6 + i * 0.55, 1.82, 25.32);
+    B.add(M.wood, boxG(2.4, 0.04, 0.3, 2, 0.3), 20.5, 1.7, 25.24);
+    for (let i = 0; i < 4; i++) B.add(M.plasticBeige, boxG(0.24, 0.18, 0.16, 0.3, 0.2), 19.6 + i * 0.55, 1.82, 25.24);
   }
 
   // ============ D 卸货口 ============
@@ -577,6 +618,18 @@ export function buildWorld(scene, M, T) {
     NB.add(M.enamelGrey, cylG(0.11, 0.16, 0.18, 10), sx2, 2.52, 9.34, 0, 0, 0);
     addPoint(0xffc180, 11, 6.5, sx2, 2.62, 9.12);
   }
+  // 壁扇 ×2（夏末婚宴的摇头扇，现在停着，头微垂）
+  for (const fx of [10, 26]) {
+    NB.add(M.enamelGrey, boxG(0.12, 0.22, 0.08, 0.12, 0.2), fx, 3.0, 9.36);
+    NB.add(M.enamelGrey, cylG(0.028, 0.028, 0.2, 6), fx, 2.94, 9.26, 0, 1.15, 0);
+    NB.add(M.plasticBeige, cylG(0.23, 0.23, 0.05, 14), fx, 2.86, 9.12, 0, Math.PI / 2 - 0.4, 0);
+    NB.add(M.plasticBlack, cylG(0.2, 0.2, 0.08, 12), fx, 2.87, 9.16, 0, Math.PI / 2 - 0.4, 0);
+  }
+  // 挂钟（散场了它还在上班）
+  NB.add(M.enamelGrey, cylG(0.24, 0.24, 0.05, 18), 32.5, 3.0, 9.36, 0, Math.PI / 2, 0);
+  NB.add(M.porcelain, cylG(0.21, 0.21, 0.055, 18), 32.5, 3.0, 9.355, 0, Math.PI / 2, 0);
+  NB.add(M.plasticBlack, boxG(0.02, 0.15, 0.012, 0.05, 0.12), 32.5, 3.065, 9.32);
+  NB.add(M.plasticBlack, boxG(0.1, 0.02, 0.012, 0.1, 0.05), 32.55, 2.99, 9.32);
   // 红横幅（横跨 A/B 墙上方，面向宴会厅）
   B.add(M.banner, planeG(9.5, 0.7, 1, 1), 18, 3.5, 9.38, 0, Math.PI);
 
@@ -635,6 +688,10 @@ export function buildWorld(scene, M, T) {
     spot.shadow.normalBias = 0.04;
     scene.add(spot, spot.target);
     addPoint(0x74b083, 2.4, 5.0, 29.5, 2.9, 17.9);
+    // 工作位上方低瓦裸灯泡（返席人整理箱位的那一小池光，别的地方仍是黑的）
+    NB.add(M.rubber, cylG(0.01, 0.01, 1.0, 6), 30.5, 2.6, 21.7);
+    NB.add(M.bulbWarm, new THREE.SphereGeometry(0.042, 8, 6), 30.5, 2.08, 21.7);
+    addPoint(0xffbe70, 5.5, 6.0, 30.5, 2.0, 21.7);
   }
 
   // 环境底光（很低，只防死黑）

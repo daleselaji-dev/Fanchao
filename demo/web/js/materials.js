@@ -783,6 +783,10 @@ export function buildMaterials(renderer) {
   M.plasticBlack = std({ color: 0x1c1c1d, roughness: 0.5, envMapIntensity: 0.4 });
   M.rubber = std({ color: 0x17181a, roughness: 0.95, envMapIntensity: 0.04 });
   M.chrome = std({ color: 0x9aa0a4, roughness: 0.3, metalness: 0.95, envMapIntensity: 1.0 });
+  // 夜窗玻璃：近黑但有环境反光——外面是夜，不是贴一块黑板
+  M.glassNight = std({ color: 0x101317, roughness: 0.06, metalness: 0.55, envMapIntensity: 1.5 });
+  // 绿玻璃啤酒瓶（2001 婚宴桌上永远有）
+  M.glassGreen = std({ color: 0x274a2b, roughness: 0.12, metalness: 0.25, envMapIntensity: 1.2 });
 
   // 纸品与标牌
   T.menu = canvasTex(texMenuPaper());

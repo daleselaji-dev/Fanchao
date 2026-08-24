@@ -43,7 +43,7 @@ export const FURN = [
   { x: 14,   z: 13.9, w: 7,   d: 1.1, tag: "rackE" },        // B 器材架（x12–14 留过巷口）
   { x: 3.2,  z: 19.0, w: 4.6, d: 1.5, tag: "deck" },         // C 录像卡座 REC/PAUSE
   { x: 11.6, z: 19.2, w: 0.9, d: 4.2, tag: "tapeShelf" },    // C 磁带架
-  { x: 14.5, z: 23.6, w: 5.5, d: 1.2, tag: "sink" },         // E 洗涤台
+  { x: 14.5, z: 24.2, w: 5.5, d: 1.2, tag: "sink" },         // E 洗涤台（贴南墙）
   { x: 22.4, z: 19.4, w: 1.0, d: 3.4, tag: "drain" },        // E 沥水架
   { x: 14.9, z: 19.4, w: 1.6, d: 1.2, tag: "basket" },       // E 器材篮
   { x: 26,   z: 20.5, w: 1.6, d: 1.6, tag: "crate" },        // D 货箱
@@ -106,7 +106,7 @@ export const ROUTE = [
   { x: 13.0, z: 16.6, pause: 0 },
   { x: 18.8, z: 16.6, pause: 0.8, act: "wipe" },    // 擦手
   { x: 18.8, z: 20.5, pause: 0 },
-  { x: 17.2, z: 22.6, pause: 3.2, act: "wash" },    // 洗涤与放置（无水声）
+  { x: 17.2, z: 23.5, pause: 3.2, act: "wash" },    // 洗涤与放置（无水声）
   { x: 18.8, z: 20.5, pause: 0 },
   { x: 18.8, z: 16.6, pause: 0, evidence: true },   // E/B 交界：侧向证据触发点
   { x: 22.6, z: 16.6, pause: 0 },

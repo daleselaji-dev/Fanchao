@@ -130,6 +130,17 @@ await shot("06_evidence", [18.8, 16.5, 0.02]);
 const evTotal = await page.evaluate(() => window.__H00.sim.evidence.totalShown);
 check(evTotal === 1, "证据每圈至多一次");
 
+// 借视（Q）：短暂接入返席人视角——信息工具，也是不安来源
+await page.evaluate(() => {
+  window.__H00.holdJack(true);
+  for (let i = 0; i < 55; i++) window.__H00.step(1 / 60);
+});
+await shot("06b_jack", null);
+await page.evaluate(() => {
+  window.__H00.holdJack(false);
+  for (let i = 0; i < 20; i++) window.__H00.step(1 / 60);
+});
+
 // 返程
 r = await page.evaluate(() => { window.__bot.dwell(2); return window.__bot.walkTo(13, 14.5, 10); });
 check(r >= 0, "从巷口上浅处");
