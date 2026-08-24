@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>返潮 H00-R0 · 3D 灰盒</title>
+<style>
+  html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #0d0b09;
+    font-family: "PingFang SC", "Microsoft YaHei", "WenQuanYi Micro Hei", sans-serif; }
+  #stage { display: block; width: 100vw; height: 100vh; }
+  .hud { position: fixed; z-index: 5; color: #d8d0bd; pointer-events: none; }
+  #chip { top: 14px; left: 16px; background: rgba(20,17,13,.78); border: 1px solid #4a443a;
+    padding: 6px 12px; border-radius: 3px; font-size: 13px; letter-spacing: .04em; }
+  #chip.done { border-color: #6e6752; color: #cfc49f; }
+  #keys { top: 14px; right: 16px; font-size: 12px; color: #857d6c; text-align: right; line-height: 1.7;
+    background: rgba(20,17,13,.55); padding: 5px 10px; border-radius: 3px; }
+  #hint { bottom: 22px; left: 50%; transform: translateX(-50%); max-width: 82vw;
+    background: rgba(20,17,13,.8); border: 1px solid #3d382f; padding: 8px 16px;
+    border-radius: 3px; font-size: 14px; text-align: center; }
+  #overlay { position: fixed; inset: 0; z-index: 9; display: flex; align-items: center; justify-content: center;
+    background: rgba(10,8,6,.72); color: #cfc6b0; cursor: pointer; }
+  #overlay .card { text-align: center; line-height: 2; font-size: 15px; border: 1px solid #4a443a;
+    padding: 26px 42px; background: rgba(16,13,10,.9); border-radius: 4px; }
+  #overlay .small { font-size: 12px; color: #8a8170; }
+  #overlay.hidden { display: none; }
+  body.nohud .hud, body.nohud #overlay { display: none; }
+</style>
+</head>
+<body>
+<canvas id="stage"></canvas>
+<div id="chip" class="hud"></div>
+<div id="keys" class="hud">WASD 移动 · 鼠标转向<br>E 交互 · R 复位 · V 调试层 · M 静音</div>
+<div id="hint" class="hud"></div>
+<div id="overlay"><div class="card">
+  点击进入<br>
+  <span class="small">WASD 移动 · 鼠标转向 · E 交互 · R 复位 · M 静音</span><br>
+  <span class="small">任务：把手里的婚宴录像带送到 C 房卡座归档，再回到宴会厅</span>
+</div></div>
+<script type="importmap">
+{ "imports": { "three": "./vendor/three.module.min.js" } }
+</script>
+<script type="module" src="./main.js"></script>
+</body>
+</html>
