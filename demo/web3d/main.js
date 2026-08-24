@@ -60,7 +60,13 @@ function log(msg) {
   console.log(`W3D | ${msg}`);
 }
 // 自动化验证钩子（无 UI）
-window.__W3D = { state, entity, player: player.state, logs: state.logs };
+window.__W3D = {
+  state,
+  entity,
+  player: player.state,
+  logs: state.logs,
+  isFigureVisible: () => figure.group.visible,
+};
 
 // ---------- 工具 ----------
 const inRect = (x, z, r) => x >= r.x && x <= r.x + r.w && z >= r.y && z <= r.y + r.h;

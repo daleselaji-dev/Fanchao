@@ -49,7 +49,12 @@ export function createPlayer(camera, canvas) {
   mesh.add(tape);
 
   canvas.addEventListener("click", () => {
-    if (!state.locked) canvas.requestPointerLock();
+    if (!state.locked) {
+      try {
+        const p = canvas.requestPointerLock();
+        if (p && p.catch) p.catch(() => {});
+      } catch (e) { /* headless 环境无指针锁，WASD 仍可用 */ }
+    }
   });
   document.addEventListener("pointerlockchange", () => {
     state.locked = document.pointerLockElement === canvas;
