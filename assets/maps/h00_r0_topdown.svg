@@ -1,0 +1,126 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1210" viewBox="0 0 1200 1210">
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#d8d0bd"/></marker></defs>
+<rect width="1200" height="1210" fill="#171512"/>
+<text x="30" y="42" fill="#e8e0cc" font-size="26" font-weight="bold" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">H00-R0《婚宴后场：返席》俯视空间与行为地图 v1</text>
+<text x="30" y="72" fill="#8f8878" font-size="15" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">空间闭环：A→B→C→(E/D)→B→A　·　实体旧后勤路线：D→B→C门外→E→D　·　几何与 demo/web 运行时一致（单位：米）</text>
+<rect x="90" y="141" width="1002" height="240" fill="#7c5a4b"/>
+<rect x="90" y="399" width="1002" height="216" fill="#5f7169"/>
+<rect x="90" y="633" width="330" height="228" fill="#5c646a"/>
+<rect x="438" y="633" width="312" height="228" fill="#63695f"/>
+<rect x="768" y="633" width="324" height="228" fill="#6d5f4c"/>
+<rect x="540" y="381" width="60" height="18" fill="#8a8172"/>
+<rect x="270" y="615" width="48" height="18" fill="#8a8172"/>
+<rect x="570" y="615" width="48" height="18" fill="#8a8172"/>
+<rect x="870" y="615" width="90" height="18" fill="#8a8172"/>
+<rect x="72" y="123" width="1056" height="18" fill="#cfc6b4"/>
+<rect x="72" y="861" width="1056" height="18" fill="#cfc6b4"/>
+<rect x="72" y="123" width="18" height="756" fill="#cfc6b4"/>
+<rect x="1092" y="123" width="18" height="756" fill="#cfc6b4"/>
+<rect x="90" y="381" width="450" height="18" fill="#cfc6b4"/>
+<rect x="600" y="381" width="492" height="18" fill="#cfc6b4"/>
+<rect x="90" y="615" width="180" height="18" fill="#cfc6b4"/>
+<rect x="318" y="615" width="252" height="18" fill="#cfc6b4"/>
+<rect x="618" y="615" width="252" height="18" fill="#cfc6b4"/>
+<rect x="960" y="615" width="132" height="18" fill="#cfc6b4"/>
+<rect x="420" y="633" width="18" height="228" fill="#cfc6b4"/>
+<rect x="750" y="633" width="18" height="228" fill="#cfc6b4"/>
+<rect x="108" y="156" width="36" height="27" fill="#4d463c" stroke="#2c2822"/>
+<text x="108" y="151" fill="#b9b19c" font-size="12" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">音箱（伴奏声源）</text>
+<rect x="1008" y="324" width="48" height="30" fill="#4d463c" stroke="#2c2822"/>
+<text x="1008" y="319" fill="#b9b19c" font-size="12" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">备餐车</text>
+<rect x="150" y="408" width="330" height="39" fill="#4d463c" stroke="#2c2822"/>
+<text x="158" y="432" fill="#c8c0aa" font-size="12" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">服务台</text>
+<rect x="675" y="408" width="330" height="39" fill="#4d463c" stroke="#2c2822"/>
+<text x="683" y="432" fill="#c8c0aa" font-size="12" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">保温台</text>
+<rect x="210" y="546" width="180" height="33" fill="#4d463c" stroke="#2c2822"/>
+<text x="218" y="568" fill="#c8c0aa" font-size="12" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">器材架</text>
+<rect x="450" y="546" width="210" height="33" fill="#4d463c" stroke="#2c2822"/>
+<text x="458" y="568" fill="#c8c0aa" font-size="12" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">器材架</text>
+<rect x="126" y="666" width="138" height="45" fill="#4d463c" stroke="#2c2822"/>
+<text x="134" y="694" fill="#c8c0aa" font-size="12" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">录像卡座 REC/PAUSE（任务点）</text>
+<rect x="378" y="672" width="27" height="126" fill="#4d463c" stroke="#2c2822"/>
+<text x="378" y="667" fill="#b9b19c" font-size="12" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">磁带架</text>
+<rect x="465" y="804" width="165" height="36" fill="#4d463c" stroke="#2c2822"/>
+<text x="473" y="827" fill="#c8c0aa" font-size="12" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">洗涤台</text>
+<rect x="702" y="678" width="30" height="102" fill="#4d463c" stroke="#2c2822"/>
+<text x="702" y="673" fill="#b9b19c" font-size="12" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">沥水架</text>
+<rect x="477" y="678" width="48" height="36" fill="#4d463c" stroke="#2c2822"/>
+<text x="477" y="673" fill="#b9b19c" font-size="12" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">器材篮</text>
+<rect x="810" y="711" width="48" height="48" fill="#4d463c" stroke="#2c2822"/>
+<text x="810" y="706" fill="#b9b19c" font-size="12" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">货箱</text>
+<rect x="867" y="777" width="48" height="48" fill="#4d463c" stroke="#2c2822"/>
+<rect x="1008" y="723" width="48" height="48" fill="#4d463c" stroke="#2c2822"/>
+<rect x="960" y="654" width="132" height="30" fill="#4d463c" stroke="#2c2822"/>
+<text x="968" y="674" fill="#c8c0aa" font-size="12" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">卸货台</text>
+<circle cx="300" cy="246" r="63" fill="#c25040"/>
+<circle cx="300" cy="246" r="44" fill="#a03e30"/>
+<circle cx="630" cy="222" r="63" fill="#c25040"/>
+<circle cx="630" cy="222" r="44" fill="#a03e30"/>
+<circle cx="900" cy="264" r="63" fill="#c25040"/>
+<circle cx="900" cy="264" r="44" fill="#a03e30"/>
+<text x="100" y="351" fill="#f0e8d4" font-size="19" font-weight="bold" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">A 婚宴厅</text>
+<text x="100" y="371" fill="rgba(240,232,212,0.65)" font-size="13" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">公共现实底片 · 收场中的婚宴</text>
+<text x="100" y="585" fill="#f0e8d4" font-size="19" font-weight="bold" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">B 后场服务走廊</text>
+<text x="100" y="605" fill="rgba(240,232,212,0.65)" font-size="13" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">唯一路线判断点：浅处 / 低处</text>
+<text x="100" y="831" fill="#f0e8d4" font-size="19" font-weight="bold" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">C 录像/广播室</text>
+<text x="100" y="851" fill="rgba(240,232,212,0.65)" font-size="13" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">证据房：REC/PAUSE 归档</text>
+<text x="448" y="831" fill="#f0e8d4" font-size="19" font-weight="bold" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">E 洗涤/器材间</text>
+<text x="448" y="851" fill="rgba(240,232,212,0.65)" font-size="13" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">回返点 · 工作痕迹</text>
+<text x="778" y="831" fill="#f0e8d4" font-size="19" font-weight="bold" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">D 卸货口</text>
+<text x="778" y="851" fill="rgba(240,232,212,0.65)" font-size="13" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">实体旧路线起点 · 硬质受压证据</text>
+<rect x="120" y="546" width="570" height="69" fill="none" stroke="#d8b98a" stroke-width="2.5" stroke-dasharray="10 7"/>
+<text x="96" y="531" fill="#d8b98a" font-size="14" font-weight="bold" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">低处（虚线框）＝异常高度对应区：仅声学与材料后果，游戏内无可见线</text>
+<polyline points="570,408 570,483 180,483 168,594 294,603 294,654 222,702" fill="none" stroke="#9db4c8" stroke-width="3.5" marker-end="url(#arrow)" opacity="0.95"/>
+<polyline points="570,408 570,513 420,513 420,597 294,597 294,654 222,702" fill="none" stroke="#d8b98a" stroke-width="3.5" stroke-dasharray="3 6" marker-end="url(#arrow)" opacity="0.95"/>
+<text x="210" y="474" fill="#9db4c8" font-size="14" font-weight="bold" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">浅处服务线（视野好，路稍长）</text>
+<text x="468" y="610" fill="#d8b98a" font-size="13" font-weight="bold" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">低处器材线（更短，证据更强）</text>
+<polyline points="945,750 915,624 915,510 420,510 420,594 294,594 420,594 594,594 594,711 546,774 594,711 594,594 708,594 915,561 915,624 945,750" fill="none" stroke="#9ab07f" stroke-width="3" stroke-dasharray="1 7" marker-end="url(#arrow)" opacity="0.95"/>
+<circle cx="945" cy="750" r="7" fill="#c9b57a"/>
+<text x="957" y="776" fill="#c9b57a" font-size="13" font-weight="bold" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">W0 整理箱位</text>
+<circle cx="915" cy="624" r="4" fill="#9ab07f"/>
+<circle cx="915" cy="510" r="4" fill="#9ab07f"/>
+<circle cx="420" cy="510" r="4" fill="#9ab07f"/>
+<circle cx="420" cy="594" r="4" fill="#9ab07f"/>
+<circle cx="294" cy="594" r="7" fill="#c9b57a"/>
+<text x="254" y="638" fill="#c9b57a" font-size="13" font-weight="bold" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">W5 在 C 门外放盘</text>
+<circle cx="420" cy="594" r="4" fill="#9ab07f"/>
+<circle cx="594" cy="594" r="7" fill="#c9b57a"/>
+<text x="604" y="580" fill="#c9b57a" font-size="13" font-weight="bold" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">W7 擦手</text>
+<circle cx="594" cy="711" r="4" fill="#9ab07f"/>
+<circle cx="546" cy="774" r="7" fill="#c9b57a"/>
+<text x="558" y="790" fill="#c9b57a" font-size="13" font-weight="bold" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">W9 洗涤与放置</text>
+<circle cx="594" cy="711" r="4" fill="#9ab07f"/>
+<circle cx="594" cy="594" r="7" fill="#c9b57a"/>
+<text x="604" y="560" fill="#c9b57a" font-size="13" font-weight="bold" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">W11 侧向证据点</text>
+<circle cx="708" cy="594" r="4" fill="#9ab07f"/>
+<circle cx="915" cy="561" r="4" fill="#9ab07f"/>
+<circle cx="915" cy="624" r="4" fill="#9ab07f"/>
+<text x="765" y="492" fill="#9ab07f" font-size="14" font-weight="bold" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">实体旧后勤路线（匀速 1.5m/s，让行不推回）</text>
+<circle cx="225" cy="330" r="9" fill="#4a6478" stroke="#dbe4ea" stroke-width="2"/>
+<text x="240" y="318" fill="#cfe0ee" font-size="14" font-weight="bold" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">玩家起点（手持录像带）</text>
+<circle cx="195" cy="688" r="72" fill="none" stroke="#d8d0bd" stroke-width="1.5" stroke-dasharray="5 5" opacity="0.7"/>
+<text x="111" y="774" fill="#d8d0bd" font-size="12" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">E 键交互半径 2.4m（=UE 240UU）</text>
+<g transform="translate(567,354) rotate(90)"><path d="M0,0 L100,-42 A108,108 0 0 1 100,42 Z" fill="rgba(125,150,142,0.22)"/><rect x="-7" y="-7" width="14" height="14" fill="#7d968e"/></g>
+<text x="579" y="359" fill="#a9c2b8" font-size="13" font-weight="bold" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">Cam_A_B</text>
+<g transform="translate(180,828) rotate(-45)"><path d="M0,0 L100,-42 A108,108 0 0 1 100,42 Z" fill="rgba(125,150,142,0.22)"/><rect x="-7" y="-7" width="14" height="14" fill="#7d968e"/></g>
+<text x="192" y="833" fill="#a9c2b8" font-size="13" font-weight="bold" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">Cam_C_Door</text>
+<g transform="translate(675,666) rotate(153)"><path d="M0,0 L100,-42 A108,108 0 0 1 100,42 Z" fill="rgba(125,150,142,0.22)"/><rect x="-7" y="-7" width="14" height="14" fill="#7d968e"/></g>
+<text x="687" y="671" fill="#a9c2b8" font-size="13" font-weight="bold" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">Cam_E_B</text>
+<rect x="30" y="894.0" width="1140" height="150" fill="#211e19" stroke="#353026"/>
+<g transform="translate(60,926.0)"><circle cx="20" cy="0" r="8" fill="#4a6478" stroke="#dbe4ea" stroke-width="2"/></g>
+<text x="116" y="931.0" fill="#d8d0bd" font-size="14" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">玩家（旧蓝工服，3.6m/s）</text>
+<g transform="translate(620,926.0)"><circle cx="20" cy="0" r="8" fill="#3f4a52"/><rect x="26" y="-4" width="5" height="8" fill="#8f8878"/></g>
+<text x="676" y="931.0" fill="#d8d0bd" font-size="14" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">实体“返席人”（普通后勤步速与持盘，非追击敌人）</text>
+<g transform="translate(60,958.0)"><line x1="0" y1="0" x2="40" y2="0" stroke="#9db4c8" stroke-width="3.5"/></g>
+<text x="116" y="963.0" fill="#d8d0bd" font-size="14" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">浅处服务线</text>
+<g transform="translate(620,958.0)"><line x1="0" y1="0" x2="40" y2="0" stroke="#d8b98a" stroke-width="3.5" stroke-dasharray="3 6"/></g>
+<text x="676" y="963.0" fill="#d8d0bd" font-size="14" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">低处器材线</text>
+<g transform="translate(60,990.0)"><line x1="0" y1="0" x2="40" y2="0" stroke="#9ab07f" stroke-width="3" stroke-dasharray="1 7"/></g>
+<text x="116" y="995.0" fill="#d8d0bd" font-size="14" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">实体旧路线（工作点为金色圆）</text>
+<g transform="translate(620,990.0)"><rect x="0" y="-8" width="40" height="16" fill="none" stroke="#d8b98a" stroke-width="2" stroke-dasharray="8 5"/></g>
+<text x="676" y="995.0" fill="#d8d0bd" font-size="14" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">低处范围（设计标注，不入正式画面）</text>
+<g transform="translate(60,1022.0)"><path d="M0,0 L34,-14 A36,36 0 0 1 34,14 Z" fill="rgba(125,150,142,0.35)"/></g>
+<text x="116" y="1027.0" fill="#d8d0bd" font-size="14" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">Round 3 验证机位</text>
+<g transform="translate(620,1022.0)"><rect x="8" y="-8" width="16" height="16" fill="#c25040"/></g>
+<text x="676" y="1027.0" fill="#d8d0bd" font-size="14" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">婚宴圆桌（事件红，公共现实底片）</text>
+</svg>
