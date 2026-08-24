@@ -1,0 +1,13 @@
+{
+  "name": "fanchao-h00-web3d",
+  "private": true,
+  "version": "0.1.0",
+  "description": "返潮 H00-R0 3D 灰盒 Demo（Three.js，断网可玩；three 已 vendor 化，npm 仅用于更新 vendor）",
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/"
+  },
+  "dependencies": {
+    "three": "^0.185.1"
+  }
+}
