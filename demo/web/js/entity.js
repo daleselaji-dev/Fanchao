@@ -195,6 +195,13 @@ export function createEntity(scene, M) {
         armL.userData.elbow.rotation.x = -1.3 + Math.sin(workT * 2.6) * 0.18;
         armR.userData.elbow.rotation.x = -1.3 + Math.cos(workT * 2.6) * 0.18;
         hips.position.y = 0.93;
+      } else if (act === "check") {
+        // E/B 交界的一拍停顿：站直、不动，只剩呼吸——比任何动作都不对劲
+        const b2 = Math.sin(breathe * 1.2) * 0.004;
+        torso.rotation.x += (0.03 - torso.rotation.x) * Math.min(1, dt * 6);
+        armL.rotation.x += (-0.3 - armL.rotation.x) * Math.min(1, dt * 5);
+        armR.rotation.x += (-0.3 - armR.rotation.x) * Math.min(1, dt * 5);
+        hips.position.y = 0.965 + b2;
       } else {
         // boxes：整理箱位，反复小幅下蹲搬正
         const k = (Math.sin(workT * 2.4) + 1) / 2;
@@ -205,15 +212,16 @@ export function createEntity(scene, M) {
       }
     }
 
-    // 证据窗口：抬头 + 向左侧转，让前侧短暂进入侧向视线
+    // 证据窗口：E/B 交界停顿时身体朝北（刚从 E 出来），巷里蹲守的玩家在它左侧（西）。
+    // 头+肩向左转——转得比礼貌该有的多一点，前侧复眼壳进入侧向视线。
     const targetBlend = evidenceActive > 0 ? 1 : 0;
     evidenceBlend += (targetBlend - evidenceBlend) * Math.min(1, dt * (targetBlend ? 6 : 3));
-    // 向右侧转（进 E 门时面向南，右侧=西=巷里蹲守的玩家方向）+ 轻微歪头
-    headG.rotation.x = 0.42 - evidenceBlend * 0.5;
-    headG.rotation.y = -evidenceBlend * 0.85;
-    headG.rotation.z = evidenceBlend * 0.14;
+    headG.rotation.x = 0.42 - evidenceBlend * 0.52;
+    headG.rotation.y = evidenceBlend * 1.15;
+    headG.rotation.z = -evidenceBlend * 0.12;
+    torso.rotation.y = evidenceBlend * 0.35;
     // 4~5 米外它只有十来个像素——发光必须强到「脸上有东西泛微光」能隔着巷子读出来
-    shellMat.emissive.setScalar(evidenceBlend * 1.6);
+    shellMat.emissive.setScalar(evidenceBlend * 2.2);
 
     // 影子跟随
     blob.position.y = 0.02;

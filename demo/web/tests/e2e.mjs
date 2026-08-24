@@ -126,7 +126,9 @@ r = await page.evaluate(() => {
   return window.__bot.until("H.sim.evidence.active > 1.2", 30);
 });
 check(r >= 0, `侧向证据触发（等待 ${r.toFixed?.(1)}s）`);
-await shot("06_evidence", [18.8, 16.5, 0.02]);
+// 等窗口走到中段再拍：转头 blend 已到位，仍在 ≤2s 合同内
+await page.evaluate(() => window.__bot.until("H.sim.evidence.active < 1.05", 3));
+await shot("06_evidence", [18.8, 16.5, 0.06]);
 const evTotal = await page.evaluate(() => window.__H00.sim.evidence.totalShown);
 check(evTotal === 1, "证据每圈至多一次");
 

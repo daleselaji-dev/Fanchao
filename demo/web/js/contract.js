@@ -108,7 +108,8 @@ export const ROUTE = [
   { x: 18.8, z: 20.5, pause: 0 },
   { x: 17.2, z: 23.5, pause: 3.2, act: "wash" },    // 洗涤与放置（无水声）
   { x: 18.8, z: 20.5, pause: 0 },
-  { x: 18.8, z: 16.6, pause: 0, evidence: true },   // E/B 交界：侧向证据触发点
+  // E/B 交界：路线固定的一拍停顿（不因玩家而变）；玩家蹲在低处才换到侧向证据
+  { x: 18.8, z: 16.6, pause: 1.6, act: "check", evidence: true },
   { x: 22.6, z: 16.6, pause: 0 },
   { x: 29.5, z: 15.5, pause: 0 },
   { x: 29.5, z: 17.6, pause: 0 },
