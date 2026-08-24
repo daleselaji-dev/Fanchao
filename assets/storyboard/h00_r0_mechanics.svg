@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1480" height="900" viewBox="0 0 1480 900">
+<defs><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#d8d0bd"/></marker></defs>
+<rect width="1480" height="900" fill="#171512"/>
+<text x="30" y="44" fill="#e8e0cc" font-size="24" font-weight="bold" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">H00-R0 机制说明：实体回返 · 让行 · 侧向证据 · 玩家任务</text>
+<text x="30" y="72" fill="#8f8878" font-size="14" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">来源：Round 2 行为合同 + demo/ue/H00_Source 代码事实；与 demo/web 运行时一致</text>
+<text x="30" y="122" fill="#9ab07f" font-size="17" font-weight="bold" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">① 实体“返席人”状态机（无追逐、无冲刺、无推回）</text>
+<rect x="30" y="140" width="300" height="96" rx="6" fill="#211e19" stroke="#4a4436" stroke-width="1.5"/>
+<text x="44" y="168" fill="#e8e0cc" font-size="16" font-weight="bold" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">工作 WORK</text>
+<text x="44" y="192" fill="#b3ab97" font-size="13" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">在航点执行普通动作：</text>
+<text x="44" y="212" fill="#b3ab97" font-size="13" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">整理箱位 / 放盘 / 擦手 / 洗涤</text>
+<text x="44" y="232" fill="#b3ab97" font-size="13" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">停留 1.4–3.2 秒</text>
+<rect x="30" y="300" width="300" height="96" rx="6" fill="#211e19" stroke="#4a4436" stroke-width="1.5"/>
+<text x="44" y="328" fill="#e8e0cc" font-size="16" font-weight="bold" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">移动 MOVE</text>
+<text x="44" y="352" fill="#b3ab97" font-size="13" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">沿旧后勤路线匀速 1.5m/s：</text>
+<text x="44" y="372" fill="#b3ab97" font-size="13" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">D → B → C门外 → E → D</text>
+<text x="44" y="392" fill="#b3ab97" font-size="13" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">速度永不因玩家改变</text>
+<rect x="30" y="460" width="300" height="96" rx="6" fill="#211e19" stroke="#4a4436" stroke-width="1.5"/>
+<text x="44" y="488" fill="#e8e0cc" font-size="16" font-weight="bold" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">等待 WAIT</text>
+<text x="44" y="512" fill="#b3ab97" font-size="13" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">玩家占用路线前方 &lt;1m：</text>
+<text x="44" y="532" fill="#b3ab97" font-size="13" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">原地停住，继续等</text>
+<text x="44" y="552" fill="#b3ab97" font-size="13" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">不推挤、不绕圈逼近、不出声吓人</text>
+<line x1="180" y1="236" x2="180" y2="300" stroke="#9ab07f" stroke-width="2.2" marker-end="url(#ar)"/>
+<text x="180.0" y="260.0" fill="#9ab07f" font-size="12.5" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">停留结束</text>
+<line x1="120" y1="396" x2="120" y2="460" stroke="#9ab07f" stroke-width="2.2" marker-end="url(#ar)"/>
+<text x="120.0" y="420.0" fill="#9ab07f" font-size="12.5" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">玩家挡路</text>
+<line x1="240" y1="460" x2="240" y2="396" stroke="#9ab07f" stroke-width="2.2" marker-end="url(#ar)"/>
+<text x="240.0" y="420.0" fill="#9ab07f" font-size="12.5" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">路线恢复空闲</text>
+<line x1="330" y1="348" x2="420" y2="348" stroke="#c9b57a" stroke-width="2.2" marker-end="url(#ar)"/>
+<text x="375.0" y="340.0" fill="#c9b57a" font-size="12.5" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">抵达工作点</text>
+<rect x="420" y="300" width="250" height="96" rx="6" fill="#211e19" stroke="#6b6148" stroke-width="1.5"/>
+<text x="434" y="328" fill="#e8e0cc" font-size="16" font-weight="bold" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">回到 工作 WORK</text>
+<text x="434" y="352" fill="#b3ab97" font-size="13" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">到达下一航点后</text>
+<text x="434" y="372" fill="#b3ab97" font-size="13" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">继续旧职责</text>
+<text x="434" y="392" fill="#b3ab97" font-size="13" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">循环永不结束</text>
+<rect x="30" y="610" width="640" height="110" rx="6" fill="#26201c" stroke="#7a4438" stroke-width="1.5"/>
+<text x="44" y="638" fill="#d08a7a" font-size="16" font-weight="bold" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">永不发生（Round 2 已否决，升格为永久禁止）</text>
+<text x="44" y="662" fill="#b3ab97" font-size="13" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">× 随机追踪玩家 / 冲刺 / 因玩家靠近而跳脸表演</text>
+<text x="44" y="682" fill="#b3ab97" font-size="13" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">× 碰撞把玩家推飞 / 分贝惩罚 / 伪精确物理数值</text>
+<text x="44" y="702" fill="#b3ab97" font-size="13" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">× 自动恐怖过场 / 改变速度 / 瞬移</text>
+<text x="740" y="122" fill="#d8b98a" font-size="17" font-weight="bold" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">② 侧向证据（每圈至多一次，≤2 秒）</text>
+<rect x="740" y="140" width="330" height="150" rx="6" fill="#211e19" stroke="#4a4436" stroke-width="1.5"/>
+<text x="754" y="168" fill="#e8e0cc" font-size="16" font-weight="bold" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">全部条件同时成立</text>
+<text x="754" y="192" fill="#b3ab97" font-size="13" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">· 实体正处于 E/B 交界（航点 W11）</text>
+<text x="754" y="212" fill="#b3ab97" font-size="13" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">· 玩家位于低处（异常高度对应区）</text>
+<text x="754" y="232" fill="#b3ab97" font-size="13" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">· 玩家与实体视线无墙体遮挡</text>
+<text x="754" y="252" fill="#b3ab97" font-size="13" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">· 距离 &lt; 8m</text>
+<text x="754" y="272" fill="#b3ab97" font-size="13" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">· 本圈尚未显示过</text>
+<line x1="905" y1="290" x2="905" y2="350" stroke="#9ab07f" stroke-width="2.2" marker-end="url(#ar)"/>
+<rect x="740" y="350" width="330" height="116" rx="6" fill="#211e19" stroke="#8a744a" stroke-width="1.5"/>
+<text x="754" y="378" fill="#e8e0cc" font-size="16" font-weight="bold" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">显示 1.6 秒</text>
+<text x="754" y="402" fill="#b3ab97" font-size="13" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">前侧干燥石化复眼结构（候选种子）</text>
+<text x="754" y="422" fill="#b3ab97" font-size="13" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">只作侧向短证据：看得出错误，</text>
+<text x="754" y="442" fill="#b3ab97" font-size="13" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">认不全形态；无音刺、无镜头夺权</text>
+<rect x="740" y="520" width="330" height="96" rx="6" fill="#211e19" stroke="#4a4436" stroke-width="1.5"/>
+<text x="754" y="548" fill="#e8e0cc" font-size="16" font-weight="bold" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">否则</text>
+<text x="754" y="572" fill="#b3ab97" font-size="13" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">实体保持背影 / 肩线 / 工作姿态</text>
+<text x="754" y="592" fill="#b3ab97" font-size="13" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">声音永远先于画面抵达</text>
+<text x="754" y="612" fill="#b3ab97" font-size="13" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">（视线被墙挡住时只闻其声）</text>
+<text x="1120" y="122" fill="#9db4c8" font-size="17" font-weight="bold" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">③ 玩家任务流（唯一普通任务）</text>
+<rect x="1120" y="140" width="330" height="78" rx="6" fill="#211e19" stroke="#4a4436" stroke-width="1.5"/>
+<text x="1134" y="168" fill="#e8e0cc" font-size="16" font-weight="bold" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">持带出发</text>
+<text x="1134" y="192" fill="#b3ab97" font-size="13" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">从 A 婚宴厅进入 B 后场走廊</text>
+<text x="1134" y="212" fill="#b3ab97" font-size="13" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">手里是刚交回的婚宴录像带</text>
+<rect x="1120" y="262" width="330" height="78" rx="6" fill="#211e19" stroke="#4a4436" stroke-width="1.5"/>
+<text x="1134" y="290" fill="#e8e0cc" font-size="16" font-weight="bold" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">路线判断 ×2</text>
+<text x="1134" y="314" fill="#b3ab97" font-size="13" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">去程与返程各一次：</text>
+<text x="1134" y="334" fill="#b3ab97" font-size="13" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">浅处服务线 ↔ 低处器材线</text>
+<rect x="1120" y="384" width="330" height="78" rx="6" fill="#211e19" stroke="#4a4436" stroke-width="1.5"/>
+<text x="1134" y="412" fill="#e8e0cc" font-size="16" font-weight="bold" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">REC/PAUSE 归档</text>
+<text x="1134" y="436" fill="#b3ab97" font-size="13" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">C 卡座 2.4m 内按 E（=UE 240UU）</text>
+<text x="1134" y="456" fill="#b3ab97" font-size="13" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">CRT 播几秒普通婚宴画面</text>
+<rect x="1120" y="506" width="330" height="78" rx="6" fill="#211e19" stroke="#4a4436" stroke-width="1.5"/>
+<text x="1134" y="534" fill="#e8e0cc" font-size="16" font-weight="bold" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">返回 A，循环完成</text>
+<text x="1134" y="558" fill="#b3ab97" font-size="13" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">门缝里实体背影走远</text>
+<text x="1134" y="578" fill="#b3ab97" font-size="13" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">不解释，不结算，不奖励</text>
+<line x1="1285" y1="218" x2="1285" y2="262" stroke="#9ab07f" stroke-width="2.2" marker-end="url(#ar)"/>
+<line x1="1285" y1="340" x2="1285" y2="384" stroke="#9ab07f" stroke-width="2.2" marker-end="url(#ar)"/>
+<line x1="1285" y1="462" x2="1285" y2="506" stroke="#9ab07f" stroke-width="2.2" marker-end="url(#ar)"/>
+<rect x="1120" y="630" width="330" height="90" rx="6" fill="#211e19" stroke="#5a6478" stroke-width="1.5"/>
+<text x="1134" y="658" fill="#e8e0cc" font-size="16" font-weight="bold" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">R = 全局复位</text>
+<text x="1134" y="682" fill="#b3ab97" font-size="13" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">玩家 / 录像带 / 实体航点 / 计时</text>
+<text x="1134" y="702" fill="#b3ab97" font-size="13" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">全部回到 00 秒</text>
+<text x="1134" y="722" fill="#b3ab97" font-size="13" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">RESET_REASON 写入日志</text>
+<line x1="1285" y1="604" x2="1285" y2="630" stroke="#9db4c8" stroke-width="2.2" stroke-dasharray="4 4" marker-end="url(#ar)"/>
+<text x="1285.0" y="609.0" fill="#9db4c8" font-size="12.5" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">任意时刻</text>
+<rect x="30" y="770" width="1420" height="90" fill="#211e19" stroke="#353026"/>
+<text x="46" y="798" fill="#b3ab97" font-size="13" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">恐怖来源：不是怪物追人，而是“一个普通岗位的动作被旧伤、压力和位置重新规定”。玩家改变的不是实体行为，而是自己与这条旧路线交叉的时机与代价。</text>
+<text x="46" y="822" fill="#b3ab97" font-size="13" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">低处 = 同一不可见高度的后果区：伴奏变厚变远（无水声、无滤镜），门框下部/柜脚留有干燥受压痕。异常由多种材料与声学共同证明，不靠单一贴条。</text>
+<text x="46" y="846" fill="#b3ab97" font-size="13" font-family="'PingFang SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif">本图描述的所有规则均可在 demo/web 中操作复现；UE 5.8 主线的对应实现见 demo/ue/H00_Source。</text>
+</svg>
