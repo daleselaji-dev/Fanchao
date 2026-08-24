@@ -151,7 +151,7 @@ function frame(now) {
   if (!TEST_MODE) requestAnimationFrame(frame);
 }
 
-function tick(dt) {
+function tick(dt, doRender = true) {
   // ---- 玩家输入 → sim ----
   const mv = player.update(dt, sim.player, jackHeld);
   simStep(sim, dt, {
@@ -219,9 +219,9 @@ function tick(dt) {
       flickerLevel = Math.max(flickerLevel, spike);
     } else {
       // 垂危：低位喘息
-      const b = 0.25 + Math.max(0, Math.sin(f.t * 0.9)) * 0.35 + (Math.random() < 0.01 ? 0.4 : 0);
-      f.light.intensity = f.base * b * 2;
-      f.mesh.material.color.setScalar(0.25 + b * 0.5);
+      const b = 0.22 + Math.max(0, Math.sin(f.t * 0.7)) * 0.3 + (Math.random() < 0.008 ? 0.35 : 0);
+      f.light.intensity = f.base * b * 1.1;
+      f.mesh.material.color.setScalar(0.2 + b * 0.45);
       dyingLevel = Math.max(dyingLevel, b);
     }
   }
@@ -276,6 +276,10 @@ function tick(dt) {
   audio.playerStepHook = null;
 
   // ---- 渲染（借视 = 从返席人头部看世界）----
+  if (doRender) renderOnce(dt);
+}
+
+function renderOnce(dt) {
   const cam = jackHeld ? entity.jackCam : camera;
   if (jackHeld) {
     entity.jackCam.aspect = camera.aspect;
@@ -317,7 +321,10 @@ window.__H00 = {
   holdJack: (v) => { jackHeld = v; },
   reset: () => { resetSim(sim, "TEST"); crtMode = "static"; },
   tick: (dt) => tick(dt),
-  start: () => { if (!started) { started = true; overlay.classList.add("hidden"); } },
+  step: (dt) => tick(dt, false),
+  render: () => renderOnce(1 / 60),
+  pressKey: (code, down) => { player.keys[code] = down; },
+  start: () => { if (!started) { started = true; overlay.classList.add("hidden"); audio.start(); audio.resume(); } },
   toggleAnno: () => { anno.visible = !anno.visible; },
   rendererInfo: () => renderer.info.render,
   crtMode: () => crtMode,

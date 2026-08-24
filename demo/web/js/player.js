@@ -76,6 +76,8 @@ export function createPlayer(camera, dom) {
     const kd = 1 - Math.exp(-dt * 11);
     state.move.f += ((raw.f) - state.move.f) * (Math.abs(raw.f) > 0 ? ka : kd);
     state.move.s += ((raw.s) - state.move.s) * (Math.abs(raw.s) > 0 ? ka : kd);
+    if (raw.f === 0 && Math.abs(state.move.f) < 0.01) state.move.f = 0;
+    if (raw.s === 0 && Math.abs(state.move.s) < 0.01) state.move.s = 0;
 
     // 世界方向（yaw：0 朝 -z? 用 sin/cos 组合：前 = (-sin(yaw), -cos(yaw))？
     // 约定：yaw=π 时面向 +z（南）。forward = (sin(yaw), cos(yaw)) * -1? 直接推导：

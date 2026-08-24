@@ -348,8 +348,8 @@ export function buildWorld(scene, M, T) {
     while (px5 < x0 + len - 0.4) {
       const w = rr(0.5, 0.85);
       const kind = rnd();
-      const sy = [0.32, 0.95, 1.58][Math.floor(rnd() * 3)] + 0.028;
-      if (kind < 0.4) B.add(rnd() < 0.5 ? M.cardboard1 : M.cardboard2, boxG(w, rr(0.3, 0.5), 0.7, 1, 1), px5 + w / 2, sy + 0.18, 14.45, rr(-0.06, 0.06));
+      const sy = [0.32, 0.95, 1.58][Math.floor(rnd() * 3)] + 0.026;
+      if (kind < 0.4) { const bh = rr(0.3, 0.5); B.add(rnd() < 0.5 ? M.cardboard1 : M.cardboard2, boxG(w, bh, 0.7, 1, 1), px5 + w / 2, sy + bh / 2, 14.45, rr(-0.06, 0.06)); }
       else if (kind < 0.65) B.add(M.clothRed, boxG(w, 0.24, 0.6, 1, 0.4), px5 + w / 2, sy + 0.12, 14.45, rr(-0.08, 0.08));
       else if (kind < 0.85) B.add(M.plasticBeige, boxG(w * 0.8, 0.26, 0.55, 1, 0.4), px5 + w / 2, sy + 0.13, 14.45, rr(-0.06, 0.06));
       else B.add(M.porcelain, cylG(0.16, 0.13, 0.3, 10), px5 + w / 2, sy + 0.15, 14.45);
@@ -386,7 +386,7 @@ export function buildWorld(scene, M, T) {
     B.add(M.woodDark, boxG(0.55, 0.72, 1.0, 0.5, 0.7), 5.6, 0.36, 19.75);
     // 卡座（面板朝东，玩家从门进来看到正面）
     B.add(M.plasticBlack, boxG(0.62, 0.16, 0.42, 1, 1), 4.35, 0.87, 19.7);
-    B.add(M.deckFace, planeG(0.6, 0.15), 4.35, 0.87, 19.92);
+    B.add(M.deckFace, planeG(0.6, 0.15), 4.35, 0.87, 19.48, 0, Math.PI);
     // CRT 监视器（在卡座上方的架子上，屏幕朝东南门口）
     const crtGroup = new THREE.Group();
     const shell = new THREE.Mesh(boxG(0.52, 0.42, 0.46, 1, 1), M.crtShell);
@@ -395,7 +395,7 @@ export function buildWorld(scene, M, T) {
     shell.castShadow = true;
     crtGroup.add(shell, screen);
     crtGroup.position.set(4.35, 1.32, 19.7);
-    crtGroup.rotation.y = 0.5;
+    crtGroup.rotation.y = Math.PI - 0.45;
     scene.add(crtGroup);
     dynamics.crt = { group: crtGroup, screen };
     // 台灯（暖光池）
@@ -591,13 +591,17 @@ export function buildWorld(scene, M, T) {
   }
 
   // C：台灯暖池 + CRT 荧光
-  addPoint(0xffc37c, 20, 7.5, 5.9, 1.6, 19.9, { shadow: true });
+  addPoint(0xffc37c, 20, 7.5, 5.84, 1.16, 19.78, { shadow: true });
   dynamics.lights.crtGlow = addPoint(0x9fb4a2, 2.6, 4.0, 4.8, 1.45, 20.2);
   // C 天花死灯管
   tube(8, 21.5, 2.64, "off");
 
   // E：中央单管
   tube(18.8, 21.5, 2.64, "on-shadow");
+  // E 门楣笼罩工作灯（灯泡+铁笼），从正面上方照亮门口——证据窗口的舞台光
+  NB.add(M.enamelGrey, cylG(0.07, 0.1, 0.12, 8), 18.8, 2.24, 16.95);
+  NB.add(M.bulbWarm, new THREE.SphereGeometry(0.045, 8, 6), 18.8, 2.16, 16.95);
+  addPoint(0xffd8a0, 9, 5.5, 18.8, 2.1, 16.8, { shadow: true });
 
   // D：卷帘缝冷光（低角度扫进来）+ 内门口绿应急余光
   {

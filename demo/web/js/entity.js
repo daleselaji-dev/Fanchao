@@ -205,7 +205,7 @@ export function createEntity(scene, M) {
     evidenceBlend += (targetBlend - evidenceBlend) * Math.min(1, dt * (targetBlend ? 6 : 3));
     headG.rotation.x = 0.42 - evidenceBlend * 0.5;
     headG.rotation.y = evidenceBlend * 0.85;
-    shellMat.emissive.setScalar(evidenceBlend * 0.06);
+    shellMat.emissive.setScalar(evidenceBlend * 0.16);
 
     // 影子跟随
     blob.position.y = 0.02;

@@ -70,7 +70,7 @@ void main() {
   if (uJack > 0.001) {
     col = mix(col, vec3(dot(col, vec3(0.34, 0.5, 0.16))), 0.55 * uJack);
     float n = hash(uv * uRes * 0.4 + vec2(uTime * 63.0, uTime * 41.0));
-    col += (n - 0.5) * 0.22 * uJack;
+    col += (n - 0.5) * 0.16 * uJack;
     float drop = step(0.985, hash(vec2(floor(uv.y * 160.0), floor(uTime * 30.0))));
     col *= 1.0 - drop * 0.7 * uJack;
   }
