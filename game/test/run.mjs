@@ -176,10 +176,13 @@ await shot('12_connector_gazer.png');
 const gazerVisible = await ev(() => window.__game.gazer.group.visible);
 
 // —— 拍5：终局宴会厅（喉道化） ——
+// 从这里起开 3 倍时间加速：终局的 after(5) 收网、剪缆长按、散场 after(4)
+// 都按游戏时间推进，帧饥饿下 1 倍速要等数分钟。
 await unseat();
-await ev(() => { const p = window.__game.player; p.teleport(-13.5, -6, Math.PI / 2 + 0.6); });
+await ev(() => { window.__timeScale = 3; const p = window.__game.player; p.teleport(-13.5, -6, Math.PI / 2 + 0.6); });
 const b5 = await until(() => window.__agenda.beat >= 5);
-await until(() => window.__game.L.dyn.throat.visible, 60000);
+const throatOk = await until(() => window.__game.L.dyn.throat.visible, 180000, 1200);
+if (!throatOk) errors.push('TIMEOUT: throat/finale cord net never appeared');
 await page.waitForTimeout(4000);
 await unseat();
 await ev(() => { const p = window.__game.player; p.teleport(0, -4.5, 0); p.pitch = 0.02; });
@@ -198,9 +201,8 @@ await ev(() => {
 await page.waitForTimeout(1500);
 await shot('14_at_vip_seat.png');
 // headless 帧饥饿：evaluate 轮询会挤占 rAF，游戏时间推进极慢。
-// 剪缆需持续累积 2.2 游戏秒 → 临时 3 倍时间加速 + 低频轮询。
-// 恢复循环：豁免引座（grace 刷新）+ 拉回席位，专测剪缆判定本身。
-await ev(() => { window.__timeScale = 3; });
+// 剪缆需持续累积 2.2 游戏秒 → 时间加速 + 低频轮询。
+// 恢复循环：豁免引座（grace 刷新）+ 拉回席位 + 若捆席绳被复原则重新摘挂。
 await page.keyboard.down('e');
 let cutOk = false;
 const cutSamples = [];
@@ -213,6 +215,14 @@ const cutSamples = [];
       if (g.player.seated) { a.standUp(); a.grace = 30; }
       const p = g.player.pos;
       if (Math.hypot(p.x - 2.1, p.z + 13.5) > 1.8) g.player.teleport(2.4, -12.4, 0.4);
+      // 捆席绳仍锁着 → 补一次摘/挂（模拟玩家操作）
+      const lock = g.sys.cords.find(c => c.tag === 'seatlock');
+      if (lock && !lock.heldEnd && !g.sys.held &&
+        ((lock.a === g.sys.hook('hMainA') && lock.b === g.sys.hook('hMainB')) ||
+          (lock.a === g.sys.hook('hMainB') && lock.b === g.sys.hook('hMainA')))) {
+        g.sys.grab(lock, 'a');
+        g.sys.hang(g.sys.hook('hE_free'));
+      }
       return { cut: window.__cut, ended: a.ended };
     });
     cutSamples.push(st.cut);
