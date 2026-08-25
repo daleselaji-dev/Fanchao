@@ -355,11 +355,11 @@ export class Guests {
       [[0.2, 0], [0.23, 0.35], [0.2, 0.8], [0.23, 1.05], [0.2, 1.3], [0.05, 1.42]].map(([r, y]) => new THREE.Vector2(r, y)), 8);
     const headGeo = new THREE.SphereGeometry(0.105, 10, 8);
     const bodyMat = new THREE.MeshStandardMaterial({ roughness: 0.88 });
-    const headMat = new THREE.MeshStandardMaterial({ color: 0xc8a084, roughness: 0.7 });
+    const headMat = new THREE.MeshStandardMaterial({ color: 0xd8b094, roughness: 0.65 });
     this.bodies = new THREE.InstancedMesh(bodyGeo, bodyMat, count);
     this.heads = new THREE.InstancedMesh(headGeo, headMat, count);
     this.bodies.castShadow = true;
-    const palette = [0x3a2a30, 0x2a3038, 0x4a1a1e, 0x33302a, 0x201c22, 0x5a2a28];
+    const palette = [0x6a4a52, 0x4a5468, 0x8e3038, 0x5c5648, 0x3c3644, 0x9a4a42];
     this.data = [];
     TX.srand(777);
     for (let i = 0; i < count; i++) {

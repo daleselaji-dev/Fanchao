@@ -78,6 +78,13 @@ export function buildLevel(scene, renderer) {
     scene.add(m);
     return m;
   };
+  // 地面按尺寸平铺
+  const floorMat = (base, w, h, per = 2.6) => {
+    const m = base.clone();
+    if (m.map) { m.map = m.map.clone(); m.map.needsUpdate = true; m.map.repeat.set(w / per, h / per); }
+    if (m.normalMap) { m.normalMap = m.normalMap.clone(); m.normalMap.needsUpdate = true; m.normalMap.repeat.set(w / per, h / per); }
+    return m;
+  };
   const collide = (x1, z1, x2, z2) => L.colliders.push({ minX: Math.min(x1, x2), minZ: Math.min(z1, z2), maxX: Math.max(x1, x2), maxZ: Math.max(z1, z2) });
 
   // 按墙面尺寸平铺贴图（避免长墙 UV 拉伸）
@@ -138,7 +145,7 @@ export function buildLevel(scene, renderer) {
   // ============================================================
   // 1F 宴会厅  x[-15,15] z[-20,0] 高7
   // ============================================================
-  plane(30, 20, M.terrazzo, 0, 0, -10, 0, -Math.PI / 2).receiveShadow = true;
+  plane(30, 20, floorMat(M.terrazzo, 30, 20), 0, 0, -10, 0, -Math.PI / 2).receiveShadow = true;
   plane(30, 20, M.ceilingHall, 0, 7, -10, 0, Math.PI / 2);
   // 走道红毯
   const aisle = plane(4.2, 17, M.carpet, 0, 0.02, -8.5, 0, -Math.PI / 2);
@@ -335,12 +342,14 @@ export function buildLevel(scene, renderer) {
 
   // 喉道化覆盖层（终局显形）：墙面内收的肋弧
   const throat = new THREE.Group();
-  const ribMat = new THREE.MeshStandardMaterial({ color: 0x5a4038, roughness: 0.9 });
+  const ribMat = new THREE.MeshStandardMaterial({ color: 0x6b4a3c, roughness: 0.85, emissive: 0x120a06 });
   for (let i = 0; i < 7; i++) {
-    const z = -17 + i * 2.6;
-    const rib = new THREE.Mesh(new THREE.TorusGeometry(13.2 - Math.abs(i - 3) * 0.3, 0.5 - 0.03 * Math.abs(i - 3), 8, 24, Math.PI), ribMat);
-    rib.position.set(0, 0.3, z);
-    rib.rotation.z = 0;
+    const z = -16.5 + i * 2.6;
+    const r = 10.6 - Math.abs(i - 3) * 0.45;
+    const rib = new THREE.Mesh(new THREE.TorusGeometry(r, 0.62 - 0.04 * Math.abs(i - 3), 9, 26, Math.PI), ribMat);
+    rib.position.set(0, 0.1, z);
+    rib.scale.set(1.32, 0.66, 1); // 压扁成软腭弧，顶部低于天花
+    rib.rotation.z = (i % 2 ? 1 : -1) * 0.05;
     throat.add(rib);
   }
   throat.visible = false;
@@ -352,8 +361,8 @@ export function buildLevel(scene, renderer) {
   // ============================================================
   // 服务走廊 A x[15,40] z[-8,-4.4] + B x[36.4,40] z[-4.4,14] 高3.2
   // ============================================================
-  plane(25, 3.6, M.terrazzoDark, 27.5, 0, -6.2, 0, -Math.PI / 2);
-  plane(3.6, 18.4, M.terrazzoDark, 38.2, 0, 4.8, 0, -Math.PI / 2);
+  plane(25, 3.6, floorMat(M.terrazzoDark, 25, 3.6), 27.5, 0, -6.2, 0, -Math.PI / 2);
+  plane(3.6, 18.4, floorMat(M.terrazzoDark, 3.6, 18.4), 38.2, 0, 4.8, 0, -Math.PI / 2);
   plane(25, 3.6, M.ceiling, 27.5, 3.2, -6.2, 0, Math.PI / 2);
   plane(3.6, 18.4, M.ceiling, 38.2, 3.2, 4.8, 0, Math.PI / 2);
   // 墙：下段瓷砖 + 上段灰泥
@@ -425,7 +434,7 @@ export function buildLevel(scene, renderer) {
   // ============================================================
   // 大堂 x[24,48] z[14,30] 高8
   // ============================================================
-  plane(24, 16, M.terrazzo, 36, 0, 22, 0, -Math.PI / 2);
+  plane(24, 16, floorMat(M.terrazzo, 24, 16), 36, 0, 22, 0, -Math.PI / 2);
   plane(24, 16, M.ceiling, 36, 8, 22, 0, Math.PI / 2);
   plane(4.5, 14, M.carpet, 36, 0.02, 22.8, 0, -Math.PI / 2);
   wallX(30, 24, 48, 8, M.plaster, [[33, 39]]);          // 北墙 正门
@@ -514,13 +523,30 @@ export function buildLevel(scene, renderer) {
   // ============================================================
   // 海洋馆玻璃廊 x[-19,24] z[20,24] 高3.4
   // ============================================================
-  plane(43, 4, M.concreteWet, 2.5, 0, 22, 0, -Math.PI / 2);
+  plane(43, 4, floorMat(M.concreteWet, 43, 4, 3.2), 2.5, 0, 22, 0, -Math.PI / 2);
   plane(43, 4, M.ceiling, 2.5, 3.4, 22, 0, Math.PI / 2);
   // 南墙（混凝土+瓷砖裙）
   wallX(20, -19, 24, 1.25, M.tiles, [[-19, -15.2]]);
   wallX(20, -19, 24, 2.15, M.concrete, [[-19, -15.2]], 1.25);
   // 北墙 = 玻璃 + 钢竖框；玻璃后是海
   const seaPlane = plane(46, 8, new THREE.MeshBasicMaterial({ map: TX.seaWater() }), 2.5, 2.5, 26.5, Math.PI);
+  // 水中光柱（玻璃后缓慢摆动的丁达尔光）
+  L.dyn.beams = [];
+  const beamMat = new THREE.MeshBasicMaterial({ color: 0x66d8c8, transparent: true, opacity: 0.14, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+  for (let i = 0; i < 5; i++) {
+    const beam = new THREE.Mesh(new THREE.PlaneGeometry(1.4 + i * 0.4, 7), beamMat);
+    beam.position.set(-14 + i * 8, 2.8, 25.4);
+    beam.rotation.z = 0.25;
+    scene.add(beam);
+    L.dyn.beams.push({ mesh: beam, phase: i * 1.7, x0: -14 + i * 8 });
+  }
+  // 水中悬浮的暗影轮廓（负空间——像有东西，永远看不清）
+  const shadowMat = new THREE.MeshBasicMaterial({ color: 0x02090c, transparent: true, opacity: 0.85, depthWrite: false });
+  const shade1 = new THREE.Mesh(new THREE.SphereGeometry(2.6, 12, 8), shadowMat);
+  shade1.scale.set(2.2, 0.7, 0.5);
+  shade1.position.set(-6, 3.4, 26.2);
+  scene.add(shade1);
+  L.dyn.seaShade = shade1;
   const glassMat = new THREE.MeshPhysicalMaterial({
     color: 0x9fc8c2, roughness: 0.03, metalness: 0.0, transparent: true, opacity: 0.18,
     envMapIntensity: 2.2,
@@ -612,7 +638,7 @@ export function buildLevel(scene, renderer) {
   // ============================================================
   // 员工连廊（旧冷库）x[-19,-15.2] z[-7.6,20] 高3
   // ============================================================
-  plane(3.8, 27.6, M.concrete, -17.1, 0, 6.2, 0, -Math.PI / 2);
+  plane(3.8, 27.6, floorMat(M.concrete, 3.8, 27.6, 3.2), -17.1, 0, 6.2, 0, -Math.PI / 2);
   plane(3.8, 27.6, M.ceiling, -17.1, 3, 6.2, 0, Math.PI / 2);
   wallZ(-19, -7.6, 20, 3, M.concrete, []);
   wallZ(-15.2, -4.4, 20, 3, M.concrete, [[-7.6, -4.4]]);

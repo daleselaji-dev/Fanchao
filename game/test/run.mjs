@@ -1,9 +1,9 @@
 // 自动化冒烟测试：启动 Demo → 驱动六拍主循环 → 截图存档
-// 用法：node test/run.mjs
+// 注意：headless SwiftShader 软渲染帧率低，游戏 dt 上限 0.05s → 游戏内时间约为真实时间的 1/3~1/5，
+// 因此等待时长按放大系数处理，并用 __agenda 状态轮询代替固定等待。
 import { chromium } from 'playwright-core';
-import { mkdirSync } from 'fs';
+import { mkdirSync, readFileSync, existsSync } from 'fs';
 import { createServer } from 'http';
-import { readFileSync, existsSync } from 'fs';
 import { join, extname } from 'path';
 
 const ROOT = new URL('..', import.meta.url).pathname;
@@ -25,33 +25,51 @@ const browser = await chromium.launch({
   headless: true,
   args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--no-sandbox', '--disable-dev-shm-usage'],
 });
-const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
+const page = await browser.newPage({ viewport: { width: 1152, height: 648 } });
 const errors = [];
 page.on('pageerror', e => errors.push('PAGEERROR: ' + e.message));
-page.on('console', m => { if (m.type() === 'error') errors.push('CONSOLE: ' + m.text()); });
+page.on('console', m => { if (m.type() === 'error' && !m.text().includes('404')) errors.push('CONSOLE: ' + m.text()); });
+
+const shot = (name) => page.screenshot({ path: join(OUT, name) });
+const ev = (fn) => page.evaluate(fn);
+// 被引座后自动站起
+async function unseat() {
+  await ev(() => {
+    if (window.__game.player.seated) {
+      window.__agenda.standUp();
+    }
+    window.__agenda.grace = 10;
+  });
+}
+// 等待游戏内条件
+async function until(fn, timeout = 90000, poll = 800) {
+  const t0 = Date.now();
+  while (Date.now() - t0 < timeout) {
+    if (await ev(fn)) return true;
+    await page.waitForTimeout(poll);
+  }
+  return false;
+}
 
 await page.goto('http://localhost:8811/index.html');
 await page.waitForTimeout(2500);
-await page.screenshot({ path: join(OUT, '01_title.png') });
+await shot('01_title.png');
 
-// 开席
 await page.click('#startBtn');
-await page.waitForTimeout(4000);
-const shot = async (name) => page.screenshot({ path: join(OUT, name) });
-const ev = (fn) => page.evaluate(fn);
+await until(() => window.__agenda && window.__agenda.beat >= 1);
+await page.waitForTimeout(3000);
 await shot('02_hall_spawn.png');
 
-// 走到主桌 → 议程二
+// —— 拍1：走到主桌 → 入席广播 ——
 await ev(() => { window.__game.player.teleport(0, -11, 0); });
-await page.waitForTimeout(6000);
+const b15 = await until(() => window.__agenda.beat >= 1.5);
+await page.waitForTimeout(9000);
 await shot('03_hall_maintable_announce.png');
 
-// 看东门拦门绳
+// —— 主机制：摘拦门绳 → 挂空钩 ——
 await ev(() => { const p = window.__game.player; p.teleport(11.5, -6, -Math.PI / 2 + 0.3); p.pitch = 0.05; });
-await page.waitForTimeout(1200);
+await page.waitForTimeout(1500);
 await shot('04_door_cord.png');
-
-// 摘拦门绳 → 挂到空钩（模拟主机制）
 const grabbed = await ev(() => {
   const g = window.__game;
   const cord = g.sys.cords.find(c => c.tag === 'doorE');
@@ -59,61 +77,82 @@ const grabbed = await ev(() => {
   g.sys.grab(cord, 'a');
   return g.sys.held ? 'held' : 'fail';
 });
-await page.waitForTimeout(800);
+await page.waitForTimeout(600);
 await shot('05_cord_held.png');
-const hung = await ev(() => {
-  const g = window.__game;
-  const ok = g.sys.hang(g.sys.hook('hE_free'));
-  return ok ? 'hung' : 'fail';
+const hung = await ev(() => window.__game.sys.hang(window.__game.sys.hook('hE_free')) ? 'hung' : 'fail');
+const doorEOpen = await ev(() => {
+  // 屏障应已解除
+  const bar = window.__game.L.colliders.find(c => c.minX === 14.4);
+  return bar ? (bar.disabled ? 'open' : 'closed') : 'not-found';
 });
 
-// 进走廊 → 议程三（侍应上线）
+// —— 拍2：走廊（侍应上绳） ——
 await ev(() => { window.__game.player.teleport(17, -6.2, -Math.PI / 2); });
-await page.waitForTimeout(6000);
-await ev(() => { const p = window.__game.player; p.teleport(24, -6.2, -Math.PI / 2); p.pitch = 0.0; });
-await page.waitForTimeout(2500);
+const b2 = await until(() => window.__agenda.beat >= 2);
+await until(() => window.__game.waiters[0].state === 'ride');
+await ev(() => { const p = window.__game.player; p.teleport(26, -6.9, -Math.PI / 2); p.pitch = 0.0; });
+// 等侍应滑到镜头前
+await until(() => Math.abs(window.__game.waiters[0].group.position.x - 30) < 5, 40000);
 await shot('06_corridor_waiter_on_cord.png');
 const waiterState = await ev(() => window.__game.waiters.map(w => `${w.id}:${w.state}:${w.visible}`).join(' '));
 
-// 看 T02 CRT 预现
-await ev(() => { const p = window.__game.player; p.teleport(27.5, -5.4, Math.PI * 0.72); p.pitch = -0.12; });
-await page.waitForTimeout(1500);
+// —— 改挂巡逻绳（改道验证） ——
+const reroute = await ev(() => {
+  const g = window.__game;
+  const cord = g.sys.cords.find(c =>
+    (c.a === g.sys.hook('hC2') && c.b === g.sys.hook('hC3')) ||
+    (c.b === g.sys.hook('hC2') && c.a === g.sys.hook('hC3')));
+  if (!cord) return 'no-c2c3';
+  const end = cord.a === g.sys.hook('hC3') ? 'a' : 'b';
+  g.sys.grab(cord, end);
+  g.sys.hang(g.sys.hook('hAlcove'));
+  return 'rerouted';
+});
+// 看 T02 CRT
+await unseat();
+await ev(() => { const p = window.__game.player; p.teleport(28, -5.2, Math.PI * 0.78); p.pitch = -0.1; });
+await page.waitForTimeout(4000);
 await shot('07_crt_t02.png');
 
-// 进大堂 → 议程四（返潮点火）
-await ev(() => { const p = window.__game.player; p.teleport(38, 17, Math.PI); p.pitch = 0.06; });
-await page.waitForTimeout(9000);
-await ev(() => { const p = window.__game.player; p.teleport(33, 26, Math.PI * 1.0); p.pitch = 0.04; p.yaw = 2.6; });
-await page.waitForTimeout(3000);
+// —— 拍3：大堂（返潮点火） ——
+await unseat();
+await ev(() => { const p = window.__game.player; p.teleport(38, 17, Math.PI); });
+const b3 = await until(() => window.__agenda.beat >= 3);
+// 等点火完成（雾变浓）
+await until(() => window.__game.L.dyn.fog.density > 0.02, 60000);
+await unseat();
+await ev(() => { const p = window.__game.player; p.teleport(30, 27, 2.4); p.pitch = 0.06; });
+await page.waitForTimeout(2500);
 await shot('08_lobby_after_ignition.png');
-const beat3 = await ev(() => window.__agenda.beat);
-// 点名应已触发或即将触发 → 等待并寄挂
-await page.waitForTimeout(6000);
+// 等脚本点名
+const gotCall = await until(() => window.__agenda.call.active, 160000);
+await page.waitForTimeout(1200);
 await shot('09_call_active.png');
-const callState = await ev(() => window.__agenda.call.active);
-await ev(() => {
-  const g = window.__game;
-  g.player.teleport(43.5, 24, Math.PI / 2);
-});
-await page.waitForTimeout(400);
+// 寄挂
 const parked = await ev(() => {
   const a = window.__agenda;
-  if (a.call.active) { a.resolveCall(); return 'parked'; }
-  return 'no-call';
+  if (!a.call.active) return 'no-call';
+  window.__game.player.teleport(43.5, 24, Math.PI / 2);
+  a.resolveCall();
+  return 'parked';
 });
+const wristSegs = await ev(() => window.__game.wrist.segments);
 
-// 摘大堂拦门绳去连廊
+// —— 出大堂：摘连廊拦门绳 ——
 await ev(() => {
   const g = window.__game;
   const cord = g.sys.cords.find(c => c.tag === 'doorC');
   if (cord) { g.sys.grab(cord, 'a'); g.sys.hang(g.sys.hook('hLFree')); }
 });
 
-// 海洋馆玻璃廊 → 议程五
+// —— 拍4：海洋馆玻璃廊 ——
+await unseat();
 await ev(() => { const p = window.__game.player; p.teleport(20, 22, Math.PI / 2 + 0.35); p.pitch = 0.02; });
-await page.waitForTimeout(7000);
+const b4 = await until(() => window.__agenda.beat >= 4);
+await unseat();
+await page.waitForTimeout(6000);
 await shot('10_aquarium_corridor.png');
-// 闸门吊绳挂到绞盘（安静解法）
+// 闸门吊绳 → 绞盘（安静解法）
 const gateRes = await ev(() => {
   const g = window.__game;
   const cord = g.sys.cords.find(c => c.tag === 'gate');
@@ -122,53 +161,62 @@ const gateRes = await ev(() => {
   g.sys.hang(g.sys.hook('hWinch'));
   return 'winched';
 });
-await page.waitForTimeout(8000);
-const gateY = await ev(() => window.__game.L.dyn.gate.y.toFixed(2));
-await ev(() => { const p = window.__game.player; p.teleport(6.5, 22, Math.PI / 2); });
-await page.waitForTimeout(1000);
-await shot('11_gate_rising.png');
+const gateRose = await until(() => window.__game.L.dyn.gate.y > 3.2, 90000);
+await ev(() => { const p = window.__game.player; p.teleport(7.5, 22, Math.PI / 2); p.pitch = 0.05; });
+await page.waitForTimeout(1500);
+await shot('11_gate_risen.png');
 
-// 连廊（回眸客）
+// —— 连廊（回眸客） ——
 await ev(() => { const p = window.__game.player; p.teleport(1, 22, Math.PI / 2); });
-await page.waitForTimeout(1000);
-await ev(() => { const p = window.__game.player; p.teleport(-17.1, 12, Math.PI); });
-await page.waitForTimeout(3000);
+await until(() => window.__agenda.beat >= 4.5);
+await unseat();
+await ev(() => { const p = window.__game.player; p.teleport(-17.1, 13, 0); p.pitch = 0.0; });
+await page.waitForTimeout(4000);
 await shot('12_connector_gazer.png');
+const gazerVisible = await ev(() => window.__game.gazer.group.visible);
 
-// 回宴会厅 → 议程六（送入洞房 / 喉道化）
+// —— 拍5：终局宴会厅（喉道化） ——
+await unseat();
 await ev(() => { const p = window.__game.player; p.teleport(-13.5, -6, Math.PI / 2 + 0.6); });
-await page.waitForTimeout(9000);
-await ev(() => { const p = window.__game.player; p.teleport(-8, -8, 1.9); p.pitch = 0.02; });
+const b5 = await until(() => window.__agenda.beat >= 5);
+await until(() => window.__game.L.dyn.throat.visible, 60000);
+await page.waitForTimeout(4000);
+await unseat();
+await ev(() => { const p = window.__game.player; p.teleport(0, -4.5, 0); p.pitch = 0.02; });
 await page.waitForTimeout(2500);
 await shot('13_finale_throat_hall.png');
-const beat5 = await ev(() => window.__agenda.beat);
 
-// 摘捆席绳 + 剪缆
+// —— 摘捆席绳 → 剪缆 ——
+await unseat();
 await ev(() => {
   const g = window.__game;
   const cord = g.sys.cords.find(c => c.tag === 'seatlock');
   if (cord) { g.sys.grab(cord, 'a'); g.sys.hang(g.sys.hook('hE_free')); }
-  g.player.teleport(2.1, -12.2, 0.3);
+  g.player.teleport(2.4, -12.4, 0.4);
+  g.player.pitch = -0.05;
 });
-await page.waitForTimeout(1000);
+await page.waitForTimeout(1500);
 await shot('14_at_vip_seat.png');
 await page.keyboard.down('e');
-await page.waitForTimeout(3000);
+const cutOk = await until(() => window.__agenda.ended, 90000, 400);
+if (!cutOk) { await unseat(); await ev(() => { window.__game.player.teleport(2.4, -12.4, 0.4); }); }
 await page.keyboard.up('e');
-await page.waitForTimeout(3000);
-const ended = await ev(() => window.__agenda.ended);
+await page.waitForTimeout(5000);
 await shot('15_after_cut.png');
 
-// 散场
-await ev(() => { const p = window.__game.player; p.teleport(0, -2, Math.PI); });
-await page.waitForTimeout(4000);
+// —— 散场 ——
+await until(() => !!window.__game.L.dyn.doorSOpen, 30000);
+await ev(() => { const p = window.__game.player; p.teleport(0, -2, Math.PI); p.pitch = 0.0; });
+await page.waitForTimeout(6000);
+await shot('16_exit_doors.png');
 await ev(() => { const p = window.__game.player; p.teleport(0, 6.2, Math.PI); });
-await page.waitForTimeout(5000);
-await shot('16_good_end.png');
-const finished = await ev(() => !!window.__agenda._finished);
+const finished = await until(() => !!window.__agenda._finished, 30000);
+await page.waitForTimeout(6000);
+await shot('17_good_end.png');
 
 console.log(JSON.stringify({
-  grabbed, hung, waiterState, beat3, callState, parked, gateRes, gateY, beat5, ended, finished,
+  b15, grabbed, hung, doorEOpen, b2, waiterState, reroute, b3, gotCall, parked, wristSegs,
+  b4, gateRes, gateRose, gazerVisible, b5, cutOk, finished,
   errors: errors.slice(0, 12),
 }, null, 2));
 

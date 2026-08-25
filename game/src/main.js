@@ -239,7 +239,10 @@ function updateInteract(dt) {
   }
   // 终局剪缆
   if (agenda.beat >= 5 && !agenda.ended) {
-    const seatFree = !sys.cords.some(c => c.tag === 'seatlock');
+    const lock = sys.cords.find(c => c.tag === 'seatlock');
+    const seatFree = !(lock && !lock.heldEnd &&
+      ((lock.a === sys.hook('hMainA') && lock.b === sys.hook('hMainB')) ||
+        (lock.a === sys.hook('hMainB') && lock.b === sys.hook('hMainA'))));
     const d = player.pos.distanceTo(seatPos);
     if (d < 2.0) {
       if (!seatFree) {
@@ -324,6 +327,16 @@ function updateAmbience(dt, t) {
   for (const b of L.dyn.bulbs) {
     b.group.rotation.x = Math.sin(t * 1.1 + b.phase) * 0.14;
     b.group.rotation.z = Math.cos(t * 0.9 + b.phase) * 0.1;
+  }
+  // 水中光柱摆动 + 暗影缓移
+  if (L.dyn.beams) {
+    for (const b of L.dyn.beams) {
+      b.mesh.position.x = b.x0 + Math.sin(t * 0.18 + b.phase) * 2.4;
+      b.mesh.rotation.z = 0.25 + Math.sin(t * 0.22 + b.phase) * 0.1;
+      b.mesh.material.opacity = 0.1 + Math.sin(t * 0.35 + b.phase) * 0.05;
+    }
+    L.dyn.seaShade.position.x = -6 + Math.sin(t * 0.05) * 12;
+    L.dyn.seaShade.position.y = 3.2 + Math.sin(t * 0.11) * 0.8;
   }
   // 区域触发音
   const rn = regionNameAt(player.pos);

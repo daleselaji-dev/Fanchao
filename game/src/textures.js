@@ -339,7 +339,7 @@ export function seaWater() {
   const w = 512, h = 512;
   const c = canvas(w, h), ctx = c.getContext('2d');
   const g = ctx.createLinearGradient(0, 0, 0, h);
-  g.addColorStop(0, '#1a5a64'); g.addColorStop(0.45, '#0d3640'); g.addColorStop(1, '#041318');
+  g.addColorStop(0, '#2a7a86'); g.addColorStop(0.45, '#155059'); g.addColorStop(1, '#072028');
   ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
   // 上层光带（水面透下来的光）
   for (let i = 0; i < 26; i++) {

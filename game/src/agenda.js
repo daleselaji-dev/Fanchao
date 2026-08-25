@@ -220,7 +220,7 @@ export class Agenda {
       // 宴会厅喉道化
       L.dyn.throat.visible = true;
       L.dyn.garlands.forEach((gl, i) => { gl.position.y = -1.4 - (i % 2) * 0.5; });
-      this.lightMult.hall = 0.3;
+      this.lightMult.hall = 0.45;
       this.hallColor.setHex(0xff5838);
       L.dyn.fog.density = 0.03;
       crt.setStatic('T03', true);
@@ -233,8 +233,13 @@ export class Agenda {
       sys.addCord('hW_wall', 'hStageR', { slack: 0.3 });
       sys.addCord('hE_wall', 'hStageL', { slack: 0.3 });
       sys.addCord('hW_free', 'hMainA', { slack: 0.4 });
-      sys.addCord('hE_free', 'hMainB', { slack: 0.4 });
       sys.addCord('hMainA', 'hMainB', { slack: 0.1, tag: 'seatlock', rideable: false });
+      // 主桌烛光（终局唯一新增光源：盖头新娘可读）
+      if (!this._candle) {
+        this._candle = new THREE.PointLight(0xff9a50, 14, 9, 1.6);
+        this._candle.position.set(0, 1.8, -13.5);
+        this.g.scene.add(this._candle);
+      }
       for (let i = 0; i < 3; i++) {
         waiters[i].setVisible(true);
         waiters[i].group.position.set(-6 + i * 6, 0, -6);
