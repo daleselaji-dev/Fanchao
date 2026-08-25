@@ -4,9 +4,18 @@
 酒店里所有老 CRT 永远比现实先播一步——你在屏幕里看到的，就是这个空间即将变成的样子。
 玩家是伴娘，她会从录像里发现蚀湾婚俗的最后一条：**如果海不满意新娘，就收伴娘。**
 
+## 🎮 可玩 Demo（「喜宴」垂直切片 v0.9）
+
+**下载即玩：[`releases/`](releases/)** —— Windows 便携 exe 包 + 全平台 Web 包（双击 `index.html`）。
+运行说明 / 系统要求 / 操作 / 已知限制见 [`releases/RELEASE_NOTES.md`](releases/RELEASE_NOTES.md)。
+
+- 玩法内核：**「牵红」红绳席位系统**（一根绳既是侍应的动线、门闸的机关，也是你腕上的席位缆），设计见 [`06_GAMEPLAY_CORE/`](06_GAMEPLAY_CORE/)
+- 源码：[`game/`](game/)（Three.js，纹理/模型/光照/音频全程序化生成，零外部资产）
+- 实机截图：[`game/media/shots/`](game/media/shots/) · 巡演视频：`game/media/`
+
 ## 从这里开始
 
-**➡️ 当前唯一有效的设计入口：[`05_DESIGN_V2/README.md`](05_DESIGN_V2/README.md)**
+**➡️ 当前唯一有效的设计入口：[`05_DESIGN_V2/README.md`](05_DESIGN_V2/README.md)**，玩法内核补充包：[`06_GAMEPLAY_CORE/`](06_GAMEPLAY_CORE/)
 
 三条恐怖轴：
 
@@ -20,6 +29,9 @@
 
 | 目录 | 状态 | 说明 |
 |------|------|------|
+| **`releases/`** | **生效** | **可玩 Demo 发布包（win64 exe / web）+ RELEASE_NOTES** |
+| **`game/`** | **生效** | **Demo 源码（Three.js）+ 自动化测试 + 实机截图/视频** |
+| **`06_GAMEPLAY_CORE/`** | **生效** | **玩法内核「牵红」宪章 + 宪法补丁 V2.1（CRT 降级为辅助层）** |
 | **`05_DESIGN_V2/`** | **生效** | **V2 设计交付包：宪法、七问、空间、CRT 系统、残骸生态、喜事、实体、美术、音频、Demo 规格、Gate 路线图、禁止清单、原型图索引** |
 | `2本次原型/` | 有效资产 | 视觉原型（用途逐张见 `05_DESIGN_V2/13_原型图对照索引.md`） |
 | `视觉原型1/` | 有效资产 | 早期视觉原型（同上） |
