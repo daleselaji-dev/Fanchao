@@ -131,6 +131,16 @@ export const EVIDENCE = {
   maxPerLoop: 1,
 };
 
+// 借视（Q）信号合同：它是信息工具，也是不安来源——不许无限白嫖
+export const JACK = {
+  maxHold: 3.5,    // 连续接入超过 3.5s → 信号过载（画面塌成噪场）
+  cooldown: 3.0,   // 过载后冷却 3s 才能再接入
+  recover: 2.0,    // 松手后按 2 倍速回落已累积的接入时长
+};
+
+// A 厅中央地毯（与 world 几何一致：中心 19,5.1，尺寸 26×6.2）
+export const CARPET_RECT = { x: 6, z: 2.0, w: 26, d: 6.2 };
+
 export const BEATS = [
   { t0: 0,  t1: 12, hint: "把录像带插回 C 房间的卡座。后场入口在南侧。" },
   { t0: 12, t1: 28, hint: "走廊二选一：沿服务台走，或从南侧器材槽下去。" },
@@ -172,6 +182,15 @@ export function floorHeightAt(x, z) {
 
 // 低处判定：物理上处于界面之下（声学状态与证据条件共用）
 export const isLow = (p) => floorHeightAt(p.x, p.z) <= -0.15;
+
+// 脚下表面（脚步声/材质反馈的裁决依据，纯函数）
+export function surfaceAt(p) {
+  if (isLow(p)) return "sediment";                 // 巷底压实干沉积
+  if (inRect(p, CARPET_RECT)) return "carpet";     // A 厅中央地毯
+  const r = roomOf(p);
+  if (r === "D") return "concrete";                // 卸货区水泥
+  return "terrazzo";                               // 其余水磨石
+}
 
 // 线段与 AABB 相交（slab 法，用于视线）
 export function segRectHit(x1, z1, x2, z2, r) {

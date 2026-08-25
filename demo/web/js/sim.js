@@ -8,7 +8,7 @@
 
 import {
   ROUTE, PLAYER_START, ARCHIVE_POINT, ARCHIVE_RADIUS,
-  PLAYER_SPEED, ENTITY_SPEED, PLAYER_R, ENTITY_R, EVIDENCE,
+  PLAYER_SPEED, ENTITY_SPEED, PLAYER_R, ENTITY_R, EVIDENCE, JACK,
   dist2d, isLow, losClear, roomOf, moveWithCollision, floorHeightAt,
 } from "./contract.js";
 
@@ -28,8 +28,11 @@ export function createSim() {
       act: "boxes",
       stepAcc: 0,
       waitSince: -1,
+      loops: 0,                  // 已完成的回返圈数（宴厅衰变节奏的依据）
     },
     evidence: { active: 0, shownThisLoop: false, loopsShown: 0, totalShown: 0, maxActiveSeen: 0 },
+    // 借视信号：SYNC 可接入 / COOLDOWN 过载冷却（接入本身不改变实体任何行为）
+    jack: { held: false, heldT: 0, state: "SYNC", cooldown: 0, overloads: 0 },
     lowNow: false,
     yieldCount: 0,
     lastYieldAt: -99,
@@ -72,6 +75,35 @@ export function simStep(sim, dt, input = {}) {
   if (low !== sim.lowNow) {
     sim.lowNow = low;
     emit(sim, low ? "acoustic-low" : "acoustic-normal");
+  }
+
+  // ---- 借视信号（Q）：接入计时 → 过载 → 冷却。只裁决信号，不影响实体 ----
+  {
+    const J = sim.jack;
+    const held = !!input.jack;
+    if (J.state === "COOLDOWN") {
+      J.cooldown -= dt;
+      J.heldT = 0;
+      if (J.cooldown <= 0) {
+        J.cooldown = 0;
+        J.state = "SYNC";
+        emit(sim, "jack-recover");
+      }
+    } else if (held) {
+      if (!J.held) emit(sim, "jack-on");
+      J.heldT += dt;
+      if (J.heldT > JACK.maxHold) {
+        J.state = "COOLDOWN";
+        J.cooldown = JACK.cooldown;
+        J.overloads++;
+        J.heldT = 0;
+        emit(sim, "jack-overload");
+      }
+    } else {
+      if (J.held) emit(sim, "jack-off");
+      J.heldT = Math.max(0, J.heldT - dt * JACK.recover);
+    }
+    J.held = held;
   }
 
   // ---- 归档 ----
@@ -123,7 +155,11 @@ export function simStep(sim, dt, input = {}) {
           const reached = e.next;
           e.next = (e.next + 1) % ROUTE.length;
           emit(sim, "entity-waypoint", { index: reached });
-          if (reached === 0) sim.evidence.shownThisLoop = false;
+          if (reached === 0) {
+            sim.evidence.shownThisLoop = false;
+            e.loops++;
+            emit(sim, "entity-loop", { loops: e.loops });
+          }
           if (target.pause > 0) {
             e.mode = "WORK"; e.pauseRemaining = target.pause; e.act = target.act || "";
             emit(sim, "entity-work", { act: e.act });
@@ -176,11 +212,15 @@ export function resetSim(sim, reason = "MANUAL") {
   sim.completed = false;
   sim.evidence.active = 0;
   sim.evidence.shownThisLoop = false;
+  Object.assign(sim.jack, fresh.jack);
   sim.lowNow = false;
   sim.events.length = 0;
   emit(sim, "reset", { reason });
   return sim;
 }
+
+// 借视是否实际可用（信号在 SYNC 且玩家按住）——渲染/音频消费
+export const jackLive = (sim, held) => held && sim.jack.state === "SYNC";
 
 export function drainEvents(sim) {
   const out = sim.events.slice();
