@@ -199,9 +199,27 @@ await page.waitForTimeout(1500);
 await shot('14_at_vip_seat.png');
 // headless 帧饥饿：evaluate 轮询会挤占 rAF，游戏时间推进极慢。
 // 剪缆需持续累积 2.2 游戏秒 → 临时 3 倍时间加速 + 低频轮询。
+// 恢复循环：豁免引座（grace 刷新）+ 拉回席位，专测剪缆判定本身。
 await ev(() => { window.__timeScale = 3; });
 await page.keyboard.down('e');
-const cutOk = await until(() => window.__agenda.ended, 240000, 1500);
+let cutOk = false;
+const cutSamples = [];
+{
+  const t0 = Date.now();
+  while (Date.now() - t0 < 240000) {
+    const st = await ev(() => {
+      const a = window.__agenda, g = window.__game;
+      a.grace = 30;
+      if (g.player.seated) { a.standUp(); a.grace = 30; }
+      const p = g.player.pos;
+      if (Math.hypot(p.x - 2.1, p.z + 13.5) > 1.8) g.player.teleport(2.4, -12.4, 0.4);
+      return { cut: window.__cut, ended: a.ended };
+    });
+    cutSamples.push(st.cut);
+    if (st.ended) { cutOk = true; break; }
+    await page.waitForTimeout(1500);
+  }
+}
 await page.keyboard.up('e');
 await page.waitForTimeout(5000);
 await shot('15_after_cut.png');
@@ -219,6 +237,7 @@ await shot('17_good_end.png');
 console.log(JSON.stringify({
   b15, grabbed, hung, doorEOpen, b2, waiterState, reroute, b3, gotCall, parked, wristSegs,
   b4, gateRes, gateRose, gazerVisible, b5, cutOk, finished,
+  cutSamples: cutSamples.filter((_, i) => i % 5 === 0).slice(-6),
   errors: errors.slice(0, 12),
 }, null, 2));
 
