@@ -175,10 +175,13 @@ export class Agenda {
       }
       audio.sting(0.5);
       audio.pluck(60, 0.5, 0.998);
+      // 黑暗里唯一可读的东西：红绳网自发光——看见绳就看见威胁
+      sys.cords.forEach(c => { c.mat.emissiveIntensity = 2.6; });
     });
     this.after(3.6 + tubes.length * 0.5, () => {
       if (this.beat < 3) this.lightMult.corridor = prevMult; // 点火后由点火状态接管
       L.dyn.tubes.forEach(tb => { tb.mat.emissiveIntensity = 2.6; });
+      sys.cords.forEach(c => { c.mat.emissiveIntensity = 1.2; });
       post.flash = 0.5;
       audio.setLayer('roomtone', 0.05, 2);
       ui.subtitle('灯回来的时候，托盘上的菜换过了。', 4.5);
@@ -293,7 +296,7 @@ export class Agenda {
       audio.setLayer('murmur', 0.0, 2);
       audio.unhush(1);
       this.lightMult = { hall: 0.4, corridor: 0.55, lobby: 0.42, aqua: 0.8, connector: 0.8 };
-      L.dyn.fog.density = 0.026;
+      L.dyn.fog.density = 0.022;
       L.dyn.pits.forEach(p => p.visible = true);
       L.dyn.headlights.mat.opacity = 0.12;
       crt.setFutureActive(['lobby']);

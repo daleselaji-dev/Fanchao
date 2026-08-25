@@ -104,9 +104,11 @@ await ev(() => { window.__game.player.teleport(17, -6.2, -Math.PI / 2); });
 const b2 = await until(() => window.__agenda.beat >= 2);
 await until(() => window.__game.waiters[0].state === 'ride');
 await ev(() => { const p = window.__game.player; p.teleport(26, -6.9, -Math.PI / 2); p.pitch = 0.0; });
-// 震惊节拍①：走廊灭灯横穿
+// 震惊节拍①：走廊灭灯横穿 —— 等全黑 + 绳网自发光点亮的瞬间（emissive 2.6）
 const shock1 = await until(() => window.__agenda._shock1, 40000);
-await page.waitForTimeout(2500);
+await until(() => window.__game.sys.cords.some(c => c.mat.emissiveIntensity > 2), 30000);
+await ev(() => { window.__game.player.pitch = 0.16; });
+await page.waitForTimeout(700);
 await shot('06a_shock_corridor_blackout.png');
 // 等灯光恢复
 await until(() => (window.__agenda.lightMult.corridor ?? 1) > 0.4, 60000);
@@ -140,7 +142,7 @@ const b3 = await until(() => window.__agenda.beat >= 3);
 // 等点火完成（雾变浓）
 await until(() => window.__game.L.dyn.fog.density > 0.02, 60000);
 await unseat();
-await ev(() => { const p = window.__game.player; p.teleport(30, 27, 2.4); p.pitch = 0.06; });
+await ev(() => { const p = window.__game.player; p.teleport(28, 24.5, -1.43); p.pitch = 0.08; });
 await page.waitForTimeout(2500);
 await shot('08_lobby_after_ignition.png');
 // 等脚本点名
@@ -198,10 +200,11 @@ await unseat();
 await ev(() => { const p = window.__game.player; p.teleport(-17.1, 13, 0); p.pitch = 0.0; });
 await page.waitForTimeout(4000);
 await shot('12_connector_gazer.png');
-// 震惊节拍③：灯泡爆裂
+// 震惊节拍③：灯泡爆裂 —— 等回眸客淡入完成再拍（headless 掉帧下按游戏状态等）
 await ev(() => { const p = window.__game.player; p.teleport(-17.1, 10, 0); });
 const shock3 = await until(() => window.__agenda._shock3, 30000);
-await page.waitForTimeout(1500);
+await until(() => window.__game.gazer.group.visible && window.__game.gazer.opacity > 0.7, 20000);
+await page.waitForTimeout(400);
 await shot('12a_shock_bulb_burst.png');
 const gazerVisible = await ev(() => window.__game.gazer.group.visible);
 

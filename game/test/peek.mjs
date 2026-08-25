@@ -43,13 +43,14 @@ const views = JSON.parse(process.argv[2] || 'null') || [
   [20, 22, Math.PI / 2 + 0.3, 0.02, 'p05_aqua'],
   [-17.1, 16, 0, 0.0, 'p06_connector'],
 ];
-for (const [x, z, yaw, pitch, name] of views) {
+for (const [x, z, yaw, pitch, name, script, waitMs] of views) {
+  if (script) await page.evaluate(s => new Function(s)(), script);
   await page.evaluate(([x, z, yaw, pitch]) => {
     const p = window.__game.player;
     p.teleport(x, z, yaw);
     p.pitch = pitch;
   }, [x, z, yaw, pitch]);
-  await page.waitForTimeout(1400);
+  await page.waitForTimeout(waitMs || 1400);
   await page.screenshot({ path: join(OUT, name + '.png') });
 }
 console.log(JSON.stringify({ errors: errors.slice(0, 8) }));

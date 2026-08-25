@@ -446,12 +446,22 @@ export function buildLevel(scene, renderer) {
   box(6, 3.4, 0.1, glassDoor, 36, 1.7, 30, {});
   collide(32.8, 29.8, 39.2, 30.2);
   box(0.14, 3.4, 0.14, M.steel, 33, 1.7, 30, {}); box(0.14, 3.4, 0.14, M.steel, 39, 1.7, 30, {}); box(0.14, 3.4, 0.14, M.steel, 36, 1.7, 30, {});
-  // 门外：海雾中的车灯（两组远光晕）
+  // 门外：海雾中的车灯（径向柔光贴图 + 加法混合 → 雾里的光球而非硬边方块）
   const fogGlow = new THREE.MeshBasicMaterial({ color: 0xc8d4c8, transparent: true, opacity: 0.22, depthWrite: false });
   plane(14, 6, fogGlow, 36, 2.5, 36, Math.PI);
-  const head1 = new THREE.MeshBasicMaterial({ color: 0xfff2cc, transparent: true, opacity: 0.0, depthWrite: false });
-  const hl1 = plane(1.2, 0.7, head1, 33.5, 1.0, 35, Math.PI);
-  const hl2 = plane(1.2, 0.7, head1, 38.5, 1.0, 35.5, Math.PI);
+  const glowCv = document.createElement('canvas'); glowCv.width = glowCv.height = 128;
+  const gctx = glowCv.getContext('2d');
+  const gr = gctx.createRadialGradient(64, 64, 2, 64, 64, 62);
+  gr.addColorStop(0, 'rgba(255,244,210,1)'); gr.addColorStop(0.25, 'rgba(255,236,190,0.55)');
+  gr.addColorStop(0.6, 'rgba(220,200,160,0.14)'); gr.addColorStop(1, 'rgba(0,0,0,0)');
+  gctx.fillStyle = gr; gctx.fillRect(0, 0, 128, 128);
+  const glowTex = new THREE.CanvasTexture(glowCv);
+  const head1 = new THREE.MeshBasicMaterial({
+    map: glowTex, color: 0xfff2cc, transparent: true, opacity: 0.0,
+    depthWrite: false, blending: THREE.AdditiveBlending, fog: false,
+  });
+  const hl1 = plane(2.6, 1.7, head1, 33.5, 1.0, 35, Math.PI);
+  const hl2 = plane(2.6, 1.7, head1, 38.5, 1.0, 35.5, Math.PI);
   L.dyn.headlights = { mat: head1, m1: hl1, m2: hl2 };
   // 镜面柱 ×4
   [[30, 18], [42, 18], [30, 26], [42, 26]].forEach(([x, z]) => {

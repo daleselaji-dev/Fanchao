@@ -35,11 +35,18 @@ const L = buildLevel(scene, renderer);
   ground.rotation.x = -Math.PI / 2;
   ground.position.set(0, -0.01, 12);
   scene.add(ground);
-  const mist = new THREE.Mesh(new THREE.PlaneGeometry(30, 8), new THREE.MeshBasicMaterial({ color: 0xb8c4be, transparent: true, opacity: 0.18, depthWrite: false }));
-  mist.position.set(0, 3, 16); mist.rotation.y = Math.PI;
+  // 夜幕背景板：挡住背后海洋馆水面板穿帮，让门外只剩夜与雾
+  const night = new THREE.Mesh(new THREE.PlaneGeometry(70, 20), new THREE.MeshBasicMaterial({ color: 0x05070a, fog: false }));
+  night.position.set(0, 6, 19.6); night.rotation.y = Math.PI;
+  scene.add(night);
+  const mist = new THREE.Mesh(new THREE.PlaneGeometry(34, 9), new THREE.MeshBasicMaterial({ color: 0xb8c4be, transparent: true, opacity: 0.3, depthWrite: false }));
+  mist.position.set(0, 3.2, 16.5); mist.rotation.y = Math.PI;
   scene.add(mist);
+  const mist2 = new THREE.Mesh(new THREE.PlaneGeometry(26, 5), new THREE.MeshBasicMaterial({ color: 0x8f9c94, transparent: true, opacity: 0.2, depthWrite: false }));
+  mist2.position.set(2, 1.6, 13); mist2.rotation.y = Math.PI;
+  scene.add(mist2);
   for (let i = 0; i < 4; i++) {
-    const hl = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 0.6), L.dyn.headlights.mat);
+    const hl = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 1.6), L.dyn.headlights.mat);
     hl.position.set(-6 + i * 4 + (i % 2), 0.9, 13 + (i % 2) * 1.5);
     hl.rotation.y = Math.PI;
     scene.add(hl);

@@ -573,8 +573,8 @@ export class Gazer {
       if (d < 2.6) this.dissolving = true; // 不可接近：走近即散
     }
     const flicker = 0.8 + Math.sin(t * 9.7) * 0.1 + Math.sin(t * 23.3) * 0.06;
-    this.mats[0].opacity = 0.32 * this.opacity * flicker;
-    this.mats[1].opacity = 0.14 * this.opacity * flicker;
+    this.mats[0].opacity = 0.42 * this.opacity * flicker;
+    this.mats[1].opacity = 0.2 * this.opacity * flicker;
     // 永远回眸看向玩家（或凝视固定方向——终局指向锚点）
     const yaw = this.fixedYaw !== null ? this.fixedYaw
       : Math.atan2(playerPos.x - this.group.position.x, playerPos.z - this.group.position.z);
