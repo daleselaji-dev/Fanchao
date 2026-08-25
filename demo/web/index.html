@@ -3,68 +3,73 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>返潮 H00-R0《婚宴后场：返席》行为灰盒（Web 并行切片）</title>
-<link rel="stylesheet" href="style.css">
+<link rel="icon" href="data:,">
+<title>返潮 H00-R0《婚宴后场：返席》</title>
+<style>
+  html, body { margin: 0; padding: 0; height: 100%; background: #050404; overflow: hidden;
+    font-family: "WenQuanYi Micro Hei","Noto Sans CJK SC","PingFang SC","Microsoft YaHei",sans-serif; }
+  #view { display: block; width: 100vw; height: 100vh; cursor: crosshair; }
+
+  /* 中心点 */
+  #dot { position: fixed; left: 50%; top: 50%; width: 3px; height: 3px; margin: -1.5px;
+    background: rgba(220,214,196,0.55); border-radius: 50%; pointer-events: none; }
+
+  /* 交互提示 */
+  #prompt { position: fixed; left: 50%; bottom: 14vh; transform: translateX(-50%);
+    color: #d6cdb4; font-size: 15px; letter-spacing: 0.2em; opacity: 0;
+    transition: opacity 0.25s; pointer-events: none; text-shadow: 0 1px 3px #000; }
+  #prompt.show { opacity: 0.92; }
+
+  /* 事件字幕 */
+  #caption { position: fixed; left: 50%; bottom: 7vh; transform: translateX(-50%);
+    color: #b8b09a; font-size: 14px; letter-spacing: 0.12em; opacity: 0;
+    transition: opacity 0.6s; pointer-events: none; text-shadow: 0 1px 3px #000;
+    max-width: 72vw; text-align: center; }
+  #caption.show { opacity: 0.85; }
+
+  /* 录像带状态（极简角标） */
+  #chip { position: fixed; right: 18px; top: 14px; font-size: 11px; letter-spacing: 0.18em;
+    color: rgba(180,172,150,0.5); pointer-events: none; }
+  #chip.archived { color: rgba(150,190,150,0.55); }
+
+  /* 开场遮罩 */
+  #overlay { position: fixed; inset: 0; background: radial-gradient(ellipse at 50% 42%, #171310 0%, #060505 70%);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    color: #cfc6b0; z-index: 10; cursor: pointer; transition: opacity 0.8s; }
+  #overlay.hidden { opacity: 0; pointer-events: none; }
+  #overlay h1 { font-size: 34px; font-weight: 600; letter-spacing: 0.5em; margin: 0 0 6px 0.5em; }
+  #overlay h2 { font-size: 15px; font-weight: 400; letter-spacing: 0.34em; color: #8f8672; margin: 0 0 42px 0.34em; }
+  #overlay .keys { font-size: 13px; line-height: 2.1; color: #9a9179; letter-spacing: 0.12em; text-align: center; }
+  #overlay .keys b { color: #cfc6b0; font-weight: 600; }
+  #overlay .enter { margin-top: 44px; font-size: 13px; letter-spacing: 0.3em; color: #6f6a58;
+    animation: breathe 2.6s ease-in-out infinite; }
+  #overlay .contract { position: fixed; bottom: 3vh; font-size: 11px; color: #565040; letter-spacing: 0.1em; }
+  @keyframes breathe { 0%,100% { opacity: 0.35; } 50% { opacity: 0.85; } }
+</style>
+<script type="importmap">
+{ "imports": { "three": "./lib/three.module.min.js" } }
+</script>
 </head>
 <body>
-<header id="topbar">
-  <div id="title-block">
-    <h1>返潮 · H00-R0《婚宴后场：返席》</h1>
-    <p class="subtitle">Web 行为灰盒 v1 —— 只验证行为合同；官方主线为 UE 5.8（demo/ue）</p>
+<canvas id="view"></canvas>
+<div id="dot"></div>
+<div id="prompt"></div>
+<div id="caption"></div>
+<div id="chip" class="hand">TAPE IN HAND</div>
+
+<div id="overlay">
+  <h1>返　潮</h1>
+  <h2>H00-R0 · 婚宴后场：返席</h2>
+  <div class="keys">
+    你是今晚婚宴的临时录像员。散场了。<br>
+    把手里这盘带子插回 C 房间的卡座，按下 <b>REC/PAUSE</b> 归档，回宴会厅。<br><br>
+    <b>鼠标</b> 转向 · <b>WASD</b> 移动 · <b>E</b> 交互 · 按住 <b>Q</b> 借视 · <b>R</b> 复位 · <b>M</b> 声音<br>
+    建议佩戴耳机 —— 这里的声音先于画面。
   </div>
-  <div id="task-block">
-    <div id="task-text">任务：把婚宴录像带插回 C 房间卡座，按 REC/PAUSE 归档</div>
-    <div id="tape-chip" class="chip chip-hand">TAPE IN HAND</div>
-  </div>
-</header>
+  <div class="enter">点 击 进 入 后 场</div>
+  <div class="contract">它不追你、不吓你、不撞你。它只是还在上班。</div>
+</div>
 
-<main id="layout">
-  <div id="stage-wrap">
-    <canvas id="stage" width="1080" height="768"></canvas>
-    <div id="hint-overlay"></div>
-  </div>
-
-  <aside id="side">
-    <section class="panel">
-      <h2>60–90 秒节拍（Round 2 合同）</h2>
-      <ol id="beats">
-        <li data-beat="0"><span class="t">00–12</span> A→B：先读懂婚宴收场的正常工作</li>
-        <li data-beat="1"><span class="t">12–28</span> B：发现同高低处后果；听见实体沿旧路线工作</li>
-        <li data-beat="2"><span class="t">28–43</span> C：插带并按 REC/PAUSE，看到普通婚宴画面</li>
-        <li data-beat="3"><span class="t">43–60</span> 返程路线判断：信息与风险交换，无对错分支</li>
-        <li data-beat="4"><span class="t">60–76</span> 实体继续普通工作；E/B 交界短暂侧向证据</li>
-        <li data-beat="5"><span class="t">76–90</span> 回到 A；实体沿旧路线离开，留下工作声</li>
-      </ol>
-    </section>
-
-    <section class="panel">
-      <h2>声学状态</h2>
-      <div id="acoustic-state" class="state-normal">正常 —— 伴奏来自 A 宴会厅音箱</div>
-      <div class="note">低处不画线、不变色；只有声音变厚变远与柜脚/门框下部的材料后果。</div>
-    </section>
-
-    <section class="panel">
-      <h2>操作</h2>
-      <table id="controls">
-        <tr><td>W A S D / 方向键</td><td>移动</td></tr>
-        <tr><td>E</td><td>在 C 卡座 2.4m 内归档</td></tr>
-        <tr><td>R</td><td>全局复位到 00 秒</td></tr>
-        <tr><td>V</td><td>显示/隐藏三组固定机位标注</td></tr>
-        <tr><td>M</td><td>声音开/关（程序化，无素材）</td></tr>
-      </table>
-    </section>
-
-    <section class="panel" id="log-panel">
-      <h2>运行日志（对齐 UE 格式）</h2>
-      <pre id="log"></pre>
-    </section>
-  </aside>
-</main>
-
-<footer id="contract-bar">
-  行为合同：实体不攻击、不冲刺、不跳脸、不推回；它只沿 D→B→C门外→E→D 的旧后勤路线回返，路线被占用时原地等待。无可见海水、无水线、无蓝色滤镜。
-</footer>
-
-<script src="main.js"></script>
+<script type="module" src="js/main.js"></script>
 </body>
 </html>
