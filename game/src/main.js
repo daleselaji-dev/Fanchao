@@ -10,6 +10,7 @@ import { Post } from './post.js';
 import { CRTManager } from './crt.js';
 import { UI } from './ui.js';
 import { Agenda } from './agenda.js';
+import { Atmosphere } from './atmo.js';
 import * as TX from './textures.js';
 
 const canvas = document.getElementById('c');
@@ -138,6 +139,40 @@ const crt = new CRTManager(renderer, scene, L.screens, L.future);
 
 // ---------- 后处理 ----------
 const post = new Post(renderer, window.innerWidth, window.innerHeight);
+
+// ---------- 氛围层：体积光锥 / 漂尘 / 焦散 ----------
+const atmo = new Atmosphere(scene);
+// 宴会厅吊灯光锥
+atmo.addCone(0, 5.2, -5, 0.75, 3.4, 5.2, 0.055, 'hall');
+atmo.addCone(0, 5.2, -12, 0.75, 3.4, 5.2, 0.055, 'hall');
+// 舞台追光锥（斜射）
+{
+  const sc = atmo.addCone(0, 0, 0, 0.35, 2.5, 8.4, 0.06, 'hall');
+  sc.position.set(0, 4.0, -15.1);
+  const dir = new THREE.Vector3(0, 1.4 - 6.6, -18.2 + 12).normalize();
+  sc.quaternion.setFromUnitVectors(new THREE.Vector3(0, -1, 0), dir);
+}
+// 大堂主吊灯 + 正门海雾透光
+atmo.addCone(36, 6.4, 22, 1.5, 5.4, 6.6, 0.05, 'lobby');
+atmo.addShaft(36, 2.4, 28.6, 6.2, 4.6, Math.PI, 0, 0.045, 'lobby', '185,210,200');
+// 服务走廊荧光灯片（跟随灯管闪烁）
+for (const tube of L.dyn.tubes) {
+  const lp = tube.light.position;
+  atmo.addCone(lp.x, 3.1, lp.z, 0.45, 1.35, 3.0, 0.05, 'corridor', '208,238,218', tube.light);
+}
+// 员工连廊灯泡小光锥（跟随摇晃灯泡）
+for (const b of L.dyn.bulbs) {
+  atmo.addCone(b.light.position.x, 2.65, b.light.position.z, 0.12, 1.1, 2.6, 0.06, 'connector', '255,214,150', b.light);
+}
+// 海洋馆焦散（地面 + 南墙）
+atmo.addCaustics(2.5, 0.045, 22, 43, 4.2, -Math.PI / 2, 0, 0.16, 'aqua');
+atmo.addCaustics(2.5, 1.6, 20.2, 43, 3.0, 0, 0, 0.07, 'aqua');
+// 漂尘
+atmo.addDust([-14, 0.3, -19, 14, 6.4, -0.5], 320, 0.035, 0xd8c8a8, 0.5, 'hall');
+atmo.addDust([25, 0.3, 15, 47, 7.4, 29], 260, 0.035, 0xd0c4a4, 0.45, 'lobby');
+atmo.addDust([-18, 0.2, 20.3, 23, 3.2, 23.8], 240, 0.03, 0x9fd8cc, 0.55, 'aqua');
+atmo.addDust([16, 0.3, -7.6, 39.5, 3, 13.5], 170, 0.028, 0xc8d8be, 0.4, 'corridor');
+atmo.addDust([-18.6, 0.3, -7, -15.6, 2.8, 19], 120, 0.03, 0xd8c8a8, 0.4, 'connector');
 
 // ---------- 区域 ----------
 function regionAt(pos) {
@@ -330,6 +365,21 @@ function updateAmbience(dt, t) {
     b.group.rotation.x = Math.sin(t * 1.1 + b.phase) * 0.14;
     b.group.rotation.z = Math.cos(t * 0.9 + b.phase) * 0.1;
   }
+  // 红灯笼微摆（点火后摆幅加大——像有水流过大厅）
+  const lanSway = agenda.beat >= 3 ? 0.12 : 0.04;
+  for (const ln of L.dyn.lanterns) {
+    ln.group.rotation.x = Math.sin(t * 0.7 + ln.phase) * lanSway;
+    ln.group.rotation.z = Math.cos(t * 0.55 + ln.phase) * lanSway * 0.7;
+  }
+  // 海草摆动
+  if (L.dyn.kelps) for (const k of L.dyn.kelps) {
+    k.mesh.rotation.z = Math.sin(t * 0.4 + k.phase) * 0.12;
+    k.mesh.position.x += Math.sin(t * 0.23 + k.phase) * dt * 0.15;
+  }
+  // 连廊胶帘摆动
+  if (L.dyn.strips) for (const s of L.dyn.strips) {
+    s.mesh.rotation.x = Math.sin(t * 0.8 + s.phase) * 0.05;
+  }
   // 水中光柱摆动 + 暗影缓移
   if (L.dyn.beams) {
     for (const b of L.dyn.beams) {
@@ -429,6 +479,7 @@ function loop() {
     gazer.update(dt, player.pos, t);
     bride.update(dt);
     crt.update(dt, player.pos);
+    atmo.update(dt, agenda.lightMult);
   }
   post.render(scene, camera, dt, t);
 }
