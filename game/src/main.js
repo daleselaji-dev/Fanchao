@@ -398,10 +398,20 @@ window.__game = g;
 window.__agenda = agenda;
 
 const clock = new THREE.Clock();
+let fixedT = 0;
 function loop() {
   requestAnimationFrame(loop);
-  const dt = Math.min(0.05, clock.getDelta()) * (window.__timeScale || 1);
-  const t = clock.elapsedTime;
+  // __fixedDt：离线逐帧渲染（固定步长）；__timeScale：加速（自动化测试用）
+  let dt, t;
+  if (window.__fixedDt !== undefined) {
+    dt = window.__fixedDt;
+    fixedT += dt;
+    t = fixedT;
+    clock.getDelta();
+  } else {
+    dt = Math.min(0.05, clock.getDelta()) * (window.__timeScale || 1);
+    t = clock.elapsedTime;
+  }
 
   player.update(dt, L.colliders, regionAt);
   if (started) {
