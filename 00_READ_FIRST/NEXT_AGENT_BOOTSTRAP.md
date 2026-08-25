@@ -1,6 +1,17 @@
 # 下一 Agent 启动顺序
 
-## 先读
+> ## ⚠️ 本文件已被 DESIGN V2 取代（2026-08-25）
+>
+> **不要执行本文件的 F01 Hero Sculpt 路线。** 该路线已作废（人形高模前置阻塞是被明令禁止的生产错误，
+> 见 `../05_DESIGN_V2/12_禁止事项与淘汰说明.md` §1.7、§2）。
+>
+> 下一 Agent 请从 [`../05_DESIGN_V2/README.md`](../05_DESIGN_V2/README.md) 开始，
+> 执行 `../05_DESIGN_V2/11_生产路线图_Gate.md` 的 G0→G1。
+> 以下原文仅作考古保留。
+
+---
+
+## 先读（已废弃）
 1. `PROJECT_LOGIC_AND_RESULTS.md`
 2. `../01_CORE_CANON/PROJECT_CONSTITUTION_vNEXT.md`
 3. `../05_WORKFLOW/MASTER_PRODUCTION_WORKFLOW.md`
