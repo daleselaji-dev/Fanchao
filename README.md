@@ -4,48 +4,57 @@
 
 与《死魂曲 / SIREN》同量级的民俗恐怖：单主角、章节制；画质目标不低于优秀 PS3 后期作品。
 
-## 入口（只有这一套）
+## 入口
 
-1. **[docs/game-design/](docs/game-design/README.md)** —— 现行设计宪法（世界、形象库、玩法、视觉、技术栈裁决、审定记录）。
-2. **[docs/agent-playbook/](docs/agent-playbook/README.md)** —— 下一个 Agent 制作 Demo 的逐步执行手册（Three.js 3D 灰盒，Step 1—10，含资产占位策略与完成定义）。**注意：Demo 尚未制作，该手册是计划不是成果。**
-3. **[docs/demo-v1-walkthrough.md](docs/demo-v1-walkthrough.md)** —— 已有 2D 行为灰盒的审阅指南（嵌截图）。
+1. **[docs/game-design/](docs/game-design/README.md)** —— 现行设计宪法（世界、形象库、玩法、视觉、技术栈双栈裁决、审定记录）+ 生产规格（07 垂直切片节拍 / 08 资产精度 / 09 威胁谱系）。
+2. **[docs/review/](docs/review/01_现状评估报告.md)** —— 现行评估与方案（2026-08-25）：
+   - [01 现状评估报告](docs/review/01_现状评估报告.md)——精髓 / 不足 / 不一致清单（含 8 条待裁决冲突）；
+   - [02 创新提升方案](docs/review/02_创新提升方案.md)——剧情、技术栈、玩法、视觉、恐怖逻辑各项提案 + 丢弃清单；
+   - [03 下一步制作清单](docs/review/03_下一步制作清单.md)——**下一个执行者从这里开始（D0 + D1-1）**。
+3. **[docs/agent-playbook/](docs/agent-playbook/README.md)** —— Demo 逐步执行手册（历史参考；3D Demo 已产出，见下）。
 
 ## 现在就能跑的东西
 
-**H00-R0 Web 行为灰盒**（2D，行为合同回归基线，零依赖）：
+**H00-R0 三维切片**（Three.js 第一人称，死魂曲实机质感，15 项自动化测试全过）：
 
 ```bash
 python3 -m http.server 8000
 # 打开 http://localhost:8000/demo/web/
+npm test   # 行为合同 + 玩法回归
 ```
 
-`WASD` 移动 · `E` 归档 · `R` 复位 · `V` 标注层 · `M` 声音
+`WASD` 移动 · 鼠标转向 · `E` 归档 · `Q` 借视（待按 [C1 裁决](docs/review/01_现状评估报告.md#3-不一致清单两套文档都自称现行的地方)改造为线务听诊）· `R` 复位（调试）
+
+**2D 行为灰盒**（行为合同回归基线，冻结维护）：`demo/web-graybox/`
 
 ## 技术栈（一页结论，详见 [06 文档](docs/game-design/06_技术栈与制作工作流.md)）
 
-- **Demo 执行栈：Three.js（浏览器）**——云端 Agent 可完整执行、可玩、可截图；产出于 `demo/web3d/`（尚未创建）。
-- **正式产品栈：Unreal Engine 5.8**——最终画质与垂直切片；起点是 `demo/ue/H00_Source/`，只在装有 UE 的本地开发机推进，云端 Agent 不领 UE 任务。
+- **Demo 执行栈：Three.js（浏览器）**——云端 Agent 可完整执行、可玩、可测试；主工程 `demo/web/`。
+- **正式产品栈：Unreal Engine 5.8**——最终画质与垂直切片；起点 `demo/ue/H00_Source/`，只在装有 UE 的本地开发机推进。
 
 ## 仓库结构
 
 ```text
-docs/game-design/        现行设计宪法（唯一设定入口）
-docs/agent-playbook/     Demo 生成手册（下一 Agent 从这里开始）
-docs/demo-v1-walkthrough.md   2D 行为灰盒审阅指南
-demo/web/                2D 行为灰盒（可玩，冻结维护）
+docs/game-design/        现行设计宪法 + 生产规格（唯一设定入口）
+docs/review/             现状评估 / 创新方案 / 下一步清单（2026-08-25 现行）
+docs/agent-playbook/     Demo 生成手册（历史参考）
+docs/tech-route.md       技术路线（栈裁决部分已由 06 取代，行为合同数值表仍有效）
+demo/web/                Three.js 3D Demo（Demo 执行栈主工程，可玩）
+demo/web-graybox/        2D 行为灰盒（回归基线，冻结维护）
 demo/ue/H00_Source/      UE 5.8 参考源码（正式产品栈起点）
 assets/                  地图/分镜/截图/概念帧/灰盒渲染（审阅材料）
 tools/                   截图与图表生成脚本
-返潮_项目设定与Demo交接包_2026-08-05.zip   历史材料（不再解压入库，冲突以 docs/game-design/ 为准）
+返潮_项目设定与Demo交接包_2026-08-05.zip   唯一历史层（不解压入库；冲突以 docs/ 为准）
 ```
 
-## 实现状态（诚实标注）
+## 实现状态（诚实标注，2026-08-25）
 
 | 项 | 状态 |
 | --- | --- |
-| 设计宪法 + Demo 生成手册 | 完成（本仓库） |
-| 2D Web 行为灰盒（行为合同全项） | PASS（可运行、截图可复现） |
-| Three.js 3D Demo（`demo/web3d/`） | **NOT RUN**（按 [playbook](docs/agent-playbook/README.md) 执行） |
+| 设计宪法（00–06）+ 生产规格（07–09） | 完成（本仓库） |
+| 评估报告 / 创新方案 / 制作清单 | 完成（`docs/review/`） |
+| 3D Demo：行为合同 + 死魂曲质感 + 15 项测试 | PASS（本仓库可复跑） |
+| 3D Demo：测深 / 承压证据链 / 守仪式 | **NOT RUN**（宪法四动词实装 0/4，升级路径见 [03 清单 §D1](docs/review/03_下一步制作清单.md)） |
 | UE 5.8 编译 + 状态机 | PASS（2026-08-04 原开发机历史证据，未在云端复跑） |
 | UE 可见画面 | FAIL → 待复验（本地开发机任务，不阻塞 Demo） |
-| 正式资产 / 贴图 / 实录音频 | NOT RUN（按 Gate 冻结） |
+| 正式资产 / 实录音频 | NOT RUN（按 Gate 冻结） |
