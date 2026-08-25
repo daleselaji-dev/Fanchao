@@ -1,0 +1,6 @@
+node_modules/
+.playwright/
+# 交接包解压产物（阅读材料，不入库；原始 zip 已在仓库根目录）
+handover/
+__pycache__/
+*.pyc

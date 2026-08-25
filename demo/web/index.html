@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="data:,">
+<title>返潮 H00-R0《婚宴后场：返席》</title>
+<style>
+  html, body { margin: 0; padding: 0; height: 100%; background: #050404; overflow: hidden;
+    font-family: "WenQuanYi Micro Hei","Noto Sans CJK SC","PingFang SC","Microsoft YaHei",sans-serif; }
+  #view { display: block; width: 100vw; height: 100vh; cursor: crosshair; }
+
+  /* 中心点 */
+  #dot { position: fixed; left: 50%; top: 50%; width: 3px; height: 3px; margin: -1.5px;
+    background: rgba(220,214,196,0.55); border-radius: 50%; pointer-events: none; }
+
+  /* 交互提示 */
+  #prompt { position: fixed; left: 50%; bottom: 14vh; transform: translateX(-50%);
+    color: #d6cdb4; font-size: 15px; letter-spacing: 0.2em; opacity: 0;
+    transition: opacity 0.25s; pointer-events: none; text-shadow: 0 1px 3px #000; }
+  #prompt.show { opacity: 0.92; }
+
+  /* 事件字幕 */
+  #caption { position: fixed; left: 50%; bottom: 7vh; transform: translateX(-50%);
+    color: #b8b09a; font-size: 14px; letter-spacing: 0.12em; opacity: 0;
+    transition: opacity 0.6s; pointer-events: none; text-shadow: 0 1px 3px #000;
+    max-width: 72vw; text-align: center; }
+  #caption.show { opacity: 0.85; }
+
+  /* 录像带状态（极简角标） */
+  #chip { position: fixed; right: 18px; top: 14px; font-size: 11px; letter-spacing: 0.18em;
+    color: rgba(180,172,150,0.5); pointer-events: none; }
+  #chip.archived { color: rgba(150,190,150,0.55); }
+
+  /* 开场遮罩 */
+  #overlay { position: fixed; inset: 0; background: radial-gradient(ellipse at 50% 42%, #171310 0%, #060505 70%);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    color: #cfc6b0; z-index: 10; cursor: pointer; transition: opacity 0.8s; }
+  #overlay.hidden { opacity: 0; pointer-events: none; }
+  #overlay h1 { font-size: 34px; font-weight: 600; letter-spacing: 0.5em; margin: 0 0 6px 0.5em; }
+  #overlay h2 { font-size: 15px; font-weight: 400; letter-spacing: 0.34em; color: #8f8672; margin: 0 0 42px 0.34em; }
+  #overlay .keys { font-size: 13px; line-height: 2.1; color: #9a9179; letter-spacing: 0.12em; text-align: center; }
+  #overlay .keys b { color: #cfc6b0; font-weight: 600; }
+  #overlay .enter { margin-top: 44px; font-size: 13px; letter-spacing: 0.3em; color: #6f6a58;
+    animation: breathe 2.6s ease-in-out infinite; }
+  #overlay .contract { position: fixed; bottom: 3vh; font-size: 11px; color: #565040; letter-spacing: 0.1em; }
+  @keyframes breathe { 0%,100% { opacity: 0.35; } 50% { opacity: 0.85; } }
+</style>
+<script type="importmap">
+{ "imports": { "three": "./lib/three.module.min.js" } }
+</script>
+</head>
+<body>
+<canvas id="view"></canvas>
+<div id="dot"></div>
+<div id="prompt"></div>
+<div id="caption"></div>
+<div id="chip" class="hand">TAPE IN HAND</div>
+
+<div id="overlay">
+  <h1>返　潮</h1>
+  <h2>H00-R0 · 婚宴后场：返席</h2>
+  <div class="keys">
+    你是今晚婚宴的临时录像员。散场了。<br>
+    把手里这盘带子插回 C 房间的卡座，按下 <b>REC/PAUSE</b> 归档，回宴会厅。<br><br>
+    <b>鼠标</b> 转向 · <b>WASD</b> 移动 · <b>E</b> 交互 · 按住 <b>Q</b> 借视 · <b>R</b> 复位 · <b>M</b> 声音<br>
+    建议佩戴耳机 —— 这里的声音先于画面。
+  </div>
+  <div class="enter">点 击 进 入 后 场</div>
+  <div class="contract">它不追你、不吓你、不撞你。它只是还在上班。</div>
+</div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
