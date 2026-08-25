@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>返潮 H00-R0《婚宴后场：返席》行为灰盒（Web 并行切片）</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header id="topbar">
+  <div id="title-block">
+    <h1>返潮 · H00-R0《婚宴后场：返席》</h1>
+    <p class="subtitle">Web 行为灰盒 v1 —— 只验证行为合同；官方主线为 UE 5.8（demo/ue）</p>
+  </div>
+  <div id="task-block">
+    <div id="task-text">任务：把婚宴录像带插回 C 房间卡座，按 REC/PAUSE 归档</div>
+    <div id="tape-chip" class="chip chip-hand">TAPE IN HAND</div>
+  </div>
+</header>
+
+<main id="layout">
+  <div id="stage-wrap">
+    <canvas id="stage" width="1080" height="768"></canvas>
+    <div id="hint-overlay"></div>
+  </div>
+
+  <aside id="side">
+    <section class="panel">
+      <h2>60–90 秒节拍（Round 2 合同）</h2>
+      <ol id="beats">
+        <li data-beat="0"><span class="t">00–12</span> A→B：先读懂婚宴收场的正常工作</li>
+        <li data-beat="1"><span class="t">12–28</span> B：发现同高低处后果；听见实体沿旧路线工作</li>
+        <li data-beat="2"><span class="t">28–43</span> C：插带并按 REC/PAUSE，看到普通婚宴画面</li>
+        <li data-beat="3"><span class="t">43–60</span> 返程路线判断：信息与风险交换，无对错分支</li>
+        <li data-beat="4"><span class="t">60–76</span> 实体继续普通工作；E/B 交界短暂侧向证据</li>
+        <li data-beat="5"><span class="t">76–90</span> 回到 A；实体沿旧路线离开，留下工作声</li>
+      </ol>
+    </section>
+
+    <section class="panel">
+      <h2>声学状态</h2>
+      <div id="acoustic-state" class="state-normal">正常 —— 伴奏来自 A 宴会厅音箱</div>
+      <div class="note">低处不画线、不变色；只有声音变厚变远与柜脚/门框下部的材料后果。</div>
+    </section>
+
+    <section class="panel">
+      <h2>操作</h2>
+      <table id="controls">
+        <tr><td>W A S D / 方向键</td><td>移动</td></tr>
+        <tr><td>E</td><td>在 C 卡座 2.4m 内归档</td></tr>
+        <tr><td>R</td><td>全局复位到 00 秒</td></tr>
+        <tr><td>V</td><td>显示/隐藏三组固定机位标注</td></tr>
+        <tr><td>M</td><td>声音开/关（程序化，无素材）</td></tr>
+      </table>
+    </section>
+
+    <section class="panel" id="log-panel">
+      <h2>运行日志（对齐 UE 格式）</h2>
+      <pre id="log"></pre>
+    </section>
+  </aside>
+</main>
+
+<footer id="contract-bar">
+  行为合同：实体不攻击、不冲刺、不跳脸、不推回；它只沿 D→B→C门外→E→D 的旧后勤路线回返，路线被占用时原地等待。无可见海水、无水线、无蓝色滤镜。
+</footer>
+
+<script src="main.js"></script>
+</body>
+</html>
