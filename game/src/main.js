@@ -225,6 +225,11 @@ function updateInteract(dt) {
       ((lock.a === sys.hook('hMainA') && lock.b === sys.hook('hMainB')) ||
         (lock.a === sys.hook('hMainB') && lock.b === sys.hook('hMainA'))));
     const d = player.pos.distanceTo(seatPos);
+    window.__cut = {
+      d: +d.toFixed(2), seatFree, eDown: player.eDown, cutHold: +cutHold.toFixed(2),
+      seated: player.seated, escorting: agenda.escorting, callActive: agenda.call.active,
+      held: !!sys.held, lockEnds: lock ? [lock.a?.id || 'held', lock.b?.id || 'held'].join('~') : 'none',
+    };
     if (d < 2.0) {
       if (!seatFree) {
         ui.prompt('席位被红绳捆着 —— 先<b>摘下</b>捆席的绳（对准绳端按 E）');
@@ -395,7 +400,7 @@ window.__agenda = agenda;
 const clock = new THREE.Clock();
 function loop() {
   requestAnimationFrame(loop);
-  const dt = Math.min(0.05, clock.getDelta());
+  const dt = Math.min(0.05, clock.getDelta()) * (window.__timeScale || 1);
   const t = clock.elapsedTime;
 
   player.update(dt, L.colliders, regionAt);

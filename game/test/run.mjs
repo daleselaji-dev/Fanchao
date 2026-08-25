@@ -197,20 +197,22 @@ await ev(() => {
 });
 await page.waitForTimeout(1500);
 await shot('14_at_vip_seat.png');
+// headless 帧饥饿：evaluate 轮询会挤占 rAF，游戏时间推进极慢。
+// 剪缆需持续累积 2.2 游戏秒 → 临时 3 倍时间加速 + 低频轮询。
+await ev(() => { window.__timeScale = 3; });
 await page.keyboard.down('e');
-const cutOk = await until(() => window.__agenda.ended, 90000, 400);
-if (!cutOk) { await unseat(); await ev(() => { window.__game.player.teleport(2.4, -12.4, 0.4); }); }
+const cutOk = await until(() => window.__agenda.ended, 240000, 1500);
 await page.keyboard.up('e');
 await page.waitForTimeout(5000);
 await shot('15_after_cut.png');
 
 // —— 散场 ——
-await until(() => !!window.__game.L.dyn.doorSOpen, 30000);
+await until(() => !!window.__game.L.dyn.doorSOpen, 120000, 1500);
 await ev(() => { const p = window.__game.player; p.teleport(0, -2, Math.PI); p.pitch = 0.0; });
 await page.waitForTimeout(6000);
 await shot('16_exit_doors.png');
 await ev(() => { const p = window.__game.player; p.teleport(0, 6.2, Math.PI); });
-const finished = await until(() => !!window.__agenda._finished, 30000);
+const finished = await until(() => !!window.__agenda._finished, 120000, 1500);
 await page.waitForTimeout(6000);
 await shot('17_good_end.png');
 
