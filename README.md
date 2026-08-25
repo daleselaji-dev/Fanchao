@@ -4,14 +4,16 @@
 酒店里所有老 CRT 永远比现实先播一步——你在屏幕里看到的，就是这个空间即将变成的样子。
 玩家是伴娘，她会从录像里发现蚀湾婚俗的最后一条：**如果海不满意新娘，就收伴娘。**
 
-## 🎮 可玩 Demo（「喜宴」垂直切片 v0.9）
+## 🎮 可玩 Demo（「喜宴」垂直切片 v1.0）
 
 **下载即玩：[`releases/`](releases/)** —— Windows 便携 exe 包 + 全平台 Web 包（双击 `index.html`）。
-运行说明 / 系统要求 / 操作 / 已知限制见 [`releases/RELEASE_NOTES.md`](releases/RELEASE_NOTES.md)。
+运行说明 / 系统要求 / 操作 / v1.0 升级清单 / 已知限制见 [`releases/RELEASE_NOTES.md`](releases/RELEASE_NOTES.md)。
 
 - 玩法内核：**「牵红」红绳席位系统**（一根绳既是侍应的动线、门闸的机关，也是你腕上的席位缆），设计见 [`06_GAMEPLAY_CORE/`](06_GAMEPLAY_CORE/)
 - 源码：[`game/`](game/)（Three.js，纹理/模型/光照/音频全程序化生成，零外部资产）
-- 实机截图：[`game/media/shots/`](game/media/shots/) · 巡演视频：`game/media/`
+- 实机截图：[`game/media/shots/`](game/media/shots/)（v1.0 全套 20 张，含三个震惊节拍） · 巡演视频：`game/media/`
+- v1.0 亮点：ACES 电影调色 + 体积光锥/漂尘/焦散、三个震惊节拍、侍应预告转头 + 立体声威胁定位、
+  交互准星/剪缆进度环、发行级标题/暂停/结算 UI、凤冠绣囍新娘
 
 ## 从这里开始
 
