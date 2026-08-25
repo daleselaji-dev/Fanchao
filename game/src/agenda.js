@@ -120,6 +120,7 @@ export class Agenda {
     player.seated = false;
     this.escorting = false;
     this.grace = 7;
+    ui.fade(0, 0.6);
     ui.prompt('');
     ui.subtitle('趁他们没看着——走。', 3);
   }

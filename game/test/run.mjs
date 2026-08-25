@@ -35,10 +35,12 @@ const ev = (fn) => page.evaluate(fn);
 // 被引座后自动站起
 async function unseat() {
   await ev(() => {
-    if (window.__game.player.seated) {
-      window.__agenda.standUp();
-    }
-    window.__agenda.grace = 10;
+    const a = window.__agenda, g = window.__game;
+    if (g.player.seated) a.standUp();
+    // 进行中的引座（黑幕已起、落座回调未到）也取消并复位黑幕
+    a.escorting = false;
+    g.ui.fade(0, 0.5);
+    a.grace = 10;
   });
 }
 // 等待游戏内条件
@@ -57,7 +59,9 @@ await shot('01_title.png');
 
 await page.click('#startBtn');
 await until(() => window.__agenda && window.__agenda.beat >= 1);
-await page.waitForTimeout(3000);
+// 等开场黑幕淡完再截
+await until(() => +getComputedStyle(document.getElementById('fade')).opacity < 0.1, 30000);
+await page.waitForTimeout(4000);
 await shot('02_hall_spawn.png');
 
 // —— 拍1：走到主桌 → 入席广播 ——
@@ -241,7 +245,12 @@ await page.waitForTimeout(6000);
 await shot('16_exit_doors.png');
 await ev(() => { const p = window.__game.player; p.teleport(0, 6.2, Math.PI); });
 const finished = await until(() => !!window.__agenda._finished, 120000, 1500);
-await page.waitForTimeout(6000);
+// 结算卡在 _goodEnd 后 3.2 游戏秒才出现 → 等 DOM 可见再截
+await until(() => {
+  const e = document.getElementById('end');
+  return e && e.style.display !== 'none' && +getComputedStyle(e).opacity > 0.8;
+}, 90000, 1500);
+await page.waitForTimeout(1500);
 await shot('17_good_end.png');
 
 console.log(JSON.stringify({
