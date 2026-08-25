@@ -6,10 +6,10 @@
  */
 import * as THREE from "three";
 import {
-  ROUTE, LOW_ZONE, CAMS, ARCHIVE_POINT, ARCHIVE_RADIUS, BEATS, EYE_HEIGHT,
+  ROUTE, LOW_ZONE, CAMS, ARCHIVE_POINT, ARCHIVE_RADIUS, BEATS, EYE_HEIGHT, JACK,
   dist2d, roomOf, isLow, losClear, floorHeightAt,
 } from "./contract.js";
-import { createSim, simStep, resetSim, drainEvents } from "./sim.js";
+import { createSim, simStep, resetSim, drainEvents, jackLive } from "./sim.js";
 import { buildMaterials } from "./materials.js";
 import { buildWorld } from "./world.js";
 import { createEntity } from "./entity.js";
@@ -110,7 +110,7 @@ window.addEventListener("keydown", (e) => {
     caption("复位到 00 秒");
     chipEl.textContent = "TAPE IN HAND";
     chipEl.className = "hand";
-    player.hand.visible = true;
+    player.showTape();
     crtMode = "static";
   }
   if (e.code === "KeyV") {
@@ -143,6 +143,11 @@ let beatShown = new Set();
 // ---------- 主循环 ----------
 let last = performance.now();
 let flickerLevel = 0, dyingLevel = 0;
+let prevFlicker = 0, ballastCooldown = 0;
+let prevYaw = null, clothCooldown = 0;
+let prevPlayerZ = null, prevEntityZ = null;
+let curtainInside = { player: false, entity: false };
+let worldT = 0;
 
 function frame(now) {
   const dt = Math.min(0.05, (now - last) / 1000);
@@ -152,12 +157,15 @@ function frame(now) {
 }
 
 function tick(dt, doRender = true) {
+  worldT += dt;
   // ---- 玩家输入 → sim ----
+  const effJack = jackLive(sim, jackHeld);   // 信号在 SYNC 且按住才真的接入
   const mv = player.update(dt, sim.player, jackHeld);
   simStep(sim, dt, {
     moveX: started ? mv.mx : 0,
     moveZ: started ? mv.mz : 0,
     wantArchive,
+    jack: started && jackHeld,
     extraColliders: colliders,
   });
   wantArchive = false;
@@ -180,6 +188,9 @@ function tick(dt, doRender = true) {
         break;
       case "loop-complete":
         caption("回到宴会厅了。它还在里面上班。", 5);
+        break;
+      case "jack-overload":
+        caption("信号断了。", 2.2);
         break;
       case "acoustic-low":
         // 不出 UI 提示——声音自己说话
@@ -233,6 +244,85 @@ function tick(dt, doRender = true) {
     g.g.position.y = (g.g.position.y || 0) * 0 + (g.bend ? Math.max(0, Math.sin(t * 0.5)) * -0.06 : Math.sin(t * 1.3) * g.amp * 0.3);
   }
 
+  // ---- E 门 PVC 门帘：被穿过时拨开，弹簧回摆 ----
+  if (dynamics.curtain) {
+    const C = dynamics.curtain;
+    const movers = [
+      { x: sim.player.x, z: sim.player.z, pz: prevPlayerZ, key: "player" },
+      { x: sim.entity.x, z: sim.entity.z, pz: prevEntityZ, key: "entity" },
+    ];
+    for (const mv2 of movers) {
+      const inside = Math.abs(mv2.x - C.doorX) < 0.9 && Math.abs(mv2.z - C.doorZ) < 0.5;
+      const dz2 = mv2.pz === null ? 0 : mv2.z - mv2.pz;
+      if (inside) {
+        for (const s of C.strips) {
+          if (Math.abs(mv2.x - s.g.position.x) < 0.24) {
+            s.vel += -dz2 * 46;   // 推开方向 = 行进方向
+          }
+        }
+        if (!curtainInside[mv2.key] && Math.abs(dz2) > 0.001) {
+          audio.curtainHit(Math.min(1, Math.abs(dz2) * 30));
+        }
+      }
+      curtainInside[mv2.key] = inside;
+    }
+    for (const s of C.strips) {
+      const idle = Math.sin(worldT * 0.5 + s.phase) * 0.008;   // 通风气流的常驻微摆
+      s.vel += (-(s.ang - idle) * 26) * dt;
+      s.vel *= Math.exp(-dt * 2.4);
+      s.ang = Math.max(-1.25, Math.min(1.25, s.ang + s.vel * dt));
+      s.g.rotation.x = s.ang;
+    }
+  }
+  prevPlayerZ = sim.player.z;
+  prevEntityZ = sim.entity.z;
+
+  // ---- 光柱尘埃（极慢漂浮）----
+  if (dynamics.dust) {
+    const D = dynamics.dust;
+    const pos = D.points.geometry.attributes.position;
+    for (let i = 0; i < pos.count; i++) {
+      const s0 = D.seed[i];
+      pos.array[i * 3] = D.base[i * 3] + Math.sin(worldT * 0.07 + s0 * 1.7) * 0.12;
+      pos.array[i * 3 + 1] = D.base[i * 3 + 1] + Math.sin(worldT * 0.13 + s0) * 0.22;
+      pos.array[i * 3 + 2] = D.base[i * 3 + 2] + Math.cos(worldT * 0.09 + s0 * 2.3) * 0.1;
+    }
+    pos.needsUpdate = true;
+  }
+
+  // ---- 宴厅衰变：实体每回返一圈，A 厅的灯就更暗一层；归档后东侧那盏彻底断气 ----
+  if (dynamics.lights.pendants) {
+    const [p1, p2, p3] = dynamics.lights.pendants;
+    const loops = sim.entity.loops;
+    const t1 = loops >= 3 ? 40 : 60;
+    const t2 = loops >= 2 ? 30 : 55;
+    const t3 = sim.archived ? 4 : 20;
+    p1.intensity += (t1 - p1.intensity) * Math.min(1, dt * 0.4);
+    p2.intensity += (t2 - p2.intensity) * Math.min(1, dt * 0.4);
+    p3.intensity += (t3 - p3.intensity) * Math.min(1, dt * 0.5);
+  }
+
+  // ---- 镇流器打火哒声（闪烁尖峰的上升沿）----
+  ballastCooldown -= dt;
+  if (flickerLevel > 0.55 && prevFlicker <= 0.55 && ballastCooldown <= 0) {
+    audio.ballastClick();
+    ballastCooldown = 0.35;
+  }
+  prevFlicker = flickerLevel;
+
+  // ---- 快速转身的衣料摩擦 ----
+  clothCooldown -= dt;
+  if (prevYaw !== null && dt > 0) {
+    let dyaw = player.state.yaw - prevYaw;
+    while (dyaw > Math.PI) dyaw -= Math.PI * 2;
+    while (dyaw < -Math.PI) dyaw += Math.PI * 2;
+    if (Math.abs(dyaw) / dt > 3.4 && clothCooldown <= 0) {
+      audio.playerCloth(Math.min(1, Math.abs(dyaw)));
+      clothCooldown = 0.9;
+    }
+  }
+  prevYaw = player.state.yaw;
+
   // ---- HUD ----
   const nearDeck = dist2d(sim.player, ARCHIVE_POINT) <= ARCHIVE_RADIUS;
   if (nearDeck && !sim.archived) {
@@ -266,12 +356,14 @@ function tick(dt, doRender = true) {
     room: roomOf(sim.player),
     entityPos: ePos,
     crtMode,
-    jack: jackHeld,
+    jack: effJack,
     flickerLevel,
     dyingLevel,
     stillT: player.state.stillT,
     evidenceActive: sim.evidence.active,
     muted,
+    archived: sim.archived,
+    loops: sim.entity.loops,
   });
   audio.playerStepHook = null;
 
@@ -280,15 +372,27 @@ function tick(dt, doRender = true) {
 }
 
 function renderOnce(dt) {
-  const cam = jackHeld ? entity.jackCam : camera;
-  if (jackHeld) {
+  const effJack = jackLive(sim, jackHeld);
+  const cam = effJack ? entity.jackCam : camera;
+  if (effJack) {
     entity.jackCam.aspect = camera.aspect;
     entity.jackCam.updateProjectionMatrix();
   }
-  post.render(scene, cam, dt, jackHeld);
+  // 过载噪场只在冷却前段爆开，然后让位给正常画面
+  const overloadBurst = sim.jack.state === "COOLDOWN" && sim.jack.cooldown > JACK.cooldown - 1.0;
+  // 空间压迫：实体近身且看得见时，注意力自己变窄（暗角收紧 + 颗粒变重）
+  const dE = dist2d(sim.player, sim.entity);
+  const seen = losClear(sim.player, sim.entity);
+  const pressure = Math.max(0, Math.min(1, (5.2 - dE) / 3.4)) * (seen ? 1 : 0.25);
+  post.render(scene, cam, dt, {
+    jack: effJack,
+    overload: overloadBurst,
+    pressure,
+    low: sim.lowNow,
+  });
 }
 
-player.state.onStep = (strength, low, side) => audio.playerStep(strength, low, side);
+player.state.onStep = (strength, surface, side) => audio.playerStep(strength, surface, side);
 
 // ---------- 尺寸 ----------
 function resize() {
@@ -319,7 +423,8 @@ window.__H00 = {
   keys: player.keys,
   pressArchive: () => { wantArchive = true; },
   holdJack: (v) => { jackHeld = v; },
-  reset: () => { resetSim(sim, "TEST"); crtMode = "static"; },
+  reset: () => { resetSim(sim, "TEST"); crtMode = "static"; player.showTape(); },
+  jackState: () => ({ ...sim.jack }),
   tick: (dt) => tick(dt),
   step: (dt) => tick(dt, false),
   render: () => renderOnce(1 / 60),

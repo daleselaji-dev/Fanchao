@@ -59,7 +59,7 @@ export function buildWorld(scene, M, T) {
   const B = makeBucket();
   const NB = makeBucket();   // 灯具等不投影几何（防阴影痤疮）
   const colliders = { rects: [], circles: [] };
-  const dynamics = { flickers: [], guests: [], crt: null, lights: {} };
+  const dynamics = { flickers: [], guests: [], crt: null, lights: {}, curtain: null, dust: null };
   const cR = (x, z, w, d) => colliders.rects.push({ x, z, w, d });
   const cC = (x, z, r) => colliders.circles.push({ x, z, r });
 
@@ -304,6 +304,53 @@ export function buildWorld(scene, M, T) {
   // 窗间墙婚宴符号：红纸囍字（贴在上半墙的大面积空白里）
   B.add(M.happiness, planeG(0.85, 0.85), 18, 2.65, 1.615);
   B.add(M.happiness, planeG(0.85, 0.85), 26, 2.65, 1.615);
+  // 摘下相框后的褪色印（时间在墙上的负片——什么都没说，什么都在说）
+  {
+    const fadeAt = (x, y, w2, h2) => {
+      const m = new THREE.Mesh(planeG(w2, h2), M.fadedFrame);
+      m.position.set(x, y, 1.612);
+      scene.add(m);
+    };
+    fadeAt(11.6, 2.5, 0.7, 0.5);
+    fadeAt(33.0, 2.4, 0.5, 0.65);
+  }
+  // 舞台边：贺礼红盒堆 + 立式麦克风（散场没人收）
+  {
+    for (let i = 0; i < 4; i++) {
+      B.add(M.clothRed, boxG(rr(0.3, 0.42), 0.24, rr(0.28, 0.36), 0.5, 0.3),
+        10.2 + rr(-0.15, 0.15), 0.12 + i * 0.25, 2.5 + rr(-0.1, 0.1), rr(-0.25, 0.25));
+    }
+    cC(10.2, 2.5, 0.4);
+    B.add(M.enamelGrey, cylG(0.16, 0.2, 0.03, 12), 4.4, 0.235, 3.3);
+    B.add(M.chrome, cylG(0.012, 0.012, 1.3, 8), 4.4, 0.88, 3.3);
+    B.add(M.plasticBlack, cylG(0.035, 0.05, 0.14, 10), 4.42, 1.56, 3.32, 0.5);
+    cC(4.4, 3.3, 0.24);
+  }
+  // 东墙边：红塑料凳叠成两摞（婚宴加座，收场堆起来）
+  for (const [sx0, sz0, n0] of [[34.6, 6.6, 4], [34.55, 7.3, 3]]) {
+    for (let i = 0; i < n0; i++) {
+      B.add(M.stoolRed, cylG(0.16, 0.14, 0.035, 10), sx0 + rr(-0.02, 0.02), 0.26 + i * 0.2, sz0 + rr(-0.02, 0.02));
+      for (let l = 0; l < 4; l++) {
+        const a2 = l * Math.PI / 2 + 0.4;
+        B.add(M.stoolRed, cylG(0.016, 0.02, 0.24, 6), sx0 + Math.cos(a2) * 0.12, 0.13 + i * 0.2, sz0 + Math.sin(a2) * 0.12, 0.12 * Math.cos(a2), 0, 0.12 * Math.sin(a2));
+      }
+    }
+  }
+  cR(34.3, 6.3, 0.7, 1.3);
+  // 一把倒了的椅子（离位最远的那把——没人扶）
+  {
+    B.add(M.pleats, cylG(0.26, 0.33, 0.5, 4, 5, 0.7), 23.4, 0.2, 7.6, 0.5, 0, Math.PI / 2 - 0.2);
+    B.add(M.clothRed, boxG(0.42, 0.55, 0.06, 1.4, 0.8), 23.15, 0.24, 7.75, Math.PI / 2 - 0.2, 0.4, 0.5);
+    cC(23.3, 7.6, 0.35);
+  }
+  // 地毯上的婚宴残屑：瓜子壳、纸屑、爆过的小红炮纸（贴地小面片）
+  srand(510024);
+  for (let i = 0; i < 46; i++) {
+    const nx = rr(7, 31), nz = rr(2.4, 7.8);
+    const kind = rnd();
+    const mat = kind < 0.5 ? M.clothRed : (kind < 0.8 ? M.cardboard1 : M.porcelain);
+    B.add(mat, planeG(rr(0.02, 0.05), rr(0.02, 0.045)), nx, 0.022, nz, 0, -Math.PI / 2, rr(0, 6.3));
+  }
   // 地面收场杂物：散落餐巾、汽水瓶筐、双喜烟盒
   for (let i = 0; i < 9; i++) {
     const nx = rr(6, 31), nz = rr(3, 8.4);
@@ -366,6 +413,32 @@ export function buildWorld(scene, M, T) {
   // 灭火器
   B.add(M.lantern, cylG(0.08, 0.08, 0.5, 10), 2.35, 0.6, 11.5);
   B.add(M.plasticBlack, cylG(0.02, 0.02, 0.18, 6), 2.35, 0.9, 11.5, 0, 0, 0.5);
+  // 挂历（2001年10月，10月2日画着红圈）
+  B.add(M.calendar, planeG(0.5, 0.66), 15.6, 1.72, 10.16);
+  // 壁挂电话（拨盘式 + 螺旋线垂下）
+  {
+    B.add(M.enamelGreen, boxG(0.22, 0.34, 0.1, 0.2, 0.3), 27.2, 1.62, 10.2);
+    B.add(M.plasticBlack, boxG(0.06, 0.22, 0.05, 0.1, 0.2), 27.31, 1.62, 10.24);
+    B.add(M.plasticBlack, cylG(0.055, 0.055, 0.02, 10), 27.2, 1.56, 10.26, Math.PI / 2);
+    for (let i = 0; i < 7; i++) {
+      B.add(M.rubber, new THREE.TorusGeometry(0.022, 0.006, 5, 10), 27.28, 1.4 - i * 0.05, 10.22, Math.PI / 2 + 0.3, 0, i * 0.5);
+    }
+  }
+  // 服务门边挂钩上的一件同款蓝工装（空的——它和它穿的是一个班组的衣服）
+  {
+    B.add(M.woodDark, boxG(0.5, 0.08, 0.05, 0.5, 0.1), 20.6, 2.05, 10.16);
+    B.add(M.chrome, cylG(0.012, 0.012, 0.1, 6), 20.45, 1.99, 10.2, 0.5);
+    B.add(M.chrome, cylG(0.012, 0.012, 0.1, 6), 20.78, 1.99, 10.2, 0.5);
+    B.add(M.jacket, boxG(0.4, 0.72, 0.09, 0.5, 0.7), 20.45, 1.56, 10.26, 0, 0, 0.04);
+    B.add(M.jacket, boxG(0.34, 0.2, 0.08, 0.4, 0.2), 20.45, 1.9, 10.25);
+  }
+  // 拖把 + 干桶（斜靠西墙——洗涤间就在南边，但没有一滴水）
+  {
+    B.add(M.wood, cylG(0.02, 0.02, 1.55, 6), 2.4, 0.85, 13.2, 0, 0, 0.24);
+    B.add(M.clothRed, boxG(0.14, 0.28, 0.12, 0.2, 0.3), 2.58, 0.14, 13.24);
+    B.add(M.plasticBeige, cylG(0.17, 0.14, 0.3, 12), 2.5, 0.15, 13.8);
+    cC(2.5, 13.6, 0.3);
+  }
   // 器材架 ×2（军绿角钢架，南脚立在巷沿）
   const rack = (x0, len) => {
     for (const lz of [14.05, 14.85]) {
@@ -609,17 +682,34 @@ export function buildWorld(scene, M, T) {
     return L;
   };
 
-  // A 厅吊灯 ×3（暖，收场调暗，东侧那盏半死）
+  // A 厅吊灯 ×3（六臂铜圈吊灯——2001 宴会厅的体面；收场调暗，东侧那盏半死）
   const pendant = (x, z, int, shadow) => {
-    NB.add(M.rubber, cylG(0.012, 0.012, 0.7, 6), x, 3.85, z);
-    NB.add(M.enamelGrey, cylG(0.06, 0.24, 0.2, 12), x, 3.42, z);
-    NB.add(M.bulbWarm, new THREE.SphereGeometry(0.05, 8, 6), x, 3.34, z);
+    NB.add(M.rubber, cylG(0.012, 0.012, 0.6, 6), x, 3.9, z);
+    NB.add(M.enamelGrey, cylG(0.05, 0.09, 0.16, 10), x, 3.56, z);
+    // 铜圈 + 六臂 + 六个奶罩小灯
+    NB.add(M.chrome, new THREE.TorusGeometry(0.34, 0.018, 6, 20), x, 3.42, z, Math.PI / 2);
+    for (let k = 0; k < 6; k++) {
+      const a = k * Math.PI / 3;
+      const bx3 = x + Math.cos(a) * 0.34, bz3 = z + Math.sin(a) * 0.34;
+      NB.add(M.chrome, cylG(0.008, 0.008, 0.2, 6), x + Math.cos(a) * 0.17, 3.49, z + Math.sin(a) * 0.17, 0, 0, Math.PI / 2 - 0.8, );
+      NB.add(M.enamelGrey, cylG(0.03, 0.055, 0.07, 8), bx3, 3.38, bz3);
+      NB.add(M.bulbWarm, new THREE.SphereGeometry(0.038, 8, 6), bx3, 3.33, bz3);
+    }
+    NB.add(M.bulbWarm, new THREE.SphereGeometry(0.05, 8, 6), x, 3.3, z);
     return addPoint(0xffb265, int, 12, x, 3.3, z, { shadow });
   };
-  pendant(9, 4.8, 60, true);
-  pendant(20, 4.4, 55, true);
+  const pend1 = pendant(9, 4.8, 60, true);
+  const pend2 = pendant(20, 4.4, 55, true);
   const deadPendant = pendant(29, 5.2, 20, false);
   deadPendant.color.setHex(0xff9d55);
+  dynamics.lights.pendants = [pend1, pend2, deadPendant];
+  // 北窗透进来的一点街灯（灰绿、极弱——外面还有一个镇子在过普通的夜）
+  {
+    const winSpot = new THREE.SpotLight(0xa8b4a2, 16, 14, 0.55, 0.85, 1.6);
+    winSpot.position.set(22, 3.2, 1.8);
+    winSpot.target.position.set(19.5, 0, 6.5);
+    scene.add(winSpot, winSpot.target);
+  }
   // 舞台红纸灯笼余光
   addPoint(0xd94a2c, 7, 6.5, 6.2, 2.6, 2.4);
   B.add(M.lantern, new THREE.SphereGeometry(0.14, 10, 8), 3.6, 3.0, 1.9);
@@ -745,6 +835,68 @@ export function buildWorld(scene, M, T) {
     scene.add(g1, g2, g3);
     dynamics.guests.push({ g: g1, phase: 0, amp: 0.02 }, { g: g2, phase: 2.1, amp: 0.016 }, { g: g3, phase: 4.2, amp: 0.05, bend: true });
     cC(20.9, 3.3, 0.3); cC(19.2, 3.5, 0.3); cC(28.2, 4.6, 0.3);
+  }
+
+  // ============ E 门 PVC 门帘（2001 后场门口标配；实体穿过时会被拨开）============
+  {
+    const group = new THREE.Group();
+    const strips = [];
+    const n = 8, w0 = 1.6 / n;
+    for (let i = 0; i < n; i++) {
+      const g = new THREE.Group();
+      g.position.set(18 + w0 * (i + 0.5), 2.0, 17.6);
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(w0 * 0.92, 1.85), M.curtainPVC);
+      m.position.y = -0.925;
+      g.add(m);
+      group.add(g);
+      strips.push({ g, ang: 0, vel: 0, phase: rnd() * 6.28 });
+    }
+    // 帘轨
+    const rail = new THREE.Mesh(boxG(1.7, 0.05, 0.06, 1.5, 0.05), M.enamelGrey);
+    rail.position.set(18.8, 2.02, 17.6);
+    group.add(rail);
+    scene.add(group);
+    dynamics.curtain = { strips, doorX: 18.8, doorZ: 17.6 };
+  }
+
+  // ============ C 房补细节：卡座↔CRT 走线、备用带盒、椅背上的外套 ============
+  {
+    B.add(M.rubber, cylG(0.008, 0.008, 0.42, 6), 4.42, 1.1, 19.62, 0.35, 0, 0.15);
+    B.add(M.rubber, cylG(0.008, 0.008, 0.3, 6), 4.5, 0.95, 19.55, 0, 0, 1.1);
+    for (let i = 0; i < 2; i++) {
+      B.add(M.cardboard1, boxG(0.2, 0.032, 0.12, 0.3, 0.1), 4.9 + i * 0.24, 0.795, 19.35, rr(-0.2, 0.2));
+    }
+    B.add(M.trousers, boxG(0.4, 0.4, 0.07, 0.4, 0.4), 5.3, 0.9, 21.2, 0.15, 0.4, 0.05);
+  }
+
+  // ============ 光柱尘埃（吊灯下 / E 门楣灯下 / D 卷帘缝——干燥空气里的悬浮物）============
+  {
+    const N = 150;
+    const pos = new Float32Array(N * 3);
+    const seed = new Float32Array(N);
+    const pools = [
+      { x: 9, y: 2.3, z: 4.8, rx: 1.1, ry: 1.1, rz: 1.1 },
+      { x: 20, y: 2.3, z: 4.4, rx: 1.1, ry: 1.1, rz: 1.1 },
+      { x: 18.8, y: 1.4, z: 16.9, rx: 0.7, ry: 1.0, rz: 0.5 },
+      { x: 30.5, y: 1.3, z: 21.7, rx: 0.8, ry: 1.0, rz: 0.8 },
+      { x: 30.5, y: 0.7, z: 23.5, rx: 1.6, ry: 0.6, rz: 1.4 },
+    ];
+    for (let i = 0; i < N; i++) {
+      const P = pools[i % pools.length];
+      pos[i * 3] = P.x + (rnd() * 2 - 1) * P.rx;
+      pos[i * 3 + 1] = P.y + (rnd() * 2 - 1) * P.ry;
+      pos[i * 3 + 2] = P.z + (rnd() * 2 - 1) * P.rz;
+      seed[i] = rnd() * 6.28;
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+    const pmat = new THREE.PointsMaterial({
+      color: 0xd8c9a4, size: 0.014, transparent: true, opacity: 0.5,
+      depthWrite: false, sizeAttenuation: true,
+    });
+    const points = new THREE.Points(geo, pmat);
+    scene.add(points);
+    dynamics.dust = { points, base: pos.slice(), seed };
   }
 
   // ============ 收尾 ============

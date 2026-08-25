@@ -6,7 +6,7 @@
  * 数值合同：最大速度 3.6 m/s（对齐 UE 360UU/s），由 sim 裁决碰撞。
  */
 import * as THREE from "three";
-import { EYE_HEIGHT, floorHeightAt, PLAYER_START } from "./contract.js";
+import { EYE_HEIGHT, floorHeightAt, PLAYER_START, surfaceAt } from "./contract.js";
 
 export function createPlayer(camera, dom) {
   const state = {
@@ -41,6 +41,7 @@ export function createPlayer(camera, dom) {
   const hand = new THREE.Group();
   camera.add(hand);
   let handMeshes = null;
+  let insertT = -1;   // 归档动画：>=0 时播放「抬手插带」
   function buildHand(M) {
     // 右手自然下垂持带：只在画面右下角露出一角（第一人称的身体在场感）
     // 袖口离镜头近，同款工装布在近距+灯下会亮成蓝块——单独压暗
@@ -49,17 +50,26 @@ export function createPlayer(camera, dom) {
     const sleeve = new THREE.Mesh(new THREE.BoxGeometry(0.085, 0.2, 0.09), sleeveMat);
     sleeve.position.set(0.27, -0.34, -0.38);
     sleeve.rotation.set(-0.5, 0.15, -0.15);
+    // 卷起的袖口边
+    const cuff = new THREE.Mesh(new THREE.CylinderGeometry(0.052, 0.052, 0.035, 10), sleeveMat);
+    cuff.position.set(0.275, -0.415, -0.4);
+    cuff.rotation.set(-0.5, 0.15, -0.15);
     const palm = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.09, 0.055), M.skin);
     palm.position.set(0.285, -0.43, -0.42);
     palm.rotation.set(-0.4, 0.1, -0.1);
+    // 扣在带壳上的指节（第一人称里只看得见这一排）
+    const fingers = new THREE.Mesh(new THREE.BoxGeometry(0.062, 0.03, 0.05), M.skin);
+    fingers.position.set(0.288, -0.475, -0.44);
+    fingers.rotation.set(-0.7, 0.1, -0.1);
     const tape = new THREE.Mesh(new THREE.BoxGeometry(0.104, 0.188, 0.025), M.tapeLabel);
     tape.position.set(0.29, -0.5, -0.45);
     tape.rotation.set(-0.35, 0.3, -0.12);
-    hand.add(sleeve, palm, tape);
+    hand.add(sleeve, cuff, palm, fingers, tape);
     handMeshes = { sleeve, palm, tape };
   }
   function hideTape() {
-    if (handMeshes) { hand.visible = false; }
+    // 归档：不瞬间消失——先抬手把带子送进画面中央，再收手
+    if (handMeshes && insertT < 0) insertT = 0;
   }
 
   // ---- 每帧 ----
@@ -99,9 +109,9 @@ export function createPlayer(camera, dom) {
       const prev = state.bobPhase;
       state.bobPhase += speed * dt * stride;
       state.bobAmp += (1 - state.bobAmp) * Math.min(1, dt * 6);
-      // 落步：相位过半周期
+      // 落步：相位过半周期（表面材质由合同层裁决）
       if (Math.floor(prev / Math.PI) !== Math.floor(state.bobPhase / Math.PI)) {
-        state.onStep?.(speedN, floorHeightAt(simPlayer.x, simPlayer.z) < -0.15,
+        state.onStep?.(speedN, surfaceAt(simPlayer),
           Math.floor(state.bobPhase / Math.PI) % 2 === 0);
       }
     } else {
@@ -126,8 +136,17 @@ export function createPlayer(camera, dom) {
     camera.rotation.x = state.pitch + breathP + bobY * 0.15;
     camera.rotation.z = Math.sin(state.bobPhase) * 0.006 * state.bobAmp;
 
-    // 手持带的摆动
-    if (hand.visible) {
+    // 手持带的摆动 / 归档插带动画
+    if (insertT >= 0) {
+      insertT += dt;
+      const k = Math.min(1, insertT / 0.55);          // 抬手
+      const push = Math.max(0, Math.min(1, (insertT - 0.62) / 0.28));  // 前送
+      const ease = k * k * (3 - 2 * k);
+      hand.position.set(-0.16 * ease + bobX * 0.2, 0.24 * ease, -0.1 * ease - push * 0.16);
+      hand.rotation.x = 0.5 * ease;
+      hand.rotation.z = -0.15 * ease;
+      if (insertT > 1.05) { hand.visible = false; insertT = -2; }
+    } else if (hand.visible) {
       hand.position.set(bobX * 0.5, -bobY * 0.6, 0);
       hand.rotation.z = Math.sin(state.bobPhase) * 0.02 * state.bobAmp;
       hand.rotation.x = -bobY * 0.8;
@@ -136,5 +155,12 @@ export function createPlayer(camera, dom) {
     return { mx, mz };
   }
 
-  return { state, keys, update, requestLock, buildHand, hideTape, hand };
+  function showTape() {
+    hand.visible = true;
+    insertT = -1;
+    hand.position.set(0, 0, 0);
+    hand.rotation.set(0, 0, 0);
+  }
+
+  return { state, keys, update, requestLock, buildHand, hideTape, showTape, hand };
 }

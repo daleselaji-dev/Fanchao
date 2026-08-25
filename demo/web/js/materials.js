@@ -546,6 +546,148 @@ export function texJacket() {
   return c;
 }
 
+// 深色工装裤（旧毛料，竖向压褶 + 膝部磨白）
+export function texTrousers() {
+  srand(12121);
+  const s = 256;
+  const c = makeCanvas(s, s); const x = c.getContext("2d");
+  x.fillStyle = "#23252a"; x.fillRect(0, 0, s, s);
+  // 竖向布纹
+  for (let i = 0; i < 480; i++) {
+    x.fillStyle = `rgba(${ri(38, 60)},${ri(40, 62)},${ri(46, 70)},${rr(0.05, 0.16)})`;
+    x.fillRect(rr(0, s), 0, 1, s);
+  }
+  // 压褶亮线
+  for (const px of [s * 0.3, s * 0.72]) {
+    x.fillStyle = "rgba(90,94,104,0.22)";
+    x.fillRect(px, 0, 2.4, s);
+    x.fillStyle = "rgba(8,9,12,0.3)";
+    x.fillRect(px + 3, 0, 3.5, s);
+  }
+  // 磨白与吸灰
+  blotches(x, s, s, 10, "rgba(120,124,132,@A)", 0.10, 46);
+  blotches(x, s, s, 8, "rgba(8,8,10,@A)", 0.16, 60);
+  grime(x, s, s, 500, 0.05);
+  return c;
+}
+
+// 后场帆布围裙（本白、口袋缝线、干渍——没有一块是湿的）
+export function texApron() {
+  srand(13232);
+  const w = 192, h = 256;
+  const c = makeCanvas(w, h); const x = c.getContext("2d");
+  x.fillStyle = "#b9b09a"; x.fillRect(0, 0, w, h);
+  // 帆布纹
+  for (let i = 0; i < 700; i++) {
+    x.fillStyle = `rgba(${ri(150, 200)},${ri(142, 190)},${ri(120, 165)},${rr(0.04, 0.1)})`;
+    x.fillRect(rr(0, w), rr(0, h), rr(1, 3), 1);
+  }
+  // 大口袋 + 缝线
+  x.strokeStyle = "rgba(90,80,60,0.55)"; x.lineWidth = 2;
+  x.strokeRect(w * 0.18, h * 0.52, w * 0.64, h * 0.3);
+  x.setLineDash([4, 3]);
+  x.strokeRect(w * 0.2, h * 0.535, w * 0.6, h * 0.27);
+  x.setLineDash([]);
+  x.beginPath(); x.moveTo(w * 0.5, h * 0.52); x.lineTo(w * 0.5, h * 0.82); x.stroke();
+  // 系带压痕
+  x.fillStyle = "rgba(90,82,64,0.3)";
+  x.fillRect(0, h * 0.08, w, 5);
+  // 陈年干渍（酱色、茶色——都不是水渍反光）
+  blotches(x, w, h, 12, "rgba(96,66,38,@A)", 0.20, 30);
+  blotches(x, w, h, 8, "rgba(60,40,26,@A)", 0.16, 20);
+  streaks(x, w, h, 10, h * 0.3, h * 0.4, "rgba(80,60,40,@A)", 0.12);
+  grime(x, w, h, 500, 0.06);
+  return c;
+}
+
+// 皮肤（发黄的疲惫肤色，颧骨与关节处色沉）
+export function texSkin() {
+  srand(14343);
+  const s = 128;
+  const c = makeCanvas(s, s); const x = c.getContext("2d");
+  x.fillStyle = "#8a6a52"; x.fillRect(0, 0, s, s);
+  blotches(x, s, s, 14, "rgba(120,86,62,@A)", 0.22, 26);
+  blotches(x, s, s, 10, "rgba(96,66,48,@A)", 0.2, 20);
+  blotches(x, s, s, 6, "rgba(160,124,96,@A)", 0.12, 30);
+  for (let i = 0; i < 260; i++) {
+    x.fillStyle = `rgba(${ri(100, 150)},${ri(74, 108)},${ri(52, 82)},${rr(0.04, 0.12)})`;
+    x.fillRect(rr(0, s), rr(0, s), rr(0.6, 2), rr(0.6, 2));
+  }
+  return c;
+}
+
+// 2001 年 10 月挂历页（走廊墙上——时间被钉住的普通证据）
+export function texCalendar() {
+  srand(15454);
+  const w = 192, h = 256;
+  const c = makeCanvas(w, h); const x = c.getContext("2d");
+  x.fillStyle = "#d8cfb6"; x.fillRect(0, 0, w, h);
+  blotches(x, w, h, 6, "rgba(140,116,72,@A)", 0.14, 40);
+  // 页眉红条 + 年月
+  x.fillStyle = "#a3231a"; x.fillRect(0, 0, w, 44);
+  x.fillStyle = "#f0e3c0";
+  x.font = `bold 24px ${FONT}`; x.textAlign = "center";
+  x.fillText("2001年 10月", w / 2, 30);
+  // 星期行
+  x.fillStyle = "rgba(60,50,40,0.9)"; x.font = `12px ${FONT}`;
+  const wk = ["日", "一", "二", "三", "四", "五", "六"];
+  wk.forEach((d, i) => x.fillText(d, 16 + i * 26, 62));
+  // 日期格（10 月 1 日周一；2 日婚宴那天画了红圈）
+  x.font = `bold 14px ${FONT}`;
+  for (let d = 1; d <= 31; d++) {
+    const cell = d + 0;                    // 10.1 是周一 → 序号+1
+    const col = (cell) % 7, row = Math.floor((cell) / 7);
+    const cx0 = 16 + col * 26, cy0 = 86 + row * 30;
+    x.fillStyle = col === 0 || col === 6 ? "rgba(150,40,30,0.85)" : "rgba(50,44,36,0.85)";
+    x.fillText(String(d), cx0, cy0);
+    if (d === 2) {
+      x.strokeStyle = "rgba(170,30,20,0.8)"; x.lineWidth = 2;
+      x.beginPath(); x.arc(cx0, cy0 - 5, 11, 0, 7); x.stroke();
+    }
+  }
+  // 撕痕
+  x.fillStyle = "rgba(120,110,90,0.5)";
+  for (let i = 0; i < 12; i++) x.fillRect(6 + i * 16, 2, 8, 3);
+  grime(x, w, h, 260, 0.05);
+  return c;
+}
+
+// 墙上摘下相框后的褪色印（浅一块 + 灰边——时间在墙上的负片）
+export function texFadedFrame() {
+  const w = 128, h = 96;
+  const c = makeCanvas(w, h); const x = c.getContext("2d");
+  x.clearRect(0, 0, w, h);
+  const g = x.createLinearGradient(0, 0, 0, h);
+  g.addColorStop(0, "rgba(240,228,196,0.16)");
+  g.addColorStop(1, "rgba(240,228,196,0.10)");
+  x.fillStyle = g; x.fillRect(6, 6, w - 12, h - 12);
+  x.strokeStyle = "rgba(60,52,40,0.35)"; x.lineWidth = 3;
+  x.strokeRect(6, 6, w - 12, h - 12);
+  // 挂钉孔
+  x.fillStyle = "rgba(40,34,26,0.6)";
+  x.beginPath(); x.arc(w / 2, 4, 2.2, 0, 7); x.fill();
+  return c;
+}
+
+// PVC 门帘条（发黄半透、纵向刮痕——2001 后场门口标配）
+export function texCurtainPVC() {
+  srand(16565);
+  const w = 64, h = 256;
+  const c = makeCanvas(w, h); const x = c.getContext("2d");
+  x.fillStyle = "#b8ac88"; x.fillRect(0, 0, w, h);
+  for (let i = 0; i < 90; i++) {
+    x.fillStyle = `rgba(${ri(200, 240)},${ri(190, 226)},${ri(150, 190)},${rr(0.06, 0.18)})`;
+    x.fillRect(rr(0, w), 0, rr(0.6, 2), h);
+  }
+  streaks(x, w, h, 16, 0, h, "rgba(70,60,40,@A)", 0.14);
+  // 下缘吸灰发暗
+  const g = x.createLinearGradient(0, h * 0.7, 0, h);
+  g.addColorStop(0, "rgba(50,42,30,0)");
+  g.addColorStop(1, "rgba(50,42,30,0.4)");
+  x.fillStyle = g; x.fillRect(0, h * 0.7, w, h * 0.3);
+  return c;
+}
+
 // 天花（走廊水泥板 / 大厅石膏板）
 export function texCeiling(panel = false) {
   srand(9888 + (panel ? 1 : 0));
@@ -633,8 +775,15 @@ export function makeCRT() {
       x.beginPath(); x.moveTo(0, h * 0.88); x.lineTo(w * 0.46, h * 0.46); x.stroke();
       x.beginPath(); x.moveTo(w, h * 0.92); x.lineTo(w * 0.46, h * 0.46); x.stroke();
       x.beginPath(); x.moveTo(0, h * 0.12); x.lineTo(w * 0.46, h * 0.4); x.stroke();
+      // 走廊里的日光灯条与门洞暗块（画面读得出这是 B 廊，不是抽象噪声）
       x.fillStyle = "rgba(200,214,188,0.5)";
       x.fillRect(w * 0.3, h * 0.28, 10, 3); x.fillRect(w * 0.52, h * 0.3, 8, 2.5);
+      x.fillStyle = "rgba(6,9,6,0.8)";
+      x.fillRect(w * 0.16, h * 0.46, 12, 26); x.fillRect(w * 0.6, h * 0.5, 10, 20);
+      // 监看画面里极远处一个不动的竖影（只有几个像素——第一次看会以为是柜子）
+      const sway0 = Math.sin(t * 0.22) * 0.8;
+      x.fillStyle = "rgba(28,34,28,0.9)";
+      x.fillRect(w * 0.445 + sway0, h * 0.40, 3.2, 9);
       for (let i = 0; i < 340; i++) {
         const v = ri(30, 120);
         x.fillStyle = `rgba(${v},${v + 8},${v},${rr(0.06, 0.3)})`;
@@ -642,6 +791,15 @@ export function makeCRT() {
       }
       x.fillStyle = "rgba(0,0,0,0.25)";
       for (let y = Math.floor(t * 24) % 2; y < h; y += 2) x.fillRect(0, y, w, 1);
+      // 偶发场同步撕裂（旧监视器打嗝）
+      const tear = Math.sin(t * 0.37) > 0.965;
+      if (tear) {
+        const ty = (t * 61) % h;
+        const band = x.getImageData(0, ty, w, 7);
+        x.putImageData(band, ri(-8, 8), ty);
+        x.fillStyle = "rgba(220,232,210,0.14)";
+        x.fillRect(0, ty, w, 2);
+      }
       x.fillStyle = "rgba(200,214,188,0.75)"; x.font = "bold 10px monospace";
       x.fillText("CAM-2 B廊", 6, 13);
       x.fillText("19:47", w - 40, 13);
@@ -730,25 +888,25 @@ export function buildMaterials(renderer) {
 
   const std = (opts) => new THREE.MeshStandardMaterial(opts);
 
-  // 墙面
+  // 墙面（bumpMap 直接复用彩色贴图亮度：勾缝凹陷、砖面微鼓，斜射光下立起来）
   T.tile30 = canvasTex(texTileWall(3.0));
   T.tile28 = canvasTex(texTileWall(2.8, { grimeAmt: 1.3 }));
-  M.tileB = std({ map: T.tile30, roughness: 0.34, metalness: 0.0, envMapIntensity: 0.5 });
-  M.tileCE = std({ map: T.tile28, roughness: 0.38, metalness: 0.0, envMapIntensity: 0.4 });
+  M.tileB = std({ map: T.tile30, roughness: 0.34, metalness: 0.0, envMapIntensity: 0.5, bumpMap: T.tile30, bumpScale: 1.2 });
+  M.tileCE = std({ map: T.tile28, roughness: 0.38, metalness: 0.0, envMapIntensity: 0.4, bumpMap: T.tile28, bumpScale: 1.2 });
   T.hallWall = canvasTex(texHallWall(4.2));
-  M.hallWall = std({ map: T.hallWall, roughness: 0.85, envMapIntensity: 0.15 });
+  M.hallWall = std({ map: T.hallWall, roughness: 0.85, envMapIntensity: 0.15, bumpMap: T.hallWall, bumpScale: 0.7 });
   T.concreteWall = canvasTex(texConcrete());
-  M.concreteWall = std({ map: T.concreteWall, roughness: 0.95, envMapIntensity: 0.08 });
+  M.concreteWall = std({ map: T.concreteWall, roughness: 0.95, envMapIntensity: 0.08, bumpMap: T.concreteWall, bumpScale: 1.6 });
 
   // 地面
   T.terrazzo = canvasTex(texTerrazzo());
-  M.terrazzo = std({ map: T.terrazzo, roughness: 0.42, envMapIntensity: 0.45 });
+  M.terrazzo = std({ map: T.terrazzo, roughness: 0.42, envMapIntensity: 0.45, bumpMap: T.terrazzo, bumpScale: 0.5 });
   T.concrete = canvasTex(texConcrete());
-  M.concrete = std({ map: T.concrete, roughness: 0.9, envMapIntensity: 0.1 });
+  M.concrete = std({ map: T.concrete, roughness: 0.9, envMapIntensity: 0.1, bumpMap: T.concrete, bumpScale: 1.4 });
   T.sediment = canvasTex(texConcrete({ sediment: 1 }));
-  M.sediment = std({ map: T.sediment, roughness: 0.95, envMapIntensity: 0.06 });
+  M.sediment = std({ map: T.sediment, roughness: 0.95, envMapIntensity: 0.06, bumpMap: T.sediment, bumpScale: 1.8 });
   T.carpet = canvasTex(texCarpet());
-  M.carpet = std({ map: T.carpet, roughness: 0.95, envMapIntensity: 0.04 });
+  M.carpet = std({ map: T.carpet, roughness: 0.95, envMapIntensity: 0.04, bumpMap: T.carpet, bumpScale: 0.8 });
 
   // 天花
   T.ceilB = canvasTex(texCeiling(false));
@@ -765,9 +923,9 @@ export function buildMaterials(renderer) {
   T.enamelGrey = canvasTex(texEnamel(40, 5, 42));
   M.enamelGrey = std({ map: T.enamelGrey, roughness: 0.55, metalness: 0.2, envMapIntensity: 0.35 });
   T.wood = canvasTex(texWood());
-  M.wood = std({ map: T.wood, roughness: 0.62, envMapIntensity: 0.25 });
+  M.wood = std({ map: T.wood, roughness: 0.62, envMapIntensity: 0.25, bumpMap: T.wood, bumpScale: 0.5 });
   T.woodDark = canvasTex(texWood(14, 20));
-  M.woodDark = std({ map: T.woodDark, roughness: 0.7, envMapIntensity: 0.2 });
+  M.woodDark = std({ map: T.woodDark, roughness: 0.7, envMapIntensity: 0.2, bumpMap: T.woodDark, bumpScale: 0.5 });
   T.clothRed = canvasTex(texClothRed());
   M.clothRed = std({ map: T.clothRed, roughness: 0.62, envMapIntensity: 0.25 });
   T.pleats = canvasTex(texPleats());
@@ -825,13 +983,30 @@ export function buildMaterials(renderer) {
 
   // 实体
   T.jacket = canvasTex(texJacket());
-  M.jacket = std({ map: T.jacket, roughness: 0.85, envMapIntensity: 0.1 });
-  M.trousers = std({ color: 0x23252a, roughness: 0.92, envMapIntensity: 0.06 });
-  M.hair = std({ color: 0x141210, roughness: 0.75, envMapIntensity: 0.15 });
-  M.skin = std({ color: 0x8a6a52, roughness: 0.65, envMapIntensity: 0.2 });
+  M.jacket = std({ map: T.jacket, roughness: 0.85, envMapIntensity: 0.1, bumpMap: T.jacket, bumpScale: 0.6 });
+  T.trousers = canvasTex(texTrousers());
+  M.trousers = std({ map: T.trousers, roughness: 0.92, envMapIntensity: 0.06 });
+  M.hair = std({ color: 0x141210, roughness: 0.72, envMapIntensity: 0.15 });
+  T.skin = canvasTex(texSkin());
+  M.skin = std({ map: T.skin, roughness: 0.62, envMapIntensity: 0.2 });
   T.compound = canvasTex(texCompoundEye());
-  M.compound = std({ map: T.compound, roughness: 0.55, envMapIntensity: 0.35, emissive: 0x000000 });
+  M.compound = std({ map: T.compound, roughness: 0.55, envMapIntensity: 0.35, emissive: 0x000000, bumpMap: T.compound, bumpScale: 1.4 });
   M.shoes = std({ color: 0x191512, roughness: 0.5, envMapIntensity: 0.3 });
+  T.apron = canvasTex(texApron());
+  M.apron = std({ map: T.apron, roughness: 0.9, envMapIntensity: 0.08, side: THREE.DoubleSide });
+
+  // 场景新增细节
+  T.calendar = canvasTex(texCalendar());
+  M.calendar = std({ map: T.calendar, roughness: 0.9, envMapIntensity: 0.05 });
+  T.fadedFrame = new THREE.CanvasTexture(texFadedFrame());
+  T.fadedFrame.colorSpace = THREE.SRGBColorSpace;
+  M.fadedFrame = new THREE.MeshBasicMaterial({ map: T.fadedFrame, transparent: true, depthWrite: false, opacity: 0.9 });
+  T.curtainPVC = canvasTex(texCurtainPVC());
+  M.curtainPVC = std({
+    map: T.curtainPVC, roughness: 0.32, envMapIntensity: 0.9,
+    transparent: true, opacity: 0.52, side: THREE.DoubleSide, depthWrite: false,
+  });
+  M.stoolRed = std({ color: 0x7e1c16, roughness: 0.42, envMapIntensity: 0.5 });
 
   // 灯具
   M.tubeOn = new THREE.MeshBasicMaterial({ color: 0xd7e6d2 });

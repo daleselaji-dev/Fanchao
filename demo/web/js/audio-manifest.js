@@ -24,5 +24,11 @@ export const SOUND_MANIFEST = [
   "deck-motor",     // 卡座走带电机
   "tape-insert",    // 插带
   "jack-static",    // 借视接入的信号底噪
+  "jack-overload",  // 借视信号过载的失锁噪爆
   "breath-player",  // 玩家呼吸（低速率，气声）
+  "breath-entity",  // 借视里听见的载体呼吸（很慢、很平——还在上班的人的呼吸）
+  "curtain-pvc",    // E 门 PVC 门帘被拨开的塑料碰响
+  "ballast-click",  // 日光灯镇流器打火的哒声
+  "truck-pass",     // 远处夜路偶尔过一辆卡车（镇子还在过普通的夜）
+  "cloth-player",   // 玩家转身时自己衣料的摩擦
 ];
