@@ -112,9 +112,9 @@ const reroute = await ev(() => {
   g.sys.hang(g.sys.hook('hAlcove'));
   return 'rerouted';
 });
-// 看 T02 CRT
+// 看 T02 CRT（电视在 26.5,-7.5，从东北侧看向它）
 await unseat();
-await ev(() => { const p = window.__game.player; p.teleport(28, -5.2, Math.PI * 0.78); p.pitch = -0.1; });
+await ev(() => { const p = window.__game.player; p.teleport(28, -5.2, 0.58); p.pitch = -0.12; });
 await page.waitForTimeout(4000);
 await shot('07_crt_t02.png');
 

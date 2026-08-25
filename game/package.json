@@ -14,6 +14,8 @@
     "three": "^0.185.1"
   },
   "devDependencies": {
+    "@electron/packager": "^20.3.0",
+    "electron": "^22.3.27",
     "playwright-core": "^1.62.1"
   }
 }
