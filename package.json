@@ -1,0 +1,31 @@
+{
+  "name": "workspace",
+  "version": "1.0.0",
+  "description": "> **潮来了，但水没有来；真正抵达陆地的是水深、压力、沉积、声学和时间留下的后果。**",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "node --test demo/web/tests/*.test.mjs",
+    "e2e": "node demo/web/tests/e2e.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/daleselaji-dev/Fanchao.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/daleselaji-dev/Fanchao/issues"
+  },
+  "homepage": "https://github.com/daleselaji-dev/Fanchao#readme",
+  "type": "module",
+  "dependencies": {
+    "three": "0.180.0"
+  },
+  "devDependencies": {
+    "playwright-core": "^1.55.0"
+  }
+}
