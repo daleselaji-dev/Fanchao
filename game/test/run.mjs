@@ -103,7 +103,8 @@ const doorEOpen = await ev(() => {
 await ev(() => { window.__game.player.teleport(17, -6.2, -Math.PI / 2); });
 const b2 = await until(() => window.__agenda.beat >= 2);
 await until(() => window.__game.waiters[0].state === 'ride');
-await ev(() => { const p = window.__game.player; p.teleport(26, -6.9, -Math.PI / 2); p.pitch = 0.0; });
+// 站位离绳 >0.85m（滑行侍应的引座抓取半径），否则黑暗里被引座 → fade 遮黑截图
+await ev(() => { const p = window.__game.player; p.teleport(25.5, -7.4, -Math.PI / 2 - 0.15); p.pitch = 0.0; });
 // 震惊节拍①：走廊灭灯横穿 —— 等全黑 + 绳网自发光点亮的瞬间（emissive 2.6）
 const shock1 = await until(() => window.__agenda._shock1, 40000);
 await until(() => window.__game.sys.cords.some(c => c.mat.emissiveIntensity > 2), 30000);
