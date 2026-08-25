@@ -103,8 +103,28 @@ export class MC {
       wing.position.set(s * 0.035, 1.37, 0.13);
       this.group.add(wing);
     }
-    // 口部鱼籽状钙化增生（几何层，2 米读）
-    const roeMat = new THREE.MeshStandardMaterial({ color: 0xe4dbc2, roughness: 0.35, envMapIntensity: 1.2, transparent: true, opacity: 0.96 });
+    // 胸花（红绢花 + 绿叶——喜宴工位证）
+    {
+      const fl = new THREE.Group();
+      const petalMat = new THREE.MeshStandardMaterial({ color: 0xc01018, roughness: 0.65, emissive: 0x28060a });
+      for (let i = 0; i < 6; i++) {
+        const p = new THREE.Mesh(new THREE.SphereGeometry(0.022, 6, 5), petalMat);
+        const a = (i / 6) * Math.PI * 2;
+        p.position.set(Math.cos(a) * 0.028, Math.sin(a) * 0.028, 0);
+        p.scale.z = 0.5;
+        fl.add(p);
+      }
+      const heart = new THREE.Mesh(new THREE.SphereGeometry(0.016, 6, 5),
+        new THREE.MeshStandardMaterial({ color: 0xd8b050, roughness: 0.5 }));
+      heart.position.z = 0.012; fl.add(heart);
+      const leaf = new THREE.Mesh(new THREE.ConeGeometry(0.014, 0.05, 5),
+        new THREE.MeshStandardMaterial({ color: 0x2e5c34, roughness: 0.8 }));
+      leaf.position.set(-0.04, -0.03, -0.005); leaf.rotation.z = 1.1; fl.add(leaf);
+      fl.position.set(0.13, 1.22, 0.15);
+      this.group.add(fl);
+    }
+    // 口部鱼籽状钙化增生（几何层，2 米读）—— 湿光质感，烛光下颗颗可辨
+    const roeMat = new THREE.MeshStandardMaterial({ color: 0xe4dbc2, roughness: 0.22, envMapIntensity: 1.6, transparent: true, opacity: 0.97, emissive: 0x0c0a06 });
     const roe = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 6, 6), roeMat, 90);
     const dum = new THREE.Object3D();
     TX.srand(404);
@@ -200,15 +220,45 @@ export class Waiter {
     const collar = new THREE.Mesh(new THREE.CylinderGeometry(0.052, 0.055, 0.06, 8), armMat);
     collar.position.y = 1.44;
     this.group.add(collar);
-    // 托盘（端得极稳——无论怎么走，托盘永远水平）+ 分层沉积截面的"菜"
+    // 托盘（端得极稳——无论怎么走，托盘永远水平）——三人菜色各异
     const tray = new THREE.Group();
     const plate = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.22, 0.02, 14), new THREE.MeshStandardMaterial({ color: 0x9aa0a6, metalness: 0.9, roughness: 0.3 }));
     tray.add(plate);
-    const dish = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.15, 0.09, 12), new THREE.MeshStandardMaterial({ ...TX.sediment() }));
-    dish.position.y = 0.06;
-    tray.add(dish);
+    if (id === 0) {
+      // 分层沉积截面的「菜」
+      const dish = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.15, 0.09, 12), new THREE.MeshStandardMaterial({ ...TX.sediment() }));
+      dish.position.y = 0.06;
+      tray.add(dish);
+    } else if (id === 1) {
+      // 一摞白瓷碗（微微过高）
+      const bowlMat = new THREE.MeshStandardMaterial({ color: 0xe8e4da, roughness: 0.18, envMapIntensity: 1.2 });
+      for (let k = 0; k < 6; k++) {
+        const bowl = new THREE.Mesh(new THREE.CylinderGeometry(0.085 - k * 0.002, 0.06, 0.045, 10), bowlMat);
+        bowl.position.y = 0.035 + k * 0.042;
+        bowl.rotation.y = k * 0.4;
+        tray.add(bowl);
+      }
+    } else {
+      // 金属菜罩（看不见里面是什么）
+      const dome = new THREE.Mesh(new THREE.SphereGeometry(0.15, 14, 10, 0, Math.PI * 2, 0, Math.PI * 0.5),
+        new THREE.MeshStandardMaterial({ color: 0xb8b4a8, metalness: 0.95, roughness: 0.18, envMapIntensity: 1.8 }));
+      dome.position.y = 0.02;
+      tray.add(dome);
+      const knob = new THREE.Mesh(new THREE.SphereGeometry(0.02, 8, 6), new THREE.MeshStandardMaterial({ color: 0xc79a3a, metalness: 0.8, roughness: 0.3 }));
+      knob.position.y = 0.17;
+      tray.add(knob);
+    }
     tray.position.set(-0.22, 1.08, 0.24);
     this.group.add(tray);
+    // 腰围黑围裙
+    const apron = new THREE.Mesh(new THREE.PlaneGeometry(0.34, 0.42),
+      new THREE.MeshStandardMaterial({ color: 0x0f0f12, roughness: 0.9, side: THREE.DoubleSide }));
+    apron.position.set(0, 0.72, 0.19);
+    apron.rotation.x = 0.06;
+    this.group.add(apron);
+    // 三人体态差异：身高 / 头微倾角度
+    this.group.scale.setScalar(0.98 + id * 0.045);
+    this.head.rotation.z = (id - 1) * 0.06;
     this.arms.left.shoulder.rotation.x = -0.85;
     this.arms.left.elbow.rotation.x = -0.75;
     // 右手上举抓绳（索道姿态签名）
@@ -256,15 +306,35 @@ export class Waiter {
       this.cord = null;
     }
   }
-  startChase() { if (this.state !== 'escorting') this.state = 'chase'; }
+  // 预告→追逐：先停 0.9 秒，头部猛地转向玩家（可学习的威胁前摇）
+  startChase(instant = false) {
+    if (this.state === 'escorting' || this.state === 'chase') return;
+    if (instant || this.state === 'alert') { this.state = 'chase'; return; }
+    this.state = 'alert';
+    this.alertTimer = 0.9;
+  }
   stopChase(sys) {
-    if (this.state === 'chase') { this.state = 'stand'; this.standTimer = 1.2; }
+    if (this.state === 'chase' || this.state === 'alert') { this.state = 'stand'; this.standTimer = 1.2; }
   }
   update(dt, sys, playerPos, onCatch, audio) {
     if (!this.visible) return;
     this._bob += dt;
     const g = this.group;
     let moving = false, mv = new THREE.Vector3();
+    if (this.state === 'alert') {
+      // 定住——只有头部锁向玩家
+      this.alertTimer -= dt;
+      const dx = playerPos.x - g.position.x, dz = playerPos.z - g.position.z;
+      const targetYaw = Math.atan2(dx, dz);
+      let dd = targetYaw - this.yaw;
+      while (dd > Math.PI) dd -= Math.PI * 2;
+      while (dd < -Math.PI) dd += Math.PI * 2;
+      this.head.rotation.y += (THREE.MathUtils.clamp(dd, -1.2, 1.2) - this.head.rotation.y) * Math.min(1, dt * 14);
+      if (!this._alertSting) { this._alertSting = true; audio?.sting(0.3); }
+      if (this.alertTimer <= 0) { this.state = 'chase'; this._alertSting = false; }
+    } else if (this.head.rotation.y !== 0 && this.state !== 'chase') {
+      this.head.rotation.y += (0 - this.head.rotation.y) * dt * 3;
+    }
     if (this.state === 'ride' && this.cord) {
       if (!sys.cords.includes(this.cord) || !this.cord.a || !this.cord.b) {
         this.state = 'stand'; this.standTimer = 2.6; this.cord = null;
@@ -466,6 +536,11 @@ export class Gazer {
     const hair = new THREE.Mesh(hairGeo, mat2);
     hair.position.set(0, 1.42, -0.08);
     this.group.add(hair);
+    // 垂到腰际的长发（背身剪影的关键读法）
+    const longHair = new THREE.Mesh(new THREE.PlaneGeometry(0.26, 0.75), mat2);
+    longHair.position.set(0, 1.15, -0.14);
+    longHair.rotation.x = 0.08;
+    this.group.add(longHair);
     // 腕上剪断的旧绳头
     const stub = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.2, 5),
       new THREE.MeshBasicMaterial({ color: 0x8e1418, transparent: true, opacity: 0.6 }));
@@ -511,6 +586,7 @@ export class Gazer {
 // ---------- 新娘（盖头之下不揭示） ----------
 export class Bride {
   constructor(scene) {
+    this.scene = scene;
     this.group = new THREE.Group();
     const redSilk = new THREE.MeshStandardMaterial({ color: 0xa50f16, roughness: 0.55, emissive: 0x25040a });
     // 坐姿身形
@@ -518,11 +594,33 @@ export class Bride {
       [[0.26, 0], [0.3, 0.2], [0.24, 0.5], [0.26, 0.75], [0.2, 0.95], [0.06, 1.05]].map(([r, y]) => new THREE.Vector2(r, y)), 10), redSilk);
     body.castShadow = true;
     this.group.add(body);
-    // 盖头（红绸罩住整个头）
+    // 盖头（红绸罩住整个头——边缘绣金，烛光下唯一可读的細節）
     const veil = new THREE.Mesh(new THREE.ConeGeometry(0.2, 0.42, 10, 3, true),
-      new THREE.MeshStandardMaterial({ color: 0xb01218, roughness: 0.5, side: THREE.DoubleSide, emissive: 0x30060a }));
+      new THREE.MeshStandardMaterial({ map: TX.veilSilk(), roughness: 0.5, side: THREE.DoubleSide, emissive: 0x30060a }));
     veil.position.y = 1.22;
     this.group.add(veil);
+    // 凤冠（金带 + 珠串垂旒，微颤）
+    const gold = new THREE.MeshStandardMaterial({ color: 0xc79a3a, metalness: 0.85, roughness: 0.3, envMapIntensity: 1.6 });
+    const band = new THREE.Mesh(new THREE.TorusGeometry(0.14, 0.018, 6, 18), gold);
+    band.rotation.x = Math.PI / 2;
+    band.position.y = 1.36;
+    this.group.add(band);
+    this.beads = [];
+    for (let i = 0; i < 7; i++) {
+      const a = -0.9 + i * 0.3;
+      const string = new THREE.Group();
+      for (let k = 0; k < 4; k++) {
+        const bead = new THREE.Mesh(new THREE.SphereGeometry(0.011, 6, 5), gold);
+        bead.position.y = -0.035 * (k + 1);
+        string.add(bead);
+      }
+      string.position.set(Math.sin(a) * 0.14, 1.36, Math.cos(a) * 0.14);
+      this.group.add(string);
+      this.beads.push({ g: string, phase: i * 1.1 });
+    }
+    const crownTop = new THREE.Mesh(new THREE.ConeGeometry(0.05, 0.1, 8), gold);
+    crownTop.position.y = 1.42;
+    this.group.add(crownTop);
     // 搭在膝上的手
     const hand = new THREE.Mesh(new THREE.SphereGeometry(0.05, 8, 8), new THREE.MeshStandardMaterial({ color: 0xc8a084, roughness: 0.7 }));
     hand.position.set(0.1, 0.55, 0.2);
@@ -537,11 +635,35 @@ export class Bride {
     this.group.position.set(x, 0.42, z);
     this.group.rotation.y = yaw;
     this.group.visible = true;
+    // 主桌下：她与玩家的绳在这里汇成同一个结（终局可见，不解释）
+    if (!this._knot) {
+      this._knot = new THREE.Group();
+      const cordMat = new THREE.MeshStandardMaterial({ color: 0xa50f16, emissive: 0x3d0407, emissiveIntensity: 1.2, roughness: 0.75 });
+      const seat = new THREE.Vector3(2.1, 0.1, -13.5);
+      const mid = new THREE.Vector3(0.4, 0.08, -13.6);
+      const tube = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([
+        new THREE.Vector3(x, 0.5, z),
+        new THREE.Vector3(x + 0.4, 0.06, z + 0.3),
+        mid,
+        new THREE.Vector3(1.4, 0.05, -13.4),
+        seat,
+      ]), 20, 0.018, 5), cordMat);
+      this._knot.add(tube);
+      const knot = new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 8), cordMat);
+      knot.position.copy(mid);
+      this._knot.add(knot);
+      this.scene.add(this._knot);
+    }
   }
   update(dt) {
     if (!this.group.visible) return;
     this._t += dt;
     const b = 1 + Math.sin(this._t * 0.8) * 0.01;
     this.group.scale.set(1, b, 1);
+    // 珠旒微颤——她在极轻地抖
+    for (const bd of this.beads) {
+      bd.g.rotation.x = Math.sin(this._t * 7.3 + bd.phase) * 0.06;
+      bd.g.rotation.z = Math.cos(this._t * 8.1 + bd.phase) * 0.05;
+    }
   }
 }

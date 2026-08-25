@@ -28,9 +28,10 @@ export class Agenda {
 
   // ---------- 广播（含静默规则：收声→提示音→广播词→手势滞后） ----------
   announce(text, sylls, cardTitle = null, cardSub = '') {
-    const { audio, ui, mc } = this.g;
+    const { audio, ui, mc, post } = this.g;
     audio.hush(3);
-    this.g.post.shock = 0.8;
+    post.shock = 0.8;
+    post.letterboxTarget = 1;   // 广播 = 电影时刻
     this.after(2.2, () => audio.paChime());
     this.after(3.4, () => {
       audio.broadcast(sylls, 104 + this.beat * 4);
@@ -40,7 +41,10 @@ export class Agenda {
       const lag = 1.4 * (1 - mc.sync);
       this.after(3.4 + lag, () => mc.gesture());
     });
-    this.after(7.5, () => audio.unhush());
+    this.after(7.5, () => {
+      audio.unhush();
+      post.letterboxTarget = this._lbBase || 0;
+    });
   }
 
   addNoise(v, silent = false) {
@@ -95,23 +99,32 @@ export class Agenda {
   // ---------- 引座（失败演出：您的位置在这边） ----------
   escort(waiter) {
     if (this.escorting || this.grace > 0 || this.ended) return;
-    const { ui, player, audio } = this.g;
+    const { ui, player, audio, post } = this.g;
     this.escorting = true;
     this.call.active = false;
     ui.callHint(false);
+    ui.reticle('');
     if (this.call.waiter) { this.call.waiter.stopChase(this.g.sys); this.call.waiter = null; }
+    // 被挽住手臂：强制面向侍应的脸——闭目微笑就在眼前
+    const wp = waiter.group.position;
+    player.yaw = Math.atan2(player.pos.x - wp.x, player.pos.z - wp.z);
+    player.pitch = -0.06;
+    player.kick(-0.05, 0.03);
     audio.thud(0.25);
-    ui.fade(1, 0.5);
+    audio.sting(0.22);
+    post.shock = 1.0;
+    ui.fade(1, 0.9);
     ui.subtitle('「您的位置在这边。」', 4);
     this.after(1.6, () => {
       if (!this.escorting || this.ended) { ui.fade(0, 0.8); return; }
       player.teleport(-1.7, -10.2, 0);
+      player.pitch = 0.14; // 被按下时视线微垂——面前是桌布与倒扣的杯
       player.seated = true;
       // 押送的侍应回到席边站立
       waiter.group.position.set(-2.6, 0, -10.2);
       waiter.state = 'stand'; waiter.standTimer = 5;
       ui.fade(0, 0.8);
-      ui.prompt('你被按进了一把空椅子。<b>长按 E</b> 站起来');
+      ui.prompt('你被按进了一把空椅子 —— <b>长按</b>站起来', 'E');
     });
   }
 
@@ -120,9 +133,103 @@ export class Agenda {
     player.seated = false;
     this.escorting = false;
     this.grace = 7;
+    player.pitch = 0;
+    player.kick(0.04);
     ui.fade(0, 0.6);
     ui.prompt('');
     ui.subtitle('趁他们没看着——走。', 3);
+  }
+
+  // ================= 震惊节拍 =================
+  // ① 走廊灭灯横穿：整条走廊由远及近熄灭，黑暗里一名侍应贴脸滑过，再亮
+  _shockCorridor() {
+    this._shock1 = true;
+    const { audio, ui, post, L, waiters, sys } = this.g;
+    audio.setLayer('roomtone', 0, 0.5);
+    const prevMult = this.lightMult.corridor;
+    this.lightMult.corridor = 0.02; // 灯光目标值先归零，逐管熄灭负责视觉节奏
+    // 由远及近逐管熄灭
+    const tubes = L.dyn.tubes.filter(t => t.light.position.z < 0);
+    tubes.sort((a, b) => b.light.position.x - a.light.position.x);
+    tubes.forEach((tb, i) => {
+      this.after(0.4 + i * 0.5, () => {
+        tb.light.intensity = 0;
+        tb.mat.emissiveIntensity = 0;
+        audio.ratchet();
+        audio.thud(0.12);
+      });
+    });
+    this.after(0.4 + tubes.length * 0.5, () => {
+      post.shock = 1.2;
+      audio.boom(0.35);
+      ui.subtitle('灯灭下来的顺序——是朝着你来的。', 4);
+      // 黑暗里：侍应 0 挂上身边的绳滑过
+      const w = waiters[0];
+      w.setVisible(true);
+      const near = sys.cords.filter(c => c.rideable && c.a && c.b && c.pointAt(0.5).x > 17 && c.pointAt(0.5).x < 31);
+      if (near.length) {
+        w.cord = near[0];
+        w.t = 0.95; w.dir = -1; w.state = 'ride';
+        const p = near[0].pointAt(w.t);
+        w.group.position.set(p.x, 0, p.z);
+      }
+      audio.sting(0.5);
+      audio.pluck(60, 0.5, 0.998);
+    });
+    this.after(3.6 + tubes.length * 0.5, () => {
+      if (this.beat < 3) this.lightMult.corridor = prevMult; // 点火后由点火状态接管
+      L.dyn.tubes.forEach(tb => { tb.mat.emissiveIntensity = 2.6; });
+      post.flash = 0.5;
+      audio.setLayer('roomtone', 0.05, 2);
+      ui.subtitle('灯回来的时候，托盘上的菜换过了。', 4.5);
+    });
+  }
+
+  // ② 海洋馆：水里的暗影猛地撞上玻璃
+  _shockGlass() {
+    this._shock2 = true;
+    const { audio, ui, post, L } = this.g;
+    const shade = L.dyn.seaShade;
+    this._shadeLunge = { t: 0, fromX: shade.position.x, fromY: shade.position.y };
+    this.after(0.5, () => {
+      audio.boom(0.95);
+      post.shock = 1.6;
+      post.flash = 0.55;
+      this.g.player.kick(-0.09, 0.05);
+      L.dyn.cracks.forEach(c => { c.material.opacity = Math.max(c.material.opacity, 0.3); });
+      const prevAqua = this.lightMult.aqua;
+      this.lightMult.aqua = 0.08;
+      ui.subtitle('玻璃闷响了一声。那个影子比整面墙还长。', 5);
+      for (let i = 0; i < 3; i++) this.after(0.6 + i * 0.8, () => audio.glassCreak());
+      this.after(3.2, () => { this.lightMult.aqua = prevAqua; });
+      this.addNoise(0.3, true);
+    });
+  }
+
+  // ③ 员工连廊：头顶灯泡爆裂，黑暗尽头回眸客已经站近了一格
+  _shockBulb() {
+    this._shock3 = true;
+    const { audio, post, L, gazer, player } = this.g;
+    // 离玩家最近的灯泡
+    let best = null, bd = 1e9;
+    for (const b of L.dyn.bulbs) {
+      const d = Math.abs(b.light.position.z - player.pos.z);
+      if (d < bd) { bd = d; best = b; }
+    }
+    if (best) {
+      best.light.intensity = 0;
+      best.light.userData.base = 0;
+      best.group.visible = false;
+      audio.bulbPop();
+      post.flash = 0.45;
+      post.shock = 1.0;
+      player.kick(-0.05, -0.03);
+    }
+    this.after(0.7, () => {
+      gazer.appearAt(-17.1, Math.max(player.pos.z - 6, -5), null);
+      audio.sting(0.4);
+      this.g.ui.subtitle('灯碎的那一下，她往前站了一步。没有脚步声。', 5);
+    });
   }
 
   // ================= 六拍 =================
@@ -131,6 +238,8 @@ export class Agenda {
     ui.fade(0, 2.5);
     this.beat = 1;
     ui.card('议程一 · 迎宾', '南方大酒店 · 2001年 秋');
+    // 世界内教学：开场腕绳亮一下——低头就能看见它拖在身后
+    this.g.wrist.glow = 1.4;
     this.after(2.5, () => ui.subtitle('婚宴开始前，周絮拉着你的手腕系了根红绳："全乎人。别摘。"', 6));
     this.after(9, () => ui.subtitle('全场宾客的腕上都有一根。他们的都垂到地上，接进了同一张网。', 6));
     this.after(16, () => ui.objective('到<b>主桌</b>前听司仪报幕（WASD 移动 / 鼠标环顾）'));
@@ -215,13 +324,21 @@ export class Agenda {
 
   _beat5送入洞房() {
     this.beat = 5;
-    const { ui, sys, L, crt, guests, bride, waiters, mc, audio } = this.g;
+    const { ui, sys, L, crt, guests, bride, waiters, mc, audio, post } = this.g;
     mc.sync = 1;
+    this._lbBase = 0.6; // 终局全程电影黑边
     this.announce('送——入——洞——房——', 8, '议程六 · 送入洞房', '喜事不许退席');
+    // 身后的连廊门被什么东西关上了
+    this.after(1.2, () => {
+      audio.thud(0.7);
+      this.g.player.kick(-0.05);
+    });
     this.after(5, () => {
       // 宴会厅喉道化
       L.dyn.throat.visible = true;
-      L.dyn.garlands.forEach((gl, i) => { gl.position.y = -1.4 - (i % 2) * 0.5; });
+      this._garlandDrop = 0; // 彩带坠落动画（update 内推进）
+      audio.whoosh(0.35);
+      post.flash = 0.35;
       this.lightMult.hall = 0.45;
       this.hallColor.setHex(0xff5838);
       L.dyn.fog.density = 0.03;
@@ -257,16 +374,24 @@ export class Agenda {
   _cut() {
     if (this.ended) return;
     this.ended = true;
-    const { ui, audio, mc, waiters, guests, L, crt } = this.g;
+    const { ui, audio, mc, waiters, guests, L, crt, post, player } = this.g;
     this.finaleTimer = -1;
     this.call.active = false;
     this.call.waiter = null;
     ui.callHint(false);
     ui.timer(false);
     ui.prompt('');
+    ui.cutRing(0);
+    ui.reticle('');
     audio.snip();
     audio.hush(0.5);
     audio.setLayer('sea', 0.0, 6);
+    audio.setThreat(0, 0);
+    post.flash = 0.8;
+    post.shock = 1.6;
+    player.kick(-0.1, 0.05);
+    this._lbBase = 1;
+    post.letterboxTarget = 1;
     mc.silenced = true;
     waiters.forEach(w => { w.state = 'stand'; w.standTimer = 1e9; });
     guests.turnTo(0, 8);
@@ -280,6 +405,8 @@ export class Agenda {
       L.dyn.doorSOpen = true;
       L.dyn.doorSCollider.disabled = true;
       L.dyn.headlights.mat.opacity = 0.9;
+      this._lbBase = 0.6;
+      post.letterboxTarget = 0.6;
       ui.objective('散场了 —— 从<b>正门</b>出去。');
     });
   }
@@ -287,12 +414,21 @@ export class Agenda {
   _goodEnd() {
     if (this._finished) return;
     this._finished = true;
-    const { ui, audio } = this.g;
+    const { ui, audio, L, post } = this.g;
+    // 车灯迎面亮起 → 白入结算
+    L.dyn.headlights.mat.opacity = 1;
+    post.flash = 1.2;
+    post.letterboxTarget = 1;
+    audio.motif(false, 0.045);
     ui.fade(1, 3);
     audio.setLayer('roomtone', 0, 2);
     this.after(3.2, () => {
       ui.end('散 场',
-        '海雾里停着一排车，车灯全亮着。<br>没有人按喇叭。没有人催。<br><br>你腕上的绳头还在，剪断的。<br>和那个女人的一样。<br><br><span class="dim">《返潮 FANCHAO》——「喜宴」垂直切片 · 通关</span>',
+        '海雾里停着一排车，车灯全亮着。<br>没有人按喇叭。没有人催。<br><br>你腕上的绳头还在，剪断的。<br>和那个女人的一样。<br><br>' +
+        '<div class="credits">《返潮 FANCHAO》·「喜宴」垂直切片 v1.0<br>' +
+        '设计 / 程序 / 美术 / 音频 —— 返潮制作组<br>' +
+        '本包全部资产（纹理·模型·光照·音频）均为程序化生成<br>' +
+        '2001 · 蚀湾 · 南方大酒店</div>',
         '再来一遍', () => location.reload());
     });
   }
@@ -300,16 +436,19 @@ export class Agenda {
   _badEnd() {
     if (this.ended) return;
     this.ended = true;
-    const { ui, audio, L } = this.g;
+    const { ui, audio, L, post } = this.g;
     ui.timer(false);
+    ui.cutRing(0);
     ui.fade(1, 1.2);
+    post.letterboxTarget = 1;
     audio.broadcast(6, 92);
+    audio.sting(0.5);
     L.dyn.cardYou.mat.map = L.dyn.cardYou.flip;
     L.dyn.cardYou.mat.needsUpdate = true;
     this.after(1.6, () => {
       ui.end('您的位置在这边',
-        '议程走完的时候，你还坐在席上。<br><br>侍应把你面前的桌牌轻轻翻了过来。<br>牌面上写的不是你的名字。<br><br><span class="red-big">「上　宾」</span>',
-        '重来这一段', () => this._retryFinale());
+        '议程走完的时候，你还坐在席上。<br><br>侍应把你面前的桌牌轻轻翻了过来。<br>牌面上写的不是你的名字。<br>',
+        '重来这一段', () => this._retryFinale(), true);
     });
   }
 
@@ -351,6 +490,43 @@ export class Agenda {
     else if (this.beat === 4 && p.x < 2.5 && p.z > 19) this._beat4b连廊();
     else if (this.beat === 4.5 && p.x > -15 && p.z < 0 && p.z > -20) this._beat5送入洞房();
     else if (this.ended && this._doorOpen() && p.z > 5.5) this._goodEnd();
+
+    // —— 震惊节拍触发 ——
+    if (this.beat === 2 && !this._shock1 && p.x > 25 && p.z < 0) this._shockCorridor();
+    if (this.beat >= 4 && this.beat < 5 && !this._shock2 && p.z > 20.5 && p.x < 16 && p.x > -10) this._shockGlass();
+    if (this.beat === 4.5 && !this._shock3 && p.x < -15 && p.z < 12 && p.z > -4) this._shockBulb();
+
+    // —— 暗影扑撞动画 ——
+    if (this._shadeLunge) {
+      const s = this._shadeLunge;
+      const shade = g.L.dyn.seaShade;
+      s.t += dt;
+      if (s.t < 0.55) {
+        const k = s.t / 0.55;
+        shade.position.x += ((p.x + 2) - shade.position.x) * k * 0.4;
+        shade.position.z = 26.2 - k * 1.5;
+        shade.position.y = s.fromY + (1.7 - s.fromY) * k;
+        shade.scale.setScalar(1 + k * 0.4);
+      } else if (s.t < 4) {
+        shade.position.z += (26.2 - shade.position.z) * dt * 0.7;
+        shade.position.y += (3.2 - shade.position.y) * dt * 0.5;
+      } else {
+        shade.scale.setScalar(1);
+        this._shadeLunge = null;
+      }
+    }
+
+    // —— 彩带坠落（终局收网的一部分） ——
+    if (this._garlandDrop !== undefined && this._garlandDrop < 1) {
+      this._garlandDrop = Math.min(1, this._garlandDrop + dt * 0.7);
+      const k = this._garlandDrop;
+      // easeOutBack：坠到底部微弹
+      const c1 = 1.70158, c3 = c1 + 1;
+      const e = 1 + c3 * Math.pow(k - 1, 3) + c1 * Math.pow(k - 1, 2);
+      g.L.dyn.garlands.forEach((gl, i) => {
+        gl.position.y = (-1.4 - (i % 2) * 0.5) * e;
+      });
+    }
 
     // —— 点名进行时 ——
     if (this.call.active) {

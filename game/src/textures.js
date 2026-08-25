@@ -421,43 +421,141 @@ export function concrete() {
 }
 
 // ---------- 皮肤 / 面部（实体用，含司仪口部钙化） ----------
+// v1.0：512 分辨率 + 分层皮肤（底色/血色/毛孔/油湿高光）+ 不对称五官
 export function skinFace(kind = 'mc') {
   srand(kind === 'mc' ? 191 : 193);
-  const w = 256, h = 256;
+  const w = 512, h = 512;
   const c = canvas(w, h), ctx = c.getContext('2d');
   ctx.fillStyle = '#c8a084'; ctx.fillRect(0, 0, w, h);
-  noiseFill(ctx, w, h, [200, 160, 132], 14, 0.4);
-  // 眼窝阴影（贴图 UV：面部映射在前半球）
-  ctx.fillStyle = 'rgba(70,50,44,0.55)';
-  ctx.beginPath(); ctx.ellipse(w * 0.38, h * 0.42, 15, 9, 0, 0, Math.PI * 2); ctx.fill();
-  ctx.beginPath(); ctx.ellipse(w * 0.62, h * 0.42, 15, 9, 0, 0, Math.PI * 2); ctx.fill();
-  // 瞳
-  ctx.fillStyle = 'rgba(20,16,14,0.95)';
-  ctx.beginPath(); ctx.ellipse(w * 0.38, h * 0.42, 5, 4, 0, 0, Math.PI * 2); ctx.fill();
-  ctx.beginPath(); ctx.ellipse(w * 0.62, h * 0.42, 5, 4, 0, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = 'rgba(255,255,255,0.35)';
-  ctx.fillRect(w * 0.38 - 1, h * 0.42 - 2, 2, 2); ctx.fillRect(w * 0.62 - 1, h * 0.42 - 2, 2, 2);
-  // 鼻影
-  ctx.fillStyle = 'rgba(150,110,90,0.4)';
-  ctx.beginPath(); ctx.ellipse(w * 0.5, h * 0.55, 6, 12, 0, 0, Math.PI * 2); ctx.fill();
+  noiseFill(ctx, w, h, [200, 160, 132], 12, 0.4);
+  // 血色分区：颧骨/鼻头偏红，眼下青灰
+  stains(ctx, w, h, 4, [190, 120, 105], 90, 0.2);
+  ctx.fillStyle = 'rgba(150,140,140,0.16)';
+  ctx.beginPath(); ctx.ellipse(w * 0.38, h * 0.47, 34, 14, 0.1, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(w * 0.62, h * 0.475, 34, 14, -0.1, 0, Math.PI * 2); ctx.fill();
+  // 毛孔
+  for (let i = 0; i < 2600; i++) {
+    ctx.fillStyle = `rgba(120,86,66,${0.03 + rnd() * 0.05})`;
+    ctx.fillRect(rnd() * w, rnd() * h, 1.4, 1.4);
+  }
+  const asym = kind === 'mc' ? 6 : 0; // 司仪：右眼低半分——正常里的一点点不对
+  // 眼窝阴影
+  ctx.fillStyle = 'rgba(70,50,44,0.5)';
+  ctx.beginPath(); ctx.ellipse(w * 0.38, h * 0.42, 30, 17, 0.06, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(w * 0.62, h * 0.42 + asym, 30, 17, -0.06, 0, Math.PI * 2); ctx.fill();
   if (kind === 'mc') {
-    // 司仪：口部鱼籽状钙化增生（层层卵粒封死唇形）
-    for (let i = 0; i < 220; i++) {
-      const ang = rnd() * Math.PI * 2, rr = rnd() * 30;
+    // 睁大的眼 + 高光（永远看着你）
+    ctx.fillStyle = 'rgba(232,226,214,0.9)';
+    ctx.beginPath(); ctx.ellipse(w * 0.38, h * 0.42, 13, 8, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(w * 0.62, h * 0.42 + asym, 13, 8, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = 'rgba(20,16,14,0.95)';
+    ctx.beginPath(); ctx.ellipse(w * 0.38, h * 0.42, 6.5, 6.5, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(w * 0.62, h * 0.42 + asym, 6.5, 6.5, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.fillRect(w * 0.38 - 2, h * 0.42 - 4, 3, 3); ctx.fillRect(w * 0.62 - 2, h * 0.42 + asym - 4, 3, 3);
+    // 眼睑垂坠
+    ctx.strokeStyle = 'rgba(96,66,54,0.7)'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(w * 0.31, h * 0.405);
+    ctx.quadraticCurveTo(w * 0.38, h * 0.385, w * 0.45, h * 0.405); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(w * 0.55, h * 0.405 + asym);
+    ctx.quadraticCurveTo(w * 0.62, h * 0.385 + asym, w * 0.69, h * 0.405 + asym); ctx.stroke();
+  } else {
+    // 侍应：闭目——两道安静的睑线 + 礼貌的浅笑
+    ctx.strokeStyle = 'rgba(88,58,48,0.85)'; ctx.lineWidth = 3.4;
+    ctx.beginPath(); ctx.moveTo(w * 0.3, h * 0.42);
+    ctx.quadraticCurveTo(w * 0.38, h * 0.445, w * 0.46, h * 0.42); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(w * 0.54, h * 0.42);
+    ctx.quadraticCurveTo(w * 0.62, h * 0.445, w * 0.7, h * 0.42); ctx.stroke();
+    // 睫毛影
+    ctx.strokeStyle = 'rgba(88,58,48,0.35)'; ctx.lineWidth = 6;
+    ctx.beginPath(); ctx.moveTo(w * 0.31, h * 0.435);
+    ctx.quadraticCurveTo(w * 0.38, h * 0.455, w * 0.45, h * 0.435); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(w * 0.55, h * 0.435);
+    ctx.quadraticCurveTo(w * 0.62, h * 0.455, w * 0.69, h * 0.435); ctx.stroke();
+  }
+  // 眉
+  ctx.strokeStyle = 'rgba(46,32,26,0.8)'; ctx.lineWidth = 5;
+  ctx.beginPath(); ctx.moveTo(w * 0.3, h * 0.355);
+  ctx.quadraticCurveTo(w * 0.38, h * 0.335, w * 0.46, h * 0.35); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(w * 0.54, h * 0.35 + asym * 0.5);
+  ctx.quadraticCurveTo(w * 0.62, h * 0.335 + asym * 0.5, w * 0.7, h * 0.355 + asym * 0.5); ctx.stroke();
+  // 鼻影 + 法令纹
+  ctx.fillStyle = 'rgba(150,110,90,0.4)';
+  ctx.beginPath(); ctx.ellipse(w * 0.5, h * 0.55, 11, 24, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = 'rgba(140,96,76,0.4)'; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(w * 0.44, h * 0.6);
+  ctx.quadraticCurveTo(w * 0.42, h * 0.66, w * 0.44, h * 0.7); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(w * 0.56, h * 0.6);
+  ctx.quadraticCurveTo(w * 0.58, h * 0.66, w * 0.56, h * 0.7); ctx.stroke();
+  if (kind === 'mc') {
+    // 司仪：口部鱼籽状钙化增生（层层卵粒封死唇形）——外圈稀疏内圈致密
+    for (let i = 0; i < 480; i++) {
+      const ang = rnd() * Math.PI * 2, rr = Math.pow(rnd(), 0.7) * 62;
       const x = w * 0.5 + Math.cos(ang) * rr * 1.5, y = h * 0.68 + Math.sin(ang) * rr * 0.62;
-      const r = 1.5 + rnd() * 3.2;
+      const r = 2.5 + rnd() * 6;
       const g = ctx.createRadialGradient(x - r * 0.3, y - r * 0.3, 0, x, y, r);
-      g.addColorStop(0, 'rgba(238,228,205,0.95)');
-      g.addColorStop(0.7, 'rgba(205,188,158,0.9)');
-      g.addColorStop(1, 'rgba(140,120,96,0.8)');
+      g.addColorStop(0, 'rgba(240,231,208,0.96)');
+      g.addColorStop(0.55, 'rgba(206,189,158,0.92)');
+      g.addColorStop(1, 'rgba(130,112,88,0.85)');
       ctx.fillStyle = g;
       ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+      // 卵粒高光（湿）
+      ctx.fillStyle = 'rgba(255,252,240,0.5)';
+      ctx.beginPath(); ctx.arc(x - r * 0.3, y - r * 0.35, r * 0.22, 0, Math.PI * 2); ctx.fill();
     }
+    // 钙化边缘的皮肤泛红发亮
+    const ring = ctx.createRadialGradient(w * 0.5, h * 0.68, 55, w * 0.5, h * 0.68, 110);
+    ring.addColorStop(0, 'rgba(178,92,74,0.3)');
+    ring.addColorStop(1, 'rgba(178,92,74,0)');
+    ctx.fillStyle = ring;
+    ctx.beginPath(); ctx.arc(w * 0.5, h * 0.68, 110, 0, Math.PI * 2); ctx.fill();
   } else {
-    // 侍应：安静的嘴，微下垂
-    ctx.strokeStyle = 'rgba(110,70,60,0.8)'; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.moveTo(w * 0.42, h * 0.68);
-    ctx.quadraticCurveTo(w * 0.5, h * 0.71, w * 0.58, h * 0.68); ctx.stroke();
+    // 侍应：安静的浅笑（弧度礼貌到不自然）
+    ctx.strokeStyle = 'rgba(110,70,60,0.85)'; ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.moveTo(w * 0.4, h * 0.68);
+    ctx.quadraticCurveTo(w * 0.5, h * 0.735, w * 0.6, h * 0.68); ctx.stroke();
+    ctx.strokeStyle = 'rgba(190,140,120,0.4)'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(w * 0.41, h * 0.695);
+    ctx.quadraticCurveTo(w * 0.5, h * 0.75, w * 0.59, h * 0.695); ctx.stroke();
+  }
+  // 油湿高光（额头/鼻梁/颧骨）
+  [[0.5, 0.28, 60, 26], [0.5, 0.5, 10, 34], [0.33, 0.5, 20, 10], [0.67, 0.5, 20, 10]].forEach(([fx, fy, rx, ry]) => {
+    const g = ctx.createRadialGradient(w * fx, h * fy, 0, w * fx, h * fy, Math.max(rx, ry));
+    g.addColorStop(0, 'rgba(255,238,220,0.18)');
+    g.addColorStop(1, 'rgba(255,238,220,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.ellipse(w * fx, h * fy, rx, ry, 0, 0, Math.PI * 2); ctx.fill();
+  });
+  return tex(c, 1, 1);
+}
+
+// ---------- 新娘盖头（红绸 + 绣金囍纹 + 垂穗边） ----------
+export function veilSilk() {
+  srand(233);
+  const w = 256, h = 256;
+  const c = canvas(w, h), ctx = c.getContext('2d');
+  const g = ctx.createLinearGradient(0, 0, 0, h);
+  g.addColorStop(0, '#a50f16'); g.addColorStop(0.6, '#8e0c12'); g.addColorStop(1, '#6b080e');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+  noiseFill(ctx, w, h, [150, 16, 22], 18, 0.35);
+  // 绸面竖向丝光
+  for (let x = 0; x < w; x += 10) {
+    ctx.fillStyle = `rgba(255,120,110,${0.03 + rnd() * 0.05})`;
+    ctx.fillRect(x, 0, 3, h);
+  }
+  // 绣金囍纹（环形排布）
+  ctx.fillStyle = 'rgba(216,168,58,0.9)';
+  ctx.font = '28px serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  for (let i = 0; i < 6; i++) {
+    ctx.fillText('囍', 24 + i * 42, h * 0.35 + (i % 2) * 26);
+  }
+  // 底缘金线 + 垂穗
+  ctx.strokeStyle = '#d8a83a'; ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.moveTo(0, h - 26); ctx.lineTo(w, h - 26); ctx.stroke();
+  ctx.lineWidth = 2;
+  for (let x = 6; x < w; x += 13) {
+    ctx.beginPath(); ctx.moveTo(x, h - 24); ctx.lineTo(x + (rnd() - 0.5) * 4, h - 4); ctx.stroke();
   }
   return tex(c, 1, 1);
 }

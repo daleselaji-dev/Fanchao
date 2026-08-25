@@ -56,6 +56,13 @@ async function until(fn, timeout = 90000, poll = 800) {
 await page.goto('http://localhost:8811/index.html');
 await page.waitForTimeout(2500);
 await shot('01_title.png');
+// v1.0 UI 元素在位
+const uiDom = await ev(() => ({
+  menu: !!document.getElementById('ctlBtn') && !!document.getElementById('pauseRestart'),
+  reticle: !!document.getElementById('reticleWrap'),
+  cutring: !!document.getElementById('cutring'),
+  endCard: !!document.getElementById('endCard'),
+}));
 
 await page.click('#startBtn');
 await until(() => window.__agenda && window.__agenda.beat >= 1);
@@ -74,6 +81,8 @@ await shot('03_hall_maintable_announce.png');
 await ev(() => { const p = window.__game.player; p.teleport(11.5, -6, -Math.PI / 2 + 0.3); p.pitch = 0.05; });
 await page.waitForTimeout(1500);
 await shot('04_door_cord.png');
+// 交互准星应处于「可摘」状态
+const reticleGrab = await ev(() => document.getElementById('reticleWrap').className);
 const grabbed = await ev(() => {
   const g = window.__game;
   const cord = g.sys.cords.find(c => c.tag === 'doorE');
@@ -95,6 +104,12 @@ await ev(() => { window.__game.player.teleport(17, -6.2, -Math.PI / 2); });
 const b2 = await until(() => window.__agenda.beat >= 2);
 await until(() => window.__game.waiters[0].state === 'ride');
 await ev(() => { const p = window.__game.player; p.teleport(26, -6.9, -Math.PI / 2); p.pitch = 0.0; });
+// 震惊节拍①：走廊灭灯横穿
+const shock1 = await until(() => window.__agenda._shock1, 40000);
+await page.waitForTimeout(2500);
+await shot('06a_shock_corridor_blackout.png');
+// 等灯光恢复
+await until(() => (window.__agenda.lightMult.corridor ?? 1) > 0.4, 60000);
 // 等侍应滑到镜头前
 await until(() => Math.abs(window.__game.waiters[0].group.position.x - 30) < 5, 40000);
 await shot('06_corridor_waiter_on_cord.png');
@@ -156,6 +171,12 @@ const b4 = await until(() => window.__agenda.beat >= 4);
 await unseat();
 await page.waitForTimeout(6000);
 await shot('10_aquarium_corridor.png');
+// 震惊节拍②：暗影撞玻璃
+await ev(() => { const p = window.__game.player; p.teleport(14, 22, Math.PI - 0.5); p.pitch = -0.05; });
+const shock2 = await until(() => window.__agenda._shock2, 30000);
+await page.waitForTimeout(1800);
+await shot('10a_shock_glass_slam.png');
+await until(() => (window.__agenda.lightMult.aqua ?? 1) > 0.4, 40000);
 // 闸门吊绳 → 绞盘（安静解法）
 const gateRes = await ev(() => {
   const g = window.__game;
@@ -177,6 +198,11 @@ await unseat();
 await ev(() => { const p = window.__game.player; p.teleport(-17.1, 13, 0); p.pitch = 0.0; });
 await page.waitForTimeout(4000);
 await shot('12_connector_gazer.png');
+// 震惊节拍③：灯泡爆裂
+await ev(() => { const p = window.__game.player; p.teleport(-17.1, 10, 0); });
+const shock3 = await until(() => window.__agenda._shock3, 30000);
+await page.waitForTimeout(1500);
+await shot('12a_shock_bulb_burst.png');
 const gazerVisible = await ev(() => window.__game.gazer.group.visible);
 
 // —— 拍5：终局宴会厅（喉道化） ——
@@ -209,6 +235,7 @@ await shot('14_at_vip_seat.png');
 // 恢复循环：豁免引座（grace 刷新）+ 拉回席位 + 若捆席绳被复原则重新摘挂。
 await page.keyboard.down('e');
 let cutOk = false;
+let cutRingSeen = false;
 const cutSamples = [];
 {
   const t0 = Date.now();
@@ -227,9 +254,13 @@ const cutSamples = [];
         g.sys.grab(lock, 'a');
         g.sys.hang(g.sys.hook('hE_free'));
       }
-      return { cut: window.__cut, ended: a.ended };
+      return {
+        cut: window.__cut, ended: a.ended,
+        ring: +getComputedStyle(document.getElementById('cutring')).opacity,
+      };
     });
     cutSamples.push(st.cut);
+    if (st.ring > 0.5) cutRingSeen = true;
     if (st.ended) { cutOk = true; break; }
     await page.waitForTimeout(1500);
   }
@@ -254,8 +285,8 @@ await page.waitForTimeout(1500);
 await shot('17_good_end.png');
 
 console.log(JSON.stringify({
-  b15, grabbed, hung, doorEOpen, b2, waiterState, reroute, b3, gotCall, parked, wristSegs,
-  b4, gateRes, gateRose, gazerVisible, b5, cutOk, finished,
+  uiDom, reticleGrab, b15, grabbed, hung, doorEOpen, b2, shock1, waiterState, reroute, b3, gotCall, parked, wristSegs,
+  b4, shock2, gateRes, gateRose, gazerVisible, shock3, b5, cutOk, cutRingSeen, finished,
   cutSamples: cutSamples.filter((_, i) => i % 5 === 0).slice(-6),
   errors: errors.slice(0, 12),
 }, null, 2));

@@ -21,6 +21,8 @@ export class Player {
     this.holdE = 0;
     this.eDown = false;
     this.ePressed = false;   // 单帧按下
+    this.kickV = 0;          // 相机冲击（摘/挂/巨响反馈）
+    this.kickRoll = 0;
     window.addEventListener('keydown', (e) => {
       this.keys[e.code] = true;
       if (e.code === 'KeyE' && !this.eDown) { this.eDown = true; this.ePressed = true; }
@@ -55,6 +57,12 @@ export class Player {
     this.pos.set(x, 0, z);
     this.vel.set(0, 0, 0);
     if (yaw !== null) this.yaw = yaw;
+  }
+
+  // 相机冲击：v>0 上挑（挂绳），v<0 下压（摘绳/巨响）
+  kick(v, roll = 0) {
+    this.kickV = v;
+    this.kickRoll = roll;
   }
 
   update(dt, colliders, regionAt) {
@@ -119,6 +127,9 @@ export class Player {
   _applyCamera(dt, still) {
     const bobY = still ? 0 : Math.sin(this.bobT) * 0.035;
     const bobX = still ? 0 : Math.cos(this.bobT * 0.5) * 0.02;
+    // 冲击衰减（弹簧回弹）
+    this.kickV *= Math.max(0, 1 - dt * 7);
+    this.kickRoll *= Math.max(0, 1 - dt * 5);
     this.camera.position.set(
       this.pos.x + bobX * Math.cos(this.yaw),
       this.pos.y + this.eyeHeight + bobY,
@@ -126,7 +137,8 @@ export class Player {
     );
     this.camera.rotation.order = 'YXZ';
     this.camera.rotation.y = this.yaw;
-    this.camera.rotation.x = this.pitch;
+    this.camera.rotation.x = this.pitch + this.kickV;
+    this.camera.rotation.z = this.kickRoll;
   }
 
   // 手部位置（持绳端点）

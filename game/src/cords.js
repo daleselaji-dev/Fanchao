@@ -42,8 +42,31 @@ export class Hook {
     this.group.position.copy(this.pos);
   }
   setHighlight(on) {
-    this.marker.material.emissiveIntensity = on ? 6 : 1;
-    this.marker.scale.setScalar(on ? 1.8 : 1);
+    this.highlighted = on;
+    if (!on) {
+      this.marker.material.emissiveIntensity = 1;
+      this.marker.scale.setScalar(1);
+    }
+  }
+  pop() { this._pop = 1; }
+  // 每帧：高亮脉冲 / 挂上弹跳 / 持绳信标
+  tick(dt, t, beacon) {
+    if (this._pop > 0) {
+      this._pop = Math.max(0, this._pop - dt * 3.2);
+      const s = 1 + Math.sin(this._pop * Math.PI) * 0.9;
+      this.marker.scale.setScalar(s);
+      this.marker.material.emissiveIntensity = 1 + this._pop * 7;
+      return;
+    }
+    if (this.highlighted) {
+      const pulse = 5 + Math.sin(t * 9) * 2.5;
+      this.marker.material.emissiveIntensity = pulse;
+      this.marker.scale.setScalar(1.7 + Math.sin(t * 9) * 0.25);
+    } else if (beacon) {
+      // 手里有绳时：可挂的礼钩温和呼吸——世界内教学，不用 UI 指路
+      this.marker.material.emissiveIntensity = 2.2 + Math.sin(t * 4 + this.pos.x) * 1.4;
+      this.marker.scale.setScalar(1.15 + Math.sin(t * 4 + this.pos.x) * 0.12);
+    }
   }
 }
 
@@ -97,7 +120,9 @@ export class Cord {
     const pa = this.endPos('a'), pb = this.endPos('b');
     const dist = pa.distanceTo(pb);
     this.length = dist;
-    const sag = Math.min(1.2, dist * 0.055 * (1 + this.slack));
+    // 挂上后的回弹（_settle 1→0：先松后紧，一次过冲）
+    const settleK = this._settle > 0 ? 1 + Math.sin(this._settle * Math.PI * 2.2) * 0.55 * this._settle : 1;
+    const sag = Math.min(1.35, dist * 0.055 * (1 + this.slack) * settleK);
     const mid = pa.clone().lerp(pb, 0.5);
     mid.y -= sag;
     const q1 = pa.clone().lerp(pb, 0.25); q1.y -= sag * 0.72;
@@ -121,6 +146,10 @@ export class Cord {
       this.mesh.scale.set(1, s, 1);
       this.mat.emissiveIntensity = 1.2 + this._wave * 1.5;
     }
+    if (this._settle > 0) {
+      this._settle = Math.max(0, this._settle - dt * 1.8);
+      this.rebuild();
+    }
     if (this.heldEnd) this.rebuild();
   }
 
@@ -139,6 +168,7 @@ export class Cord {
     if (end === 'a') this.a = hook; else this.b = hook;
     hook.cords.push(this);
     this.heldEnd = null;
+    this._settle = 1;
     this.rebuild();
   }
 
@@ -255,6 +285,8 @@ export class CordSystem {
     c.attach(c.heldEnd === null ? 'a' : c.heldEnd, hook); // heldEnd 记录在 detach 时
     this.held = null;
     this.audio?.pluck(120 + Math.random() * 60, 0.4);
+    this.audio?.ratchet();
+    hook.pop();
     c.vibrate();
     this.onTopologyChange?.(c);
     this.onNoise?.(0.25, hook.pos);
@@ -310,6 +342,12 @@ export class CordSystem {
 
   update(dt, handPos) {
     this.handPos.copy(handPos);
+    this._t = (this._t || 0) + dt;
     for (const c of this.cords) c.update(dt);
+    for (const h of this.hooks.values()) {
+      if (h.locked) continue;
+      const beacon = !!this.held && h.cords.length < 3 && h.pos.distanceToSquared(handPos) < 100;
+      h.tick(dt, this._t, beacon);
+    }
   }
 }

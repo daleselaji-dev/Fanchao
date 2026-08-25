@@ -162,7 +162,7 @@ for (const tube of L.dyn.tubes) {
 }
 // 员工连廊灯泡小光锥（跟随摇晃灯泡）
 for (const b of L.dyn.bulbs) {
-  atmo.addCone(b.light.position.x, 2.65, b.light.position.z, 0.12, 1.1, 2.6, 0.06, 'connector', '255,214,150', b.light);
+  atmo.addCone(b.light.position.x, 2.65, b.light.position.z, 0.1, 0.7, 2.5, 0.035, 'connector', '255,214,150', b.light);
 }
 // 海洋馆焦散（地面 + 南墙）
 atmo.addCaustics(2.5, 0.045, 22, 43, 4.2, -Math.PI / 2, 0, 0.16, 'aqua');
@@ -218,7 +218,11 @@ function updateGate(dt) {
   if (cord && !cord.heldEnd) {
     const hookB = cord.b === sys.hook('hGateTop') ? cord.a : cord.b;
     if (hookB === sys.hook('hJam')) gate.targetY = 1.6;
-    else if (hookB === sys.hook('hWinch')) { gate.targetY = 4.9; speed = 0.5; }
+    else if (hookB === sys.hook('hWinch')) {
+      gate.targetY = 4.9; speed = 0.5;
+      // 绞盘齿咔嗒（安静解法的声音签名）
+      if (Math.abs(gate.y - gate.targetY) > 0.02 && Math.floor(gate.y * 6) !== Math.floor((gate.y - speed * dt) * 6)) audio.ratchet();
+    }
     else if (hookB === sys.hook('hSnap')) {
       gate.targetY = 4.9; speed = 6;
       if (!gateSnapDone && gate.y < 4.5) {
@@ -250,6 +254,7 @@ let cutHold = 0;
 function updateInteract(dt) {
   // 被引座：站起
   if (player.seated) {
+    ui.reticle('');
     if (player.holdE > 1.2) agenda.standUp();
     return;
   }
@@ -268,19 +273,28 @@ function updateInteract(dt) {
     if (d < 2.0) {
       if (!seatFree) {
         ui.prompt('席位被红绳捆着 —— 先<b>摘下</b>捆席的绳（对准绳端按 E）');
+        ui.cutRing(0);
       } else if (player.eDown) {
         cutHold += dt;
-        ui.prompt(`<b>剪断腕绳</b> …… ${Math.min(100, (cutHold / 2.2 * 100)).toFixed(0)}%`);
+        ui.prompt('别松手 —— <b>剪断腕绳</b>', 'E');
+        ui.reticle('park');
+        ui.cutRing(cutHold / 2.2);
+        // 越剪越狠的反馈：相机抖 + 心跳 + 红脉冲
+        player.kick((Math.random() - 0.5) * 0.02 * (1 + cutHold), (Math.random() - 0.5) * 0.012 * cutHold);
+        post.redPulse = Math.max(post.redPulse, cutHold / 2.2 * 0.7);
         waiters.forEach(w => { if (w.visible) w.startChase(); });
         if (Math.floor(cutHold * 3) !== Math.floor((cutHold - dt) * 3)) audio.heartbeat();
-        if (cutHold >= 2.2) { agenda._cut(); cutHold = 0; }
+        if (Math.floor(cutHold * 6) !== Math.floor((cutHold - dt) * 6)) audio.pluck(300 + cutHold * 300, 0.12, 0.99);
+        if (cutHold >= 2.2) { agenda._cut(); cutHold = 0; ui.cutRing(0); }
         return;
       } else {
         cutHold = 0;
-        ui.prompt('<b>长按 E</b> —— 在你的席位前，剪断腕绳');
+        ui.cutRing(0);
+        ui.prompt('在你的席位前，<b>长按</b>剪断腕绳', 'E');
       }
     } else {
       cutHold = 0;
+      ui.cutRing(0);
     }
   }
   // 点名寄挂
@@ -289,15 +303,19 @@ function updateInteract(dt) {
     sys.hooks.forEach(hh => hh.setHighlight(false));
     if (h) {
       h.setHighlight(true);
-      ui.prompt('<b>E</b> —— 把腕绳<b>寄挂</b>到这只礼钩上');
+      ui.reticle('park');
+      ui.prompt('把腕绳<b>寄挂</b>到这只礼钩上', 'E');
       if (player.ePressedThisFrame) {
         agenda.resolveCall();
+        h.pop();
+        player.kick(-0.03);
         // 钩上留个红结
         const knot = new THREE.Mesh(new THREE.SphereGeometry(0.045, 8, 8),
           new THREE.MeshStandardMaterial({ color: 0x8e0c12, roughness: 0.8 }));
         knot.position.copy(h.pos);
         scene.add(knot);
         ui.prompt('');
+        ui.reticle('');
       }
       return;
     }
@@ -309,20 +327,52 @@ function updateInteract(dt) {
   if (target) {
     if (target.type === 'cordEnd') {
       target.cord.mat.emissiveIntensity = 2.8;
+      ui.reticle('grab');
       const tagTip = { doorE: '（拦门绳）', doorC: '（拦门绳）', gate: '（闸门吊绳）', seatlock: '（捆席绳）' }[target.cord.tag] || '';
-      ui.prompt(`<b>E</b> —— <b>摘</b>下红绳${tagTip}`);
-      if (player.ePressedThisFrame) sys.grab(target.cord, target.end);
+      ui.prompt(`<b>摘</b>下红绳${tagTip}`, 'E');
+      if (player.ePressedThisFrame) {
+        sys.grab(target.cord, target.end);
+        audio.whoosh(0.14);
+        player.kick(-0.035, 0.012);
+      }
     } else if (target.type === 'hook') {
       target.hook.setHighlight(true);
+      ui.reticle('hang');
       const tip = { hWinch: '（绞盘 · 安静）', hSnap: '（卡扣 · 巨响）', hJam: '（卡死位）' }[target.hook.id] || '';
-      ui.prompt(`<b>E</b> —— 把绳<b>挂</b>上礼钩${tip}`);
-      if (player.ePressedThisFrame) sys.hang(target.hook);
+      ui.prompt(`把绳<b>挂</b>上礼钩${tip}`, 'E');
+      if (player.ePressedThisFrame) {
+        sys.hang(target.hook);
+        player.kick(0.028, -0.01);
+      }
     }
   } else if (sys.held) {
-    ui.prompt('拿着红绳 —— 走到<b>发亮的礼钩</b>前挂上（E）');
+    ui.reticle('');
+    ui.prompt('拿着红绳 —— 走向<b>呼吸发亮</b>的礼钩挂上', 'E');
   } else if (!agenda.call.active && !(agenda.beat >= 5 && player.pos.distanceTo(seatPos) < 2.0)) {
+    ui.reticle('');
     ui.prompt('');
   }
+}
+
+// ---------- 威胁声像：最近的活动侍应（耳机可辨方位） ----------
+const _tv = new THREE.Vector3();
+function updateThreatAudio() {
+  let best = null, bd = 1e9;
+  for (const w of waiters) {
+    if (!w.visible) continue;
+    const d = w.group.position.distanceTo(player.pos);
+    if (d < bd) { bd = d; best = w; }
+  }
+  if (!best || bd > 14) { audio.setThreat(0, 0); audio.setCordHum(0, 0); return; }
+  // 方位（右为正）
+  _tv.copy(best.group.position).sub(player.pos);
+  const f = player.forward;
+  const pan = THREE.MathUtils.clamp(_tv.x * (-f.z) - _tv.z * (-f.x), -8, 8) / 8;
+  const chasing = best.state === 'chase' || best.state === 'alert';
+  const v = THREE.MathUtils.clamp(1 - bd / 14, 0, 1);
+  audio.setThreat(chasing ? Math.min(1, v * 1.6 + 0.25) : v * 0.4, pan);
+  // 绳鸣：贴近载客红绳
+  audio.setCordHum(best.state === 'ride' ? v * v : 0, pan);
 }
 
 // ---------- 屏障随绳网开合 ----------
@@ -416,11 +466,16 @@ function updateAmbience(dt, t) {
   }
 }
 
-// ---------- 标题 / 启动 ----------
+// ---------- 标题 / 启动 / 暂停 ----------
 const titleEl = document.getElementById('title');
 const startBtn = document.getElementById('startBtn');
 const resumeEl = document.getElementById('resume');
+const ctlBtn = document.getElementById('ctlBtn');
+const ctlPanel = document.getElementById('ctlPanel');
 let started = false;
+ctlBtn.addEventListener('click', () => {
+  ctlPanel.style.display = ctlPanel.style.display === 'block' ? 'none' : 'block';
+});
 startBtn.addEventListener('click', () => {
   audio.init();
   titleEl.style.opacity = 0;
@@ -434,6 +489,10 @@ document.addEventListener('pointerlockchange', () => {
   resumeEl.style.display = document.pointerLockElement === canvas ? 'none' : 'flex';
 });
 resumeEl.addEventListener('click', () => player.lock());
+document.getElementById('pauseRestart').addEventListener('click', (e) => {
+  e.stopPropagation();
+  location.reload();
+});
 
 window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
@@ -469,6 +528,7 @@ function loop() {
     updateGate(dt);
     updateBarriers();
     updateInteract(dt);
+    updateThreatAudio();
     updateAmbience(dt, t);
     sys.update(dt, player.handPos());
     wrist.record(player.pos);
