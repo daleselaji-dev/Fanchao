@@ -218,7 +218,32 @@ function updateInteract(dt) {
     if (player.holdE > 1.2) agenda.standUp();
     return;
   }
-  // 点名寄挂优先
+  // 终局剪缆 —— 在自己席位前，剪缆优先于一切（含点名寄挂）
+  if (agenda.beat >= 5 && !agenda.ended) {
+    const lock = sys.cords.find(c => c.tag === 'seatlock');
+    const seatFree = !(lock && !lock.heldEnd &&
+      ((lock.a === sys.hook('hMainA') && lock.b === sys.hook('hMainB')) ||
+        (lock.a === sys.hook('hMainB') && lock.b === sys.hook('hMainA'))));
+    const d = player.pos.distanceTo(seatPos);
+    if (d < 2.0) {
+      if (!seatFree) {
+        ui.prompt('席位被红绳捆着 —— 先<b>摘下</b>捆席的绳（对准绳端按 E）');
+      } else if (player.eDown) {
+        cutHold += dt;
+        ui.prompt(`<b>剪断腕绳</b> …… ${Math.min(100, (cutHold / 2.2 * 100)).toFixed(0)}%`);
+        waiters.forEach(w => { if (w.visible) w.startChase(); });
+        if (Math.floor(cutHold * 3) !== Math.floor((cutHold - dt) * 3)) audio.heartbeat();
+        if (cutHold >= 2.2) { agenda._cut(); cutHold = 0; }
+        return;
+      } else {
+        cutHold = 0;
+        ui.prompt('<b>长按 E</b> —— 在你的席位前，剪断腕绳');
+      }
+    } else {
+      cutHold = 0;
+    }
+  }
+  // 点名寄挂
   if (agenda.call.active) {
     const h = sys.nearestHook(player.pos, 2.4);
     sys.hooks.forEach(hh => hh.setHighlight(false));
@@ -235,34 +260,6 @@ function updateInteract(dt) {
         ui.prompt('');
       }
       return;
-    }
-  }
-  // 终局剪缆
-  if (agenda.beat >= 5 && !agenda.ended) {
-    const lock = sys.cords.find(c => c.tag === 'seatlock');
-    const seatFree = !(lock && !lock.heldEnd &&
-      ((lock.a === sys.hook('hMainA') && lock.b === sys.hook('hMainB')) ||
-        (lock.a === sys.hook('hMainB') && lock.b === sys.hook('hMainA'))));
-    const d = player.pos.distanceTo(seatPos);
-    if (d < 2.0) {
-      if (!seatFree) {
-        ui.prompt('席位被红绳捆着 —— 先<b>摘下</b>捆席的绳（对准绳端按 E）');
-      } else {
-        if (player.eDown) {
-          cutHold += dt;
-          ui.prompt(`<b>剪断腕绳</b> …… ${Math.min(100, (cutHold / 2.2 * 100)).toFixed(0)}%`);
-          waiters.forEach(w => { if (w.visible) w.startChase(); });
-          if (Math.floor(cutHold * 3) !== Math.floor((cutHold - dt) * 3)) audio.heartbeat();
-          if (cutHold >= 2.2) { agenda._cut(); cutHold = 0; }
-          return;
-        } else {
-          cutHold = 0;
-          ui.prompt('<b>长按 E</b> —— 在你的席位前，剪断腕绳');
-        }
-        if (!seatFree) return;
-      }
-      // 未剪时仍允许摘绳（往下落）
-      if (!seatFree) { /* 继续走绳交互 */ } else if (!player.eDown) { /* 提示已给 */ }
     }
   }
   // 摘/挂

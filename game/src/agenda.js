@@ -104,6 +104,7 @@ export class Agenda {
     ui.fade(1, 0.5);
     ui.subtitle('「您的位置在这边。」', 4);
     this.after(1.6, () => {
+      if (!this.escorting || this.ended) { ui.fade(0, 0.8); return; }
       player.teleport(-1.7, -10.2, 0);
       player.seated = true;
       // 押送的侍应回到席边站立
@@ -257,6 +258,9 @@ export class Agenda {
     this.ended = true;
     const { ui, audio, mc, waiters, guests, L, crt } = this.g;
     this.finaleTimer = -1;
+    this.call.active = false;
+    this.call.waiter = null;
+    ui.callHint(false);
     ui.timer(false);
     ui.prompt('');
     audio.snip();
