@@ -112,7 +112,7 @@ function humanoid({ suit = 0x28221e, shirt = 0xd8d4c8, skin = 'waiter', hair = 0
   head.position.y = 1.56;
   const skull = new THREE.Mesh(new THREE.SphereGeometry(0.115, 14, 12), skinMat(skin));
   skull.scale.set(0.92, 1.08, 0.98);
-  skull.rotation.y = Math.PI / 2; // 面部贴图朝 +Z
+  skull.rotation.y = -Math.PI / 2; // 面部贴图中心在 +X，绕 Y 转 -90° 才朝 +Z（与胸前门襟同向）
   skull.castShadow = true;
   head.add(skull);
   // 耳（左右小球，贴肤色）
@@ -129,7 +129,7 @@ function humanoid({ suit = 0x28221e, shirt = 0xd8d4c8, skin = 'waiter', hair = 0
   hairM.rotation.x = -0.22;
   head.add(hairM);
   const hairBack = new THREE.Mesh(new THREE.SphereGeometry(0.119, 12, 10, Math.PI * 0.55, Math.PI * 0.9, 0, Math.PI * 0.8), hairMat);
-  hairBack.rotation.y = Math.PI; // 开口朝前
+  hairBack.rotation.y = Math.PI / 2; // 带状中心原在 +X，转 +90° 移到 -Z（后脑），开口朝脸
   hairBack.scale.set(0.98, 1.03, 1.0);
   hairBack.position.set(0, 0.014, -0.012);
   head.add(hairBack);
