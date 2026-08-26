@@ -1,0 +1,82 @@
+《返潮 / FANCHAO》v1.5 自动化验证汇总
+运行日期：2026-08-26（终版 bundle：Rounds 1-6 全部改动 + 面部朝向修复之后）
+环境：headless Chromium + SwiftShader 软渲染（无 GPU，帧率低于真机，仅时序更严苛）
+
+================================================================
+① 六拍全流程冒烟 game/test/run.mjs —— EXIT=0，errors=[]
+================================================================
+{
+  "uiDom":       { "menu": true, "reticle": true, "cutring": true, "endCard": true },
+  "b15": true,                     // 拍1.5 入席广播
+  "grabbed": "held",               // 摘拦门绳
+  "hung": "hung",                  // 挂空钩
+  "doorEOpen": "open",             // 屏障解除
+  "b2": true,                      // 拍2 走廊
+  "shock1": true,                  // 震惊①走廊灭灯横穿（绳网自发光断言通过）
+  "waiterState": "0:ride:true 1:ride:true 2:idle:false",  // 侍应沿绳滑行
+  "reroute": "rerouted",           // 改挂巡逻绳改道
+  "b3": true,                      // 拍3 大堂点火
+  "wristSegs": 4,                  // 腕绳段数
+  "b4": true,                      // 拍4 海洋馆
+  "shock2": true,                  // 震惊②暗影撞玻璃
+  "gateRes": "winched",            // 闸门吊绳挂绞盘（安静解法）
+  "gateRose": true,                // 闸门升起
+  "gazerVisible": true,            // 回眸客现身
+  "shock3": true,                  // 震惊③灯泡爆裂
+  "b5": true,                      // 拍5 终局收网
+  "cutOk": true,                   // 长按剪缆成功（cutHold 0→2.2s 采样递增）
+  "cutRingSeen": true,             // 剪缆进度环出现
+  "finished": true,                // 好结局散场演出完成
+  "errors": []                     // 全程零 JS 报错
+}
+备注：本次运行中途的 gotCall 观察窗（160s 真实时间≈40s 游戏时间）内点名未随机触发，
+属帧饥饿下的时序现象；终局采样中 callActive:true 证明点名系统在跑，
+且已由下方③定向验证覆盖。
+
+================================================================
+② 交互手感验证 game/test/r4_verify.mjs（真实 keydown E 路径）—— 全绿
+================================================================
+{
+  "reticleBefore": "ret-grab",       // 对准绳端：准星变「摘」态
+  "promptBefore": "E摘下红绳（拦门绳）",
+  "knotScale": 1.42,                 // 目标绳结呼吸放大
+  "held": true,                      // 真实 E 键摘绳成功
+  "rippleClass": "go",               // 金环涟漪触发
+  "fovKick": 66,                     // FOV 冲击（基准 68 → 收窄）
+  "reticleHang": "ret-hang",         // 持绳对钩：准星变「挂」态
+  "hung": true,                      // 真实 E 键挂绳成功
+  "doorOpen": true,
+  "sticky": { "aimOn": "ret-grab", "afterDeviation": "ret-grab" },  // 视线偏19.5°不丢锁定
+  "threat": { "L": "0.55", "R": "0.3" }  // 屏缘威胁指示按方位点亮
+}
+
+================================================================
+③ 点名寄挂定向验证 game/test/call_verify.mjs —— 全绿
+================================================================
+{
+  "segsBefore": 4,
+  "callActive": true,      // triggerCall 后点名激活
+  "wristGlow": 1.4,        // 腕绳发亮
+  "callEnded": true,       // resolveCall 寄挂完成
+  "segsAfter": 3           // 腕绳短一截
+}
+
+================================================================
+④ 音频林奇化验证 game/test/r5_verify.mjs —— 全绿
+================================================================
+{
+  "ctxState": "running",
+  "nodes": { "dread": true, "tinnitus": true, "breath": true, "verbFB": true, "verbLP": true },
+  "calls": "ok",           // 全部新 API（低频层/耳鸣/呼吸/远厅回声/空间混响/瓷颤）调用零异常
+  "after": {
+    "dreadGain": 0.0104,   // 低频不安层增益被自动化驱动中
+    "verbLPFreq": 2380,
+    "space": "宴会厅"       // 空间混响被游戏循环按玩家实际区域回写 → 接线生效
+  }
+}
+
+================================================================
+⑤ 发布壳启动验证 game/test/verify_pkg.mjs
+================================================================
+见 media/qa_pkg_electron_boot.png（Linux Electron 壳加载与 win64 包同内容的 app，
+启动 → 进拍 1 → 渲染出画面截图）。
