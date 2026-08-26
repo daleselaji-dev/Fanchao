@@ -12,6 +12,8 @@ export function rnd() {
 function canvas(w, h) {
   const c = document.createElement('canvas');
   c.width = w; c.height = h;
+  // 预热 2d 上下文并声明频繁回读：SwiftShader/软渲染下避免 GPU 回读（getImageData 提速 10~50 倍）
+  c.getContext('2d', { willReadFrequently: true });
   return c;
 }
 
@@ -20,6 +22,15 @@ function tex(c, repeatX = 1, repeatY = 1, srgb = true) {
   t.wrapS = t.wrapT = THREE.RepeatWrapping;
   t.repeat.set(repeatX, repeatY);
   if (srgb) t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 8;
+  return t;
+}
+
+// 粗糙度贴图（线性空间）
+function roughTex(c, repeatX = 1, repeatY = 1) {
+  const t = new THREE.CanvasTexture(c);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.repeat.set(repeatX, repeatY);
   t.anisotropy = 4;
   return t;
 }
@@ -76,75 +87,137 @@ function stains(ctx, w, h, n, color, maxR, alpha) {
   }
 }
 
-// ---------- 水磨石（大堂/宴会厅地面） ----------
+// ---------- 水磨石（大堂/宴会厅地面）v1.5：1024 分辨率 + 粗糙度分层 ----------
 export function terrazzo() {
   srand(11);
-  const w = 512, h = 512;
+  const w = 1024, h = 1024;
   const c = canvas(w, h), ctx = c.getContext('2d');
   ctx.fillStyle = '#b9ab92'; ctx.fillRect(0, 0, w, h);
   noiseFill(ctx, w, h, [185, 171, 146], 18, 0.5);
-  // 骨料碎片
+  // 骨料碎片：一次生成，色/高/粗糙三图共用
   const cols = ['#d8cdb8', '#9c8f78', '#c4b49a', '#7e7260', '#e2d9c6', '#8d6f5a', '#5f584c'];
-  for (let i = 0; i < 2600; i++) {
-    const x = rnd() * w, y = rnd() * h, r = 1 + rnd() * 4.5;
-    ctx.fillStyle = cols[(rnd() * cols.length) | 0];
-    ctx.beginPath();
-    ctx.moveTo(x + r, y);
-    for (let a = 1; a < 6; a++) {
+  const chips = [];
+  for (let i = 0; i < 8200; i++) {
+    const x = rnd() * w, y = rnd() * h, r = 1.5 + rnd() * 8;
+    const ci = (rnd() * cols.length) | 0;
+    const verts = [];
+    for (let a = 0; a < 6; a++) {
       const ang = (a / 6) * Math.PI * 2;
-      const rr = r * (0.6 + rnd() * 0.6);
-      ctx.lineTo(x + Math.cos(ang) * rr, y + Math.sin(ang) * rr);
+      verts.push([Math.cos(ang) * r * (0.6 + rnd() * 0.6), Math.sin(ang) * r * (0.6 + rnd() * 0.6)]);
     }
-    ctx.closePath(); ctx.fill();
+    chips.push({ x, y, r, ci, verts, hi: rnd() });
   }
-  // 分格铜条
-  ctx.strokeStyle = 'rgba(90,72,40,0.85)'; ctx.lineWidth = 3;
-  ctx.strokeRect(1, 1, w - 2, h - 2);
+  const drawChips = (cx, fill) => {
+    for (const ch of chips) {
+      cx.fillStyle = fill(ch);
+      cx.beginPath();
+      cx.moveTo(ch.x + ch.verts[0][0], ch.y + ch.verts[0][1]);
+      for (let a = 1; a < 6; a++) cx.lineTo(ch.x + ch.verts[a][0], ch.y + ch.verts[a][1]);
+      cx.closePath(); cx.fill();
+    }
+  };
+  drawChips(ctx, ch => cols[ch.ci]);
+  // 骨料内缘高光（打磨截面的微反光）
+  for (const ch of chips) {
+    if (ch.hi < 0.6) continue;
+    ctx.fillStyle = 'rgba(255,250,238,0.14)';
+    ctx.beginPath(); ctx.arc(ch.x - ch.r * 0.25, ch.y - ch.r * 0.25, ch.r * 0.32, 0, Math.PI * 2); ctx.fill();
+  }
+  // 分格铜条（十字分格——真实水磨石分仓浇筑）
+  ctx.strokeStyle = 'rgba(112,88,46,0.9)'; ctx.lineWidth = 5;
+  ctx.strokeRect(2, 2, w - 4, h - 4);
+  ctx.beginPath(); ctx.moveTo(w / 2, 0); ctx.lineTo(w / 2, h); ctx.moveTo(0, h / 2); ctx.lineTo(w, h / 2); ctx.stroke();
+  ctx.strokeStyle = 'rgba(196,164,96,0.5)'; ctx.lineWidth = 1.5;
+  ctx.strokeRect(4, 4, w - 8, h - 8);
   // 污渍与失泽
-  stains(ctx, w, h, 9, [60, 52, 40], 130, 0.10);
-  stains(ctx, w, h, 5, [30, 30, 34], 90, 0.08);
-  // 高度图
+  stains(ctx, w, h, 14, [60, 52, 40], 240, 0.10);
+  stains(ctx, w, h, 8, [30, 30, 34], 170, 0.08);
+  // 高度图（骨料微凸 + 铜条缝下陷）
   const hc = canvas(w, h), hctx = hc.getContext('2d');
   hctx.fillStyle = '#808080'; hctx.fillRect(0, 0, w, h);
-  srand(11);
-  for (let i = 0; i < 2600; i++) {
-    const x = rnd() * w, y = rnd() * h, r = 1 + rnd() * 4.5;
-    rnd();
-    hctx.fillStyle = rnd() > 0.5 ? '#8a8a8a' : '#757575';
-    hctx.beginPath(); hctx.arc(x, y, r, 0, Math.PI * 2); hctx.fill();
-    for (let a = 1; a < 6; a++) rnd();
-  }
-  hctx.fillStyle = '#5a5a5a'; hctx.fillRect(0, 0, w, 3); hctx.fillRect(0, 0, 3, h);
-  return { map: tex(c, 6, 6), normalMap: normalFromHeight(hc, 1.0), roughness: 0.42, metalness: 0.04 };
+  drawChips(hctx, ch => ch.hi > 0.5 ? '#8a8a8a' : '#757575');
+  hctx.fillStyle = '#5a5a5a';
+  hctx.fillRect(0, 0, w, 5); hctx.fillRect(0, 0, 5, h);
+  hctx.fillRect(w / 2 - 2, 0, 4, h); hctx.fillRect(0, h / 2 - 2, w, 4);
+  // 粗糙度图：打磨面光滑（暗），污渍与缝粗糙（亮）
+  const rc = canvas(w, h), rctx = rc.getContext('2d');
+  rctx.fillStyle = '#6a6a6a'; rctx.fillRect(0, 0, w, h);
+  drawChips(rctx, ch => ch.hi > 0.5 ? '#4e4e4e' : '#5e5e5e');
+  srand(311);
+  stains(rctx, w, h, 16, [188, 188, 188], 220, 0.35);  // 失泽区变粗糙
+  stains(rctx, w, h, 10, [40, 40, 40], 150, 0.3);      // 磨亮区更滑（走的人多）
+  rctx.fillStyle = '#b0b0b0';
+  rctx.fillRect(0, 0, w, 5); rctx.fillRect(0, 0, 5, h);
+  rctx.fillRect(w / 2 - 2, 0, 4, h); rctx.fillRect(0, h / 2 - 2, w, 4);
+  return {
+    map: tex(c, 3, 3), normalMap: normalFromHeight(hc, 1.15),
+    roughnessMap: roughTex(rc, 3, 3), roughness: 1.0, metalness: 0.04,
+  };
 }
 
-// ---------- 白瓷砖（服务走廊墙裙） ----------
+// ---------- 白瓷砖（服务走廊墙裙）v1.5：1024 + 釉面/污渍粗糙度分层 + 湿痕 ----------
 export function tiles(grimeLevel = 0.6) {
   srand(23);
-  const w = 512, h = 512;
+  const w = 1024, h = 1024;
   const c = canvas(w, h), ctx = c.getContext('2d');
   const hc = canvas(w, h), hctx = hc.getContext('2d');
+  const rc = canvas(w, h), rctx = rc.getContext('2d');
   hctx.fillStyle = '#909090'; hctx.fillRect(0, 0, w, h);
-  const tw = 128, th = 128;
+  rctx.fillStyle = '#c8c8c8'; rctx.fillRect(0, 0, w, h); // 缝隙基底：粗糙
+  const tw = 256, th = 256;
   for (let ty = 0; ty < h; ty += th) {
     for (let tx = 0; tx < w; tx += tw) {
       const shade = 226 + (rnd() - 0.5) * 14;
       ctx.fillStyle = `rgb(${shade|0},${(shade - 4)|0},${(shade - 12)|0})`;
-      ctx.fillRect(tx + 3, ty + 3, tw - 6, th - 6);
+      ctx.fillRect(tx + 6, ty + 6, tw - 12, th - 12);
+      // 釉面斜向反光渐变
       const gl = ctx.createLinearGradient(tx, ty, tx + tw, ty + th);
-      gl.addColorStop(0, 'rgba(255,255,255,0.12)');
+      gl.addColorStop(0, 'rgba(255,255,255,0.14)');
       gl.addColorStop(0.5, 'rgba(255,255,255,0)');
       gl.addColorStop(1, 'rgba(0,0,0,0.10)');
-      ctx.fillStyle = gl; ctx.fillRect(tx + 3, ty + 3, tw - 6, th - 6);
-      hctx.fillStyle = '#aaaaaa'; hctx.fillRect(tx + 4, ty + 4, tw - 8, th - 8);
+      ctx.fillStyle = gl; ctx.fillRect(tx + 6, ty + 6, tw - 12, th - 12);
+      // 龟裂纹（老釉面细裂）
+      if (rnd() > 0.55) {
+        ctx.strokeStyle = 'rgba(150,140,120,0.28)'; ctx.lineWidth = 1;
+        let cx0 = tx + rnd() * tw, cy0 = ty + rnd() * th;
+        ctx.beginPath(); ctx.moveTo(cx0, cy0);
+        for (let k = 0; k < 5; k++) { cx0 += (rnd() - 0.5) * 70; cy0 += (rnd() - 0.5) * 70; ctx.lineTo(cx0, cy0); }
+        ctx.stroke();
+      }
+      // 高度：砖面微鼓
+      const hg = hctx.createRadialGradient(tx + tw / 2, ty + th / 2, 10, tx + tw / 2, ty + th / 2, tw * 0.7);
+      hg.addColorStop(0, '#b2b2b2'); hg.addColorStop(1, '#9a9a9a');
+      hctx.fillStyle = hg; hctx.fillRect(tx + 8, ty + 8, tw - 16, th - 16);
+      // 粗糙度：釉面光滑（暗），随机微变
+      rctx.fillStyle = `rgb(${52 + (rnd() * 26)|0},${52 + (rnd() * 26)|0},${52 + (rnd() * 26)|0})`;
+      rctx.fillRect(tx + 8, ty + 8, tw - 16, th - 16);
     }
   }
-  ctx.strokeStyle = 'rgba(120,112,96,1)'; ctx.lineWidth = 5;
+  ctx.strokeStyle = 'rgba(120,112,96,1)'; ctx.lineWidth = 9;
   for (let ty = 0; ty <= h; ty += th) { ctx.beginPath(); ctx.moveTo(0, ty); ctx.lineTo(w, ty); ctx.stroke(); }
   for (let tx = 0; tx <= w; tx += tw) { ctx.beginPath(); ctx.moveTo(tx, 0); ctx.lineTo(tx, h); ctx.stroke(); }
-  stains(ctx, w, h, 14 * grimeLevel, [92, 74, 50], 90, 0.22 * grimeLevel);
-  stains(ctx, w, h, 8 * grimeLevel, [40, 44, 38], 60, 0.18 * grimeLevel);
-  return { map: tex(c, 4, 1.6), normalMap: normalFromHeight(hc, 2.0), roughness: 0.28, metalness: 0.0 };
+  // 缝隙积垢线
+  ctx.strokeStyle = `rgba(78,66,46,${0.5 * grimeLevel})`; ctx.lineWidth = 3;
+  for (let ty = 0; ty <= h; ty += th) { ctx.beginPath(); ctx.moveTo(0, ty + 4); ctx.lineTo(w, ty + 4); ctx.stroke(); }
+  stains(ctx, w, h, 26 * grimeLevel, [92, 74, 50], 160, 0.22 * grimeLevel);
+  stains(ctx, w, h, 15 * grimeLevel, [40, 44, 38], 110, 0.18 * grimeLevel);
+  // 自上而下的湿痕（渗水沿缝下淌——干后留矿痕）
+  for (let i = 0; i < 7 * grimeLevel; i++) {
+    const x = rnd() * w, len = 200 + rnd() * 500, ww = 10 + rnd() * 30;
+    const g = ctx.createLinearGradient(x, 0, x, len);
+    g.addColorStop(0, `rgba(96,88,70,${0.22 * grimeLevel})`);
+    g.addColorStop(0.7, `rgba(110,104,88,${0.1 * grimeLevel})`);
+    g.addColorStop(1, 'rgba(96,88,70,0)');
+    ctx.fillStyle = g; ctx.fillRect(x - ww / 2, 0, ww, len);
+    // 湿痕区域在粗糙度上反而更光（水膜残留感）
+    const rg = rctx.createLinearGradient(x, 0, x, len);
+    rg.addColorStop(0, 'rgba(30,30,30,0.5)'); rg.addColorStop(1, 'rgba(30,30,30,0)');
+    rctx.fillStyle = rg; rctx.fillRect(x - ww / 2, 0, ww, len);
+  }
+  return {
+    map: tex(c, 2, 0.8), normalMap: normalFromHeight(hc, 2.2),
+    roughnessMap: roughTex(rc, 2, 0.8), roughness: 1.0, metalness: 0.0,
+  };
 }
 
 // ---------- 灰泥墙面（可带污渍） ----------
@@ -174,30 +247,125 @@ export function plaster(base = [214, 206, 190], grime = 0.7) {
   return { map: tex(c, 3, 1.5), normalMap: normalFromHeight(hc, 0.8), roughness: 0.92, metalness: 0.0 };
 }
 
-// ---------- 红绒布（桌布/椅套/幕布） ----------
+// ---------- 红绒布（椅套/幕布）v1.5：512 + 绒毛方向丝光 ----------
 export function velvet(dark = 0) {
   srand(53 + dark);
-  const w = 256, h = 256;
+  const w = 512, h = 512;
   const c = canvas(w, h), ctx = c.getContext('2d');
   const r0 = 132 - dark * 46, g0 = 16 - dark * 5, b0 = 22 - dark * 8;
   ctx.fillStyle = `rgb(${r0},${g0},${b0})`; ctx.fillRect(0, 0, w, h);
   noiseFill(ctx, w, h, [r0, g0, b0], 26, 0.55);
-  // 绒面丝光
-  for (let i = 0; i < 40; i++) {
-    const x = rnd() * w, y = rnd() * h, r = 20 + rnd() * 50;
+  // 绒毛压向纹（手抚过的方向差——绒布的签名）
+  for (let i = 0; i < 26; i++) {
+    const x = rnd() * w, y = rnd() * h, rr = 40 + rnd() * 120, ang = rnd() * Math.PI;
+    ctx.save();
+    ctx.translate(x, y); ctx.rotate(ang);
+    const gg = ctx.createLinearGradient(-rr, 0, rr, 0);
+    gg.addColorStop(0, 'rgba(0,0,0,0)');
+    gg.addColorStop(0.5, `rgba(${Math.min(255, r0 + 62)},${g0 + 16},${b0 + 18},0.13)`);
+    gg.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = gg;
+    ctx.beginPath(); ctx.ellipse(0, 0, rr, rr * 0.38, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
+  // 绒面丝光点
+  for (let i = 0; i < 60; i++) {
+    const x = rnd() * w, y = rnd() * h, r = 30 + rnd() * 80;
     const gg = ctx.createRadialGradient(x, y, 0, x, y, r);
-    gg.addColorStop(0, `rgba(${r0 + 55},${g0 + 14},${b0 + 16},0.10)`);
+    gg.addColorStop(0, `rgba(${Math.min(255, r0 + 55)},${g0 + 14},${b0 + 16},0.08)`);
     gg.addColorStop(1, 'rgba(0,0,0,0)');
     ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
   }
-  const hc = canvas(128, 128), hctx = hc.getContext('2d');
-  hctx.fillStyle = '#808080'; hctx.fillRect(0, 0, 128, 128);
+  const hc = canvas(256, 256), hctx = hc.getContext('2d');
+  hctx.fillStyle = '#808080'; hctx.fillRect(0, 0, 256, 256);
   srand(3);
-  for (let i = 0; i < 900; i++) {
+  for (let i = 0; i < 3400; i++) {
     hctx.fillStyle = rnd() > 0.5 ? '#848484' : '#7c7c7c';
-    hctx.fillRect(rnd() * 128, rnd() * 128, 2, 2);
+    hctx.fillRect(rnd() * 256, rnd() * 256, 2, 2);
   }
   return { map: tex(c, 2, 2), normalMap: normalFromHeight(hc, 0.6), roughness: 0.88, metalness: 0.0 };
+}
+
+// ---------- 涤纶桌布（v1.5 新增：垂坠褶皱 + 熨痕 + 酒渍） ----------
+export function tablecloth() {
+  srand(61);
+  const w = 512, h = 512;
+  const c = canvas(w, h), ctx = c.getContext('2d');
+  const hc = canvas(w, h), hctx = hc.getContext('2d');
+  const rc = canvas(w, h), rctx = rc.getContext('2d');
+  ctx.fillStyle = '#a01018'; ctx.fillRect(0, 0, w, h);
+  hctx.fillStyle = '#808080'; hctx.fillRect(0, 0, w, h);
+  rctx.fillStyle = '#9a9a9a'; rctx.fillRect(0, 0, w, h);
+  noiseFill(ctx, w, h, [160, 16, 24], 14, 0.4);
+  // 垂坠竖褶（桌布沿裙边的自然褶皱——UV 横向环绕桌裙）
+  for (let x = 0; x < w; x += 4) {
+    const fold = Math.sin(x * 0.10) * 0.5 + Math.sin(x * 0.031 + 1.7) * 0.35 + Math.sin(x * 0.007) * 0.15;
+    const l = fold * 0.5 + 0.5;
+    ctx.fillStyle = `rgba(${l > 0.5 ? 255 : 0},${l > 0.5 ? 90 : 0},${l > 0.5 ? 80 : 0},${Math.abs(l - 0.5) * 0.5})`;
+    ctx.fillRect(x, 0, 4, h);
+    hctx.fillStyle = `rgb(${(104 + l * 62)|0},${(104 + l * 62)|0},${(104 + l * 62)|0})`;
+    hctx.fillRect(x, 0, 4, h);
+    // 褶峰的涤纶反光更强
+    rctx.fillStyle = `rgb(${(176 - l * 88)|0},${(176 - l * 88)|0},${(176 - l * 88)|0})`;
+    rctx.fillRect(x, 0, 4, h);
+  }
+  // 熨烫折痕（十字形——从仓库里拿出来直接铺上）
+  ctx.strokeStyle = 'rgba(255,120,110,0.16)'; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(0, h * 0.5); ctx.lineTo(w, h * 0.5); ctx.stroke();
+  hctx.strokeStyle = '#989898'; hctx.lineWidth = 3;
+  hctx.beginPath(); hctx.moveTo(0, h * 0.5); hctx.lineTo(w, h * 0.5); hctx.stroke();
+  // 酒渍/油点
+  srand(67);
+  stains(ctx, w, h, 5, [70, 8, 12], 46, 0.35);
+  stains(rctx, w, h, 5, [30, 30, 30], 46, 0.5);
+  // 织纹微点
+  for (let i = 0; i < 4200; i++) {
+    ctx.fillStyle = `rgba(255,150,140,${0.02 + rnd() * 0.03})`;
+    ctx.fillRect(rnd() * w, rnd() * h, 1.5, 1.5);
+  }
+  return {
+    map: tex(c, 2, 1), normalMap: normalFromHeight(hc, 2.6),
+    roughnessMap: roughTex(rc, 2, 1), roughness: 1.0, metalness: 0.0,
+  };
+}
+
+// ---------- 金箔（v1.5 新增：舞台沿口/藻井线脚的锤揲金层） ----------
+export function goldFoil() {
+  srand(71);
+  const w = 256, h = 256;
+  const c = canvas(w, h), ctx = c.getContext('2d');
+  const hc = canvas(w, h), hctx = hc.getContext('2d');
+  const rc = canvas(w, h), rctx = rc.getContext('2d');
+  ctx.fillStyle = '#c79a3a'; ctx.fillRect(0, 0, w, h);
+  hctx.fillStyle = '#808080'; hctx.fillRect(0, 0, w, h);
+  rctx.fillStyle = '#4a4a4a'; rctx.fillRect(0, 0, w, h);
+  // 贴箔方格（每张金箔一块，边缘微错位——手工贴金的签名）
+  const sq = 64;
+  for (let ty = 0; ty < h; ty += sq) {
+    for (let tx = 0; tx < w; tx += sq) {
+      const tone = 190 + rnd() * 40;
+      ctx.fillStyle = `rgba(${tone|0},${(tone * 0.76)|0},${(tone * 0.3)|0},0.5)`;
+      ctx.fillRect(tx + 1, ty + 1, sq - 2, sq - 2);
+      ctx.strokeStyle = 'rgba(96,66,20,0.5)'; ctx.lineWidth = 1.5;
+      ctx.strokeRect(tx + 0.5, ty + 0.5, sq - 1, sq - 1);
+      hctx.fillStyle = rnd() > 0.5 ? '#868686' : '#7a7a7a';
+      hctx.fillRect(tx + 1, ty + 1, sq - 2, sq - 2);
+    }
+  }
+  // 锤揲凹痕与磨损露底
+  for (let i = 0; i < 130; i++) {
+    const x = rnd() * w, y = rnd() * h, r = 3 + rnd() * 9;
+    ctx.fillStyle = `rgba(${120 + rnd() * 60|0},${80 + rnd() * 40|0},${20 + rnd() * 20|0},0.3)`;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+    hctx.fillStyle = '#727272';
+    hctx.beginPath(); hctx.arc(x, y, r, 0, Math.PI * 2); hctx.fill();
+    rctx.fillStyle = 'rgba(150,150,150,0.55)';
+    rctx.beginPath(); rctx.arc(x, y, r, 0, Math.PI * 2); rctx.fill();
+  }
+  return {
+    map: tex(c, 1, 1), normalMap: normalFromHeight(hc, 1.4),
+    roughnessMap: roughTex(rc, 1, 1), roughness: 1.0, metalness: 0.9,
+  };
 }
 
 // ---------- 囍字大横幅（舞台背景） ----------
@@ -240,27 +408,51 @@ export function xiBanner() {
   return tex(c, 1, 1);
 }
 
-// ---------- 地毯（红色走道毯） ----------
+// ---------- 地毯（红色走道毯）v1.5：512 + 团花纹样 + 踩踏磨痕 ----------
 export function carpet() {
   srand(91);
-  const w = 256, h = 256;
+  const w = 512, h = 512;
   const c = canvas(w, h), ctx = c.getContext('2d');
   ctx.fillStyle = '#6e1013'; ctx.fillRect(0, 0, w, h);
   noiseFill(ctx, w, h, [110, 16, 19], 24, 0.6);
-  // 金边纹样
-  ctx.strokeStyle = 'rgba(190,150,60,0.8)'; ctx.lineWidth = 6;
-  ctx.strokeRect(10, 10, w - 20, h - 20);
-  ctx.strokeStyle = 'rgba(190,150,60,0.35)'; ctx.lineWidth = 2;
-  ctx.strokeRect(22, 22, w - 44, h - 44);
-  stains(ctx, w, h, 6, [30, 20, 18], 60, 0.25);
-  const hc = canvas(128, 128), hctx = hc.getContext('2d');
-  hctx.fillStyle = '#808080'; hctx.fillRect(0, 0, 128, 128);
-  srand(7);
-  for (let i = 0; i < 2000; i++) {
-    hctx.fillStyle = rnd() > 0.5 ? '#868686' : '#7a7a7a';
-    hctx.fillRect(rnd() * 128, rnd() * 128, 1, 1);
+  // 金边纹样（双线 + 回纹角）
+  ctx.strokeStyle = 'rgba(190,150,60,0.8)'; ctx.lineWidth = 10;
+  ctx.strokeRect(20, 20, w - 40, h - 40);
+  ctx.strokeStyle = 'rgba(190,150,60,0.35)'; ctx.lineWidth = 4;
+  ctx.strokeRect(44, 44, w - 88, h - 88);
+  // 回纹角饰
+  ctx.strokeStyle = 'rgba(190,150,60,0.55)'; ctx.lineWidth = 4;
+  [[64, 64], [w - 64, 64], [64, h - 64], [w - 64, h - 64]].forEach(([cx, cy]) => {
+    ctx.strokeRect(cx - 18, cy - 18, 36, 36);
+    ctx.strokeRect(cx - 8, cy - 8, 16, 16);
+  });
+  // 中央团花（婚庆毯的圆形缠枝纹）
+  ctx.strokeStyle = 'rgba(190,150,60,0.45)'; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.arc(w / 2, h / 2, 92, 0, Math.PI * 2); ctx.stroke();
+  ctx.beginPath(); ctx.arc(w / 2, h / 2, 70, 0, Math.PI * 2); ctx.stroke();
+  for (let i = 0; i < 8; i++) {
+    const a = (i / 8) * Math.PI * 2;
+    const px = w / 2 + Math.cos(a) * 81, py = h / 2 + Math.sin(a) * 81;
+    ctx.beginPath(); ctx.arc(px, py, 13, 0, Math.PI * 2); ctx.stroke();
   }
-  return { map: tex(c, 1, 8), normalMap: normalFromHeight(hc, 0.7), roughness: 0.95, metalness: 0.0 };
+  ctx.fillStyle = 'rgba(190,150,60,0.4)';
+  ctx.font = '52px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('囍', w / 2, h / 2 + 2);
+  // 踩踏磨痕（中线走道被踩得发暗发亮）
+  const wear = ctx.createLinearGradient(0, 0, w, 0);
+  wear.addColorStop(0, 'rgba(0,0,0,0)');
+  wear.addColorStop(0.5, 'rgba(30,6,6,0.28)');
+  wear.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = wear; ctx.fillRect(0, 0, w, h);
+  stains(ctx, w, h, 9, [30, 20, 18], 110, 0.25);
+  const hc = canvas(256, 256), hctx = hc.getContext('2d');
+  hctx.fillStyle = '#808080'; hctx.fillRect(0, 0, 256, 256);
+  srand(7);
+  for (let i = 0; i < 7000; i++) {
+    hctx.fillStyle = rnd() > 0.5 ? '#868686' : '#7a7a7a';
+    hctx.fillRect(rnd() * 256, rnd() * 256, 1.5, 1.5);
+  }
+  return { map: tex(c, 1, 4), normalMap: normalFromHeight(hc, 0.7), roughness: 0.95, metalness: 0.0 };
 }
 
 // ---------- 绿漆墙裙 ----------
@@ -336,14 +528,14 @@ export function signage(text, fg = '#e8e2d2', bg = '#233225', fs = 96) {
 // ---------- 海水（海洋馆玻璃后） ----------
 export function seaWater() {
   srand(131);
-  const w = 512, h = 512;
+  const w = 1024, h = 1024;
   const c = canvas(w, h), ctx = c.getContext('2d');
   const g = ctx.createLinearGradient(0, 0, 0, h);
   g.addColorStop(0, '#2a7a86'); g.addColorStop(0.45, '#155059'); g.addColorStop(1, '#072028');
   ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
   // 上层光带（水面透下来的光）
-  for (let i = 0; i < 26; i++) {
-    const x = rnd() * w, ww = 12 + rnd() * 50;
+  for (let i = 0; i < 44; i++) {
+    const x = rnd() * w, ww = 18 + rnd() * 90;
     const lg = ctx.createLinearGradient(x, 0, x + ww * 0.4, h * 0.55);
     lg.addColorStop(0, `rgba(120,220,210,${0.10 + rnd() * 0.12})`);
     lg.addColorStop(1, 'rgba(120,220,210,0)');
@@ -354,14 +546,14 @@ export function seaWater() {
     ctx.closePath(); ctx.fill();
   }
   // 悬浮颗粒
-  for (let i = 0; i < 700; i++) {
+  for (let i = 0; i < 2600; i++) {
     const y = rnd() * h;
     ctx.fillStyle = `rgba(140,210,200,${0.03 + rnd() * 0.09 * (1 - y / h)})`;
-    ctx.fillRect(rnd() * w, y, 1 + rnd() * 2, 1 + rnd() * 2);
+    ctx.fillRect(rnd() * w, y, 1 + rnd() * 2.5, 1 + rnd() * 2.5);
   }
   // 深处的暗影轮廓（负空间——像有什么，看不清）
-  for (let i = 0; i < 4; i++) {
-    const x = rnd() * w, y = h * 0.35 + rnd() * h * 0.5, r = 80 + rnd() * 160;
+  for (let i = 0; i < 6; i++) {
+    const x = rnd() * w, y = h * 0.35 + rnd() * h * 0.5, r = 140 + rnd() * 300;
     const gg = ctx.createRadialGradient(x, y, r * 0.2, x, y, r);
     gg.addColorStop(0, 'rgba(0,4,6,0.55)');
     gg.addColorStop(1, 'rgba(0,4,6,0)');

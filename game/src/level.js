@@ -35,6 +35,10 @@ export function buildLevel(scene, renderer) {
   M.velvet = new THREE.MeshStandardMaterial({ ...vel });
   const velD = TX.velvet(1);
   M.velvetDark = new THREE.MeshStandardMaterial({ ...velD });
+  const tcl = TX.tablecloth();
+  M.tablecloth = new THREE.MeshStandardMaterial({ ...tcl });
+  const gf = TX.goldFoil();
+  M.goldFoil = new THREE.MeshStandardMaterial({ ...gf, envMapIntensity: 1.5 });
   const car = TX.carpet();
   M.carpet = new THREE.MeshStandardMaterial({ ...car });
   M.wainscot = new THREE.MeshStandardMaterial({ ...TX.greenWainscot() });
@@ -81,8 +85,9 @@ export function buildLevel(scene, renderer) {
   // 地面按尺寸平铺
   const floorMat = (base, w, h, per = 2.6) => {
     const m = base.clone();
-    if (m.map) { m.map = m.map.clone(); m.map.needsUpdate = true; m.map.repeat.set(w / per, h / per); }
-    if (m.normalMap) { m.normalMap = m.normalMap.clone(); m.normalMap.needsUpdate = true; m.normalMap.repeat.set(w / per, h / per); }
+    for (const ch of ['map', 'normalMap', 'roughnessMap']) {
+      if (m[ch]) { m[ch] = m[ch].clone(); m[ch].needsUpdate = true; m[ch].repeat.set(w / per, h / per); }
+    }
     return m;
   };
   const collide = (x1, z1, x2, z2) => L.colliders.push({ minX: Math.min(x1, x2), minZ: Math.min(z1, z2), maxX: Math.max(x1, x2), maxZ: Math.max(z1, z2) });
@@ -95,8 +100,9 @@ export function buildLevel(scene, renderer) {
     tiledMat.cache = tiledMat.cache || {};
     if (tiledMat.cache[key]) return tiledMat.cache[key];
     const m = mat.clone();
-    if (m.map) { m.map = m.map.clone(); m.map.needsUpdate = true; m.map.repeat.set(Math.max(1, w / per), Math.max(0.6, h / per)); }
-    if (m.normalMap) { m.normalMap = m.normalMap.clone(); m.normalMap.needsUpdate = true; m.normalMap.repeat.set(Math.max(1, w / per), Math.max(0.6, h / per)); }
+    for (const ch of ['map', 'normalMap', 'roughnessMap']) {
+      if (m[ch]) { m[ch] = m[ch].clone(); m[ch].needsUpdate = true; m[ch].repeat.set(Math.max(1, w / per), Math.max(0.6, h / per)); }
+    }
     tiledMat.cache[key] = m;
     return m;
   };
@@ -165,7 +171,9 @@ export function buildLevel(scene, renderer) {
 
   // 舞台
   box(16, 0.6, 3.2, M.velvetDark, 0, 0.3, -18.4, { collide: true });
+  box(16.1, 0.1, 3.26, M.goldFoil, 0, 0.62, -18.4, {}); // 台沿金箔压条
   box(4, 0.15, 1.2, M.velvetDark, 0, 0.07, -16.6, {}); // 台阶
+  box(4.04, 0.04, 1.24, M.goldFoil, 0, 0.155, -16.6, {});
   // 舞台背景幕 + 囍横幅
   const banner = plane(14, 5.4, new THREE.MeshStandardMaterial({ map: TX.xiBanner(), roughness: 0.85 }), 0, 3.6, -19.7);
   banner.material.emissive = new THREE.Color(0x1a0304);
@@ -211,9 +219,9 @@ export function buildLevel(scene, renderer) {
     const main = ti === allTables.length - 1;
     const t = new THREE.Mesh(tableGeo, M.wood);
     t.position.set(tx, 0.38, tz); t.castShadow = true; scene.add(t);
-    const cl = new THREE.Mesh(clothGeo, M.velvet);
-    cl.position.set(tx, 0.38, tz); scene.add(cl);
-    const top = new THREE.Mesh(new THREE.CylinderGeometry(1.16, 1.16, 0.03, 20), M.velvet);
+    const cl = new THREE.Mesh(clothGeo, M.tablecloth);
+    cl.position.set(tx, 0.38, tz); cl.rotation.y = ti * 0.9; scene.add(cl);
+    const top = new THREE.Mesh(new THREE.CylinderGeometry(1.16, 1.16, 0.03, 20), M.tablecloth);
     top.position.set(tx, 0.775, tz); scene.add(top);
     const su = new THREE.Mesh(susanGeo, glassSusan);
     su.position.set(tx, 0.81, tz); scene.add(su);
@@ -827,8 +835,8 @@ export function buildLevel(scene, renderer) {
     scene.add(g);
     L.dyn.lanterns.push({ group: g, phase: i * 1.3 });
   });
-  // —— 宴会厅：天花线脚 + 藻井 ——
-  const trimMat = new THREE.MeshStandardMaterial({ color: 0x8a6a34, metalness: 0.55, roughness: 0.5 });
+  // —— 宴会厅：天花线脚 + 藻井（金箔材质） ——
+  const trimMat = M.goldFoil;
   box(30, 0.14, 0.14, trimMat, 0, 6.7, -0.2, {}); box(30, 0.14, 0.14, trimMat, 0, 6.7, -19.8, {});
   box(0.14, 0.14, 20, trimMat, -14.8, 6.7, -10, {}); box(0.14, 0.14, 20, trimMat, 14.8, 6.7, -10, {});
   box(20, 0.1, 0.1, trimMat, 0, 6.96, -4.5, {}); box(20, 0.1, 0.1, trimMat, 0, 6.96, -15.5, {});

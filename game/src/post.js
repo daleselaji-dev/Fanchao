@@ -40,13 +40,15 @@ void main() {
 const COMPOSITE_FRAG = /* glsl */`
 uniform sampler2D tScene;
 uniform sampler2D tBloomA;  // 窄泛光（亮心）
-uniform sampler2D tBloomB;  // 宽辉光（雾感）
+uniform sampler2D tBloomB;  // 宽辉光（雾感/halation）
 uniform float uTime;
 uniform float uRedPulse;   // 点名时的红脉冲
 uniform float uShock;      // 事件冲击（收声/点火）
 uniform float uFlash;      // 震惊节拍闪白
 uniform float uLetterbox;  // 电影黑边 0~1
 uniform float uExposure;
+uniform float uDread;      // 静默低压：0=正常 1=收声中（去饱和+边缘下沉）
+uniform vec2 uTexel;       // 1/分辨率（锐化用）
 varying vec2 vUv;
 
 float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
@@ -67,31 +69,57 @@ void main() {
   col.r = texture2D(tScene, uv + d * ca).r;
   col.g = texture2D(tScene, uv).g;
   col.b = texture2D(tScene, uv - d * ca).b;
-  // 双尺度泛光
+  // 锐化（unsharp mask——把 1.5x 像素比的画面锐回"数字艺术"级清晰度）
+  {
+    vec3 n1 = texture2D(tScene, uv + vec2(uTexel.x, 0.0)).rgb;
+    vec3 n2 = texture2D(tScene, uv - vec2(uTexel.x, 0.0)).rgb;
+    vec3 n3 = texture2D(tScene, uv + vec2(0.0, uTexel.y)).rgb;
+    vec3 n4 = texture2D(tScene, uv - vec2(0.0, uTexel.y)).rgb;
+    vec3 blur4 = (n1 + n2 + n3 + n4) * 0.25;
+    col += (col - blur4) * 0.55;
+  }
+  // 双尺度泛光：窄亮心中性；宽辉光偏暖红——胶片 halation（高光边缘渗红，林奇式过曝签名）
   vec3 bloomA = texture2D(tBloomA, uv).rgb;
   vec3 bloomB = texture2D(tBloomB, uv).rgb;
-  col += bloomA * 0.7 + bloomB * 0.55;
+  col += bloomA * 0.66;
+  col += bloomB * 0.55 * vec3(1.06, 0.74, 0.52);
   // 曝光 + ACES 调色
   col *= uExposure * (1.0 + uFlash * 1.6);
   col = aces(col);
   // 暖黑（阴影往琥珀偏，绝不偏蓝）
   col = pow(col, vec3(0.96, 1.0, 1.06));
   col += vec3(0.014, 0.009, 0.006);
-  // 颗粒（暗部更重——胶片特性）
+  // 轻 vibrance（低饱和像素补饱和——红金更实，不动肤色高光）
+  {
+    float lum0 = dot(col, vec3(0.299, 0.587, 0.114));
+    float sat = length(col - vec3(lum0));
+    col = mix(vec3(lum0), col, 1.0 + (0.18 - sat * 0.3) * (1.0 - uDread * 0.6));
+  }
+  // 静默低压：收声时画面微微失血、边缘下沉——静默=最大警报的视觉版
+  {
+    float lum1 = dot(col, vec3(0.299, 0.587, 0.114));
+    col = mix(col, vec3(lum1) * vec3(1.0, 0.97, 0.94), uDread * 0.22);
+    col *= 1.0 - uDread * smoothstep(0.06, 0.42, r2) * 0.22;
+  }
+  // 双层颗粒（粗+细，暗部更重——胶片特性）
   float lum = dot(col, vec3(0.299, 0.587, 0.114));
-  float g = hash(uv * vec2(1920.0, 1080.0) + fract(uTime * 7.0));
-  col += (g - 0.5) * mix(0.065, 0.02, lum);
-  // 暗角
-  float vig = 1.0 - r2 * (1.1 + uShock * 0.8);
+  float g1 = hash(uv * vec2(1920.0, 1080.0) + fract(uTime * 7.0));
+  float g2 = hash(uv * vec2(640.0, 360.0) + fract(uTime * 13.0) * 3.0);
+  col += (g1 - 0.5) * mix(0.05, 0.016, lum);
+  col += (g2 - 0.5) * mix(0.022, 0.006, lum);
+  // 暗角（呼吸感：极慢的 0.5% 起伏——房间在极轻地喘）
+  float breathe = 1.0 + sin(uTime * 0.23) * 0.005;
+  float vig = (1.0 - r2 * (1.08 + uShock * 0.8)) * breathe;
   col *= vig;
   // 点名红脉冲（画面四周渗红——腕绳的颜色）
   float edge = smoothstep(0.18, 0.5, r2);
   col = mix(col, vec3(0.42, 0.03, 0.04), edge * uRedPulse * 0.55);
   // 闪白（震惊节拍）
   col = mix(col, vec3(0.9, 0.86, 0.8), clamp(uFlash, 0.0, 1.0) * 0.55);
-  // 电影黑边
+  // 电影黑边（软边缘）
   float bar = 0.085 * uLetterbox;
-  if (uv.y < bar || uv.y > 1.0 - bar) col = vec3(0.0);
+  float lb = smoothstep(bar, bar + 0.004, uv.y) * smoothstep(bar, bar + 0.004, 1.0 - uv.y);
+  col *= mix(1.0, lb, step(0.001, uLetterbox));
   gl_FragColor = vec4(col, 1.0);
 }`;
 
@@ -116,6 +144,7 @@ export class Post {
         tScene: { value: null }, tBloomA: { value: null }, tBloomB: { value: null },
         uTime: { value: 0 }, uRedPulse: { value: 0 }, uShock: { value: 0 },
         uFlash: { value: 0 }, uLetterbox: { value: 0 }, uExposure: { value: 1.18 },
+        uDread: { value: 0 }, uTexel: { value: new THREE.Vector2(1 / width, 1 / height) },
       },
       vertexShader: QUAD_VERT, fragmentShader: COMPOSITE_FRAG,
     });
@@ -128,6 +157,9 @@ export class Post {
     this.letterbox = 0;      // 当前值（插值）
     this.letterboxTarget = 0;
     this.exposure = 1.18;
+    this.exposureTarget = 1.18; // 区域电影曝光（宴会厅过亮 / 服务区压暗）
+    this.dread = 0;             // 静默低压（audio.hush 期间 → 1）
+    this.dreadTarget = 0;
   }
 
   resize(w, h, first = false) {
@@ -160,6 +192,8 @@ export class Post {
     this.shock = Math.max(0, this.shock - dt * 0.5);
     this.flash = Math.max(0, this.flash - dt * 2.2);
     this.letterbox += (this.letterboxTarget - this.letterbox) * Math.min(1, dt * 3);
+    this.exposure += (this.exposureTarget - this.exposure) * Math.min(1, dt * 0.9);
+    this.dread += (this.dreadTarget - this.dread) * Math.min(1, dt * 1.4);
     // 1) 场景
     r.setRenderTarget(this.rtScene);
     r.render(scene, camera);
@@ -193,6 +227,8 @@ export class Post {
     u.uFlash.value = this.flash;
     u.uLetterbox.value = this.letterbox;
     u.uExposure.value = this.exposure;
+    u.uDread.value = this.dread;
+    u.uTexel.value.set(1 / this.w, 1 / this.h);
     r.setRenderTarget(null);
     r.render(this.scene, this.cam);
   }

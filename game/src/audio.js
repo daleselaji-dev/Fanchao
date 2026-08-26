@@ -147,12 +147,14 @@ export class AudioEngine {
 
   // 静默规则：广播前全楼收声
   hush(dur = 3.0) {
+    this.hushed = true; // 视觉低压层（post.uDread）读取
     if (!this.started) return;
     const t = this.ctx.currentTime;
     this.ambientBus.gain.cancelScheduledValues(t);
     this.ambientBus.gain.setTargetAtTime(0.04, t, dur * 0.33);
   }
   unhush(after = 0) {
+    this.hushed = false;
     if (!this.started) return;
     const t = this.ctx.currentTime + after;
     this.ambientBus.gain.setTargetAtTime(1.0, t, 2.2);

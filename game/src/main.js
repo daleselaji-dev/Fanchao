@@ -180,6 +180,13 @@ atmo.addDust([25, 0.3, 15, 47, 7.4, 29], 260, 0.035, 0xd0c4a4, 0.45, 'lobby');
 atmo.addDust([-18, 0.2, 20.3, 23, 3.2, 23.8], 240, 0.03, 0x9fd8cc, 0.55, 'aqua');
 atmo.addDust([16, 0.3, -7.6, 39.5, 3, 13.5], 170, 0.028, 0xc8d8be, 0.4, 'corridor');
 atmo.addDust([-18.6, 0.3, -7, -15.6, 2.8, 19], 120, 0.03, 0xd8c8a8, 0.4, 'connector');
+// 贴地雾层（v1.5：分层薄雾——大厅红金雾腰 / 海洋馆冷雾 / 大堂门口海雾渗入）
+atmo.addGroundFog(0, 0.28, -10, 30, 20, 0.14, 'hall', '186,140,110');
+atmo.addGroundFog(0, 0.85, -14, 26, 11, 0.08, 'hall', '200,130,100');
+atmo.addGroundFog(2.5, 0.32, 22, 43, 4.4, 0.2, 'aqua', '140,196,186');
+atmo.addGroundFog(36, 0.3, 26.5, 22, 8, 0.16, 'lobby', '176,186,176');
+atmo.addGroundFog(-17.1, 0.26, 6, 4.2, 26, 0.15, 'connector', '190,200,196');
+atmo.addGroundFog(0, 0.4, 11, 30, 15, 0.24, 'lobby', '168,182,172'); // 门外散场夜雾
 
 // ---------- 区域 ----------
 function regionAt(pos) {
@@ -450,6 +457,16 @@ function updateAmbience(dt, t) {
   // 区域触发音
   const rn = regionNameAt(player.pos);
   audio.setLayer('water', rn === '海洋馆连廊' ? 0.05 : 0.0, 1.5);
+  // 区域电影曝光：喜宴过亮的日常 vs 服务区过暗的通道（林奇双态）
+  {
+    const late = agenda.beat >= 5;
+    const EXP = late
+      ? { '宴会厅': 1.1, '服务走廊': 0.98, '大堂': 1.04, '海洋馆连廊': 1.02, '员工连廊': 0.94 }
+      : { '宴会厅': 1.32, '服务走廊': 1.0, '大堂': 1.16, '海洋馆连廊': 1.06, '员工连廊': 0.95 };
+    post.exposureTarget = EXP[rn] ?? 1.12;
+  }
+  // 静默低压：收声期间画面失血
+  post.dreadTarget = audio.hushed ? 1 : 0;
   if (rn === '员工连廊') {
     creakTimer -= dt;
     if (creakTimer <= 0) { creakTimer = 4 + Math.random() * 6; audio.creakLow(); }

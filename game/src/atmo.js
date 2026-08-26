@@ -73,6 +73,55 @@ export class Atmosphere {
     return m;
   }
 
+  // ---------- 地面雾层（v1.5：贴地流动的分层薄雾——fbm 噪声滚动，零 CPU） ----------
+  addGroundFog(x, y, z, w, d, opacity, group, tint = '200,190,170') {
+    if (!this._fogMats) this._fogMats = [];
+    const mat = new THREE.ShaderMaterial({
+      uniforms: {
+        uTime: { value: 0 },
+        uColor: { value: new THREE.Color(`rgb(${tint})`) },
+        uOpacity: { value: opacity },
+      },
+      vertexShader: /* glsl */`
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }`,
+      fragmentShader: /* glsl */`
+        uniform float uTime;
+        uniform vec3 uColor;
+        uniform float uOpacity;
+        varying vec2 vUv;
+        float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+        float noise(vec2 p) {
+          vec2 i = floor(p), f = fract(p);
+          f = f * f * (3.0 - 2.0 * f);
+          return mix(mix(hash(i), hash(i + vec2(1, 0)), f.x),
+                     mix(hash(i + vec2(0, 1)), hash(i + vec2(1, 1)), f.x), f.y);
+        }
+        void main() {
+          vec2 p = vUv * 6.0;
+          float n = noise(p + vec2(uTime * 0.05, uTime * 0.023)) * 0.55
+                  + noise(p * 2.3 - vec2(uTime * 0.035, 0.0)) * 0.3
+                  + noise(p * 5.1 + vec2(0.0, uTime * 0.06)) * 0.15;
+          // 边缘羽化
+          float fx = smoothstep(0.0, 0.16, vUv.x) * smoothstep(0.0, 0.16, 1.0 - vUv.x);
+          float fy = smoothstep(0.0, 0.16, vUv.y) * smoothstep(0.0, 0.16, 1.0 - vUv.y);
+          float a = smoothstep(0.32, 0.85, n) * fx * fy * uOpacity;
+          gl_FragColor = vec4(uColor, a);
+        }`,
+      transparent: true, depthWrite: false,
+    });
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, d), mat);
+    m.rotation.x = -Math.PI / 2;
+    m.position.set(x, y, z);
+    m.renderOrder = 4;
+    this.scene.add(m);
+    this._fogMats.push({ mat, base: opacity, group });
+    return m;
+  }
+
   // ---------- 漂尘（顶点着色器漂移，零 CPU） ----------
   addDust(box, count, size = 0.035, color = 0xd8c8a8, opacity = 0.5, group = 'hall') {
     const [x1, y1, z1, x2, y2, z2] = box;
@@ -183,6 +232,12 @@ export class Atmosphere {
 
   update(dt, lightMult) {
     this.time += dt;
+    if (this._fogMats) for (const f of this._fogMats) {
+      f.mat.uniforms.uTime.value = this.time;
+      // 点火后（灯光变暗）雾反而更实——返潮的呼吸
+      const k = lightMult[f.group] ?? 1;
+      f.mat.uniforms.uOpacity.value = f.base * (1.35 - k * 0.35);
+    }
     for (const c of this.cones) {
       const mult = lightMult[c.group] ?? 1;
       let k = mult;
