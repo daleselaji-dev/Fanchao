@@ -160,10 +160,39 @@ export function buildLevel(scene, renderer) {
   wallX(0, -15, 15, 7, M.plasterHall, [[-1.8, 1.8]]);    // 南墙 主入口（终局开启）
   wallZ(-15, -20, 0, 7, M.plasterHall, [[-7.6, -4.4]]);  // 西墙 连廊门
   wallZ(15, -20, 0, 7, M.plasterHall, [[-7.6, -4.4]]);   // 东墙 服务走廊门
-  // 南门（双开木门，终局前关闭）
+  // 南门（双开板式木门 + 金线嵌板，终局前关闭）
   const doorS = new THREE.Group();
-  const dL = box(1.7, 3.4, 0.12, M.wood, -0.85, 1.7, 0, {});
-  const dR = box(1.7, 3.4, 0.12, M.wood, 0.85, 1.7, 0, {});
+  const mkDoorLeaf = (x) => {
+    const leaf = new THREE.Group();
+    const body = new THREE.Mesh(new THREE.BoxGeometry(1.7, 3.4, 0.12), M.wood);
+    leaf.add(body);
+    // 双嵌板 + 金线压边
+    for (const [py, ph] of [[0.9, 1.35], [-0.75, 1.5]]) {
+      const panel = new THREE.Mesh(new THREE.BoxGeometry(1.3, ph, 0.05), M.wood);
+      panel.position.set(0, py, 0.06);
+      leaf.add(panel);
+      const trim = new THREE.Mesh(new THREE.BoxGeometry(1.38, ph + 0.08, 0.02), M.goldFoil);
+      trim.position.set(0, py, 0.045);
+      leaf.add(trim);
+    }
+    // 金色长拉手
+    const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.022, 0.75, 8), M.gold);
+    handle.position.set(x < 0 ? 0.66 : -0.66, 0.05, 0.14);
+    leaf.add(handle);
+    // 门上红纸「囍」
+    const xi = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.5), new THREE.MeshStandardMaterial({ map: TX.redPaper(), roughness: 0.85 }));
+    xi.position.set(0, 1.55, 0.09); xi.rotation.z = 0.06 * (x < 0 ? 1 : -1);
+    leaf.add(xi);
+    leaf.position.set(x, 1.7, 0);
+    scene.add(leaf);
+    return leaf;
+  };
+  const dL = mkDoorLeaf(-0.85);
+  const dR = mkDoorLeaf(0.85);
+  // 门框 + 门楣金匾
+  box(0.22, 3.6, 0.4, M.wood, -1.85, 1.8, 0, {}); box(0.22, 3.6, 0.4, M.wood, 1.85, 1.8, 0, {});
+  box(4.1, 0.24, 0.4, M.wood, 0, 3.7, 0, {});
+  plane(2.6, 0.5, new THREE.MeshStandardMaterial({ map: TX.signage('百年好合', '#e7c25c', '#6e0d12', 96), roughness: 0.8 }), 0, 3.1, -0.22, Math.PI);
   doorS.userData = { dL, dR };
   L.dyn.doorS = doorS;
   collide(-1.8, -0.2, 1.8, 0.2); // 南门关闭碰撞（终局移除）
@@ -831,9 +860,23 @@ export function buildLevel(scene, renderer) {
     ta.position.y = -0.56; g.add(ta);
     const wire = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 1.1, 4), M.black);
     wire.position.y = 0.95; g.add(wire);
+    // 透光内芯：烛心亮点 + 加法辉光（骨架剪影从内透出来）
+    const core = new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 8),
+      new THREE.MeshBasicMaterial({ color: 0xffd9a0, fog: false }));
+    g.add(core);
+    const glowT = inlineTex(64, 64, (ctx) => {
+      const gr = ctx.createRadialGradient(32, 32, 2, 32, 32, 30);
+      gr.addColorStop(0, 'rgba(255,150,90,0.85)'); gr.addColorStop(0.5, 'rgba(230,60,40,0.3)');
+      gr.addColorStop(1, 'rgba(200,40,30,0)');
+      ctx.fillStyle = gr; ctx.fillRect(0, 0, 64, 64);
+    });
+    const glow = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 1.25),
+      new THREE.MeshBasicMaterial({ map: glowT, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
+    g.add(glow);
+    glow.onBeforeRender = (r, s, cam) => { glow.quaternion.copy(cam.quaternion); };
     g.position.set(x, 4.9, z);
     scene.add(g);
-    L.dyn.lanterns.push({ group: g, phase: i * 1.3 });
+    L.dyn.lanterns.push({ group: g, phase: i * 1.3, glowMat: glow.material });
   });
   // —— 宴会厅：天花线脚 + 藻井（金箔材质） ——
   const trimMat = M.goldFoil;
@@ -1046,12 +1089,352 @@ export function buildLevel(scene, renderer) {
         L.dyn.strips.push({ mesh: s, phase: i * 0.9 + z });
       }
     });
-    const frostMat = new THREE.MeshStandardMaterial({ color: 0xd8ddd2, roughness: 0.95, transparent: true, opacity: 0.16 });
+    const frostMat = new THREE.MeshStandardMaterial({ color: 0xd8ddd2, roughness: 0.95, transparent: true, opacity: 0.09, depthWrite: false });
     for (let i = 0; i < 6; i++) {
-      const f = plane(0.8 + Math.random() * 1.4, 0.5 + Math.random() * 0.8, frostMat,
+      const f = plane(0.5 + Math.random() * 0.7, 0.4 + Math.random() * 0.5, frostMat,
         -18.82, 0.6 + Math.random() * 1.6, -4 + i * 4 + Math.random() * 2, Math.PI / 2);
       f.rotation.z = Math.random() * 3;
     }
+  }
+
+  // ============================================================
+  // 细节密度层 v1.5 —— 第三遍美术：每个空间的「可停下来盯着看」
+  // ============================================================
+
+  // —— 宴会厅：深色木墙裙 + 金线（体面的分界线） ——
+  {
+    const dadoMat = new THREE.MeshStandardMaterial({ ...TX.wood(0.55, 0.7), envMapIntensity: 0.4 });
+    dadoMat.userData.tileEvery = 2.2;
+    const dado = (w2, d2, x, z, ry = 0) => {
+      const m = box(w2, 1.0, d2, tiledMat(dadoMat, Math.max(w2, d2), 1), x, 0.5, z, { ry });
+      return m;
+    };
+    dado(29.4, 0.08, 0, -0.34); dado(29.4, 0.08, 0, -19.66);
+    dado(0.08, 19.4, -14.66, -10); dado(0.08, 19.4, 14.66, -10);
+    // 金线压顶
+    box(29.4, 0.05, 0.1, M.goldFoil, 0, 1.02, -0.36, {});
+    box(29.4, 0.05, 0.1, M.goldFoil, 0, 1.02, -19.64, {});
+    box(0.1, 0.05, 19.4, M.goldFoil, -14.64, 1.02, -10, {});
+    box(0.1, 0.05, 19.4, M.goldFoil, 14.64, 1.02, -10, {});
+  }
+  // —— 宴会厅：红绸墙幔（沿东西墙的垂坠绸带 + 金穗） ——
+  {
+    const swagMat = new THREE.MeshStandardMaterial({ color: 0x9e1018, roughness: 0.62, emissive: 0x1c0305, side: THREE.DoubleSide });
+    const mkSwag = (x1, z1, x2, z2, y) => {
+      const pts = [];
+      for (let k = 0; k <= 10; k++) {
+        const t = k / 10;
+        pts.push(new THREE.Vector3(x1 + (x2 - x1) * t, y - Math.sin(t * Math.PI) * 0.55, z1 + (z2 - z1) * t));
+      }
+      const sw = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 16, 0.09, 7), swagMat);
+      scene.add(sw);
+      // 两端金穗
+      for (const [ex, ez] of [[x1, z1], [x2, z2]]) {
+        const ta = new THREE.Mesh(new THREE.ConeGeometry(0.05, 0.34, 7), new THREE.MeshStandardMaterial({ color: 0xc79a3a, metalness: 0.5, roughness: 0.5 }));
+        ta.position.set(ex, y - 0.2, ez);
+        scene.add(ta);
+      }
+    };
+    for (let i = 0; i < 4; i++) {
+      mkSwag(-14.62, -2 - i * 4.4, -14.62, -6 - i * 4.4, 4.3);
+      mkSwag(14.62, -2 - i * 4.4, 14.62, -6 - i * 4.4, 4.3);
+    }
+    // 南墙门两侧对幛
+    mkSwag(-6.5, -0.34, -2.4, -0.34, 4.6);
+    mkSwag(2.4, -0.34, 6.5, -0.34, 4.6);
+  }
+  // —— 桌面：红烛（黄铜座 + 焰苗广告牌）+ 筷架 + 折扇巾 ——
+  {
+    L.dyn.flames = [];
+    const brass = new THREE.MeshStandardMaterial({ color: 0xa8842e, metalness: 0.85, roughness: 0.35 });
+    const waxMat = new THREE.MeshStandardMaterial({ color: 0xc01018, roughness: 0.45, emissive: 0x40060a });
+    const flameTex = inlineTex(64, 96, (ctx, w2, h2) => {
+      const g = ctx.createRadialGradient(w2 / 2, h2 * 0.62, 2, w2 / 2, h2 * 0.55, w2 * 0.55);
+      g.addColorStop(0, 'rgba(255,246,214,1)');
+      g.addColorStop(0.35, 'rgba(255,196,110,0.85)');
+      g.addColorStop(0.75, 'rgba(235,110,40,0.3)');
+      g.addColorStop(1, 'rgba(200,60,20,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.ellipse(w2 / 2, h2 * 0.55, w2 * 0.32, h2 * 0.46, 0, 0, Math.PI * 2); ctx.fill();
+    });
+    const flameMat0 = new THREE.MeshBasicMaterial({ map: flameTex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false });
+    allTables.forEach(([tx, tz], ti) => {
+      const holder = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.055, 0.05, 10), brass);
+      holder.position.set(tx - 0.12, 0.885, tz + 0.3);
+      scene.add(holder);
+      const candle = new THREE.Mesh(new THREE.CylinderGeometry(0.016, 0.016, 0.16, 8), waxMat);
+      candle.position.set(tx - 0.12, 0.985, tz + 0.3);
+      scene.add(candle);
+      const fm = flameMat0.clone();
+      const fl = new THREE.Mesh(new THREE.PlaneGeometry(0.09, 0.14), fm);
+      fl.position.set(tx - 0.12, 1.115, tz + 0.3);
+      fl.onBeforeRender = (r, s, cam) => { fl.quaternion.copy(cam.quaternion); };
+      scene.add(fl);
+      L.dyn.flames.push({ mesh: fl, mat: fm, phase: ti * 1.7, y0: 1.115 });
+    });
+    // 筷子（每席一双，金属枕）+ 折扇巾
+    const chopGeo = new THREE.BoxGeometry(0.012, 0.012, 0.24);
+    const chopMat = new THREE.MeshStandardMaterial({ color: 0x6e3a20, roughness: 0.5 });
+    const chops = new THREE.InstancedMesh(chopGeo, chopMat, allTables.length * 16);
+    const restGeo = new THREE.CylinderGeometry(0.02, 0.025, 0.05, 6);
+    const rests = new THREE.InstancedMesh(restGeo, M.porcelain, allTables.length * 8);
+    const fanGeo = new THREE.ConeGeometry(0.06, 0.16, 5, 1, true);
+    const fanMat = new THREE.MeshStandardMaterial({ color: 0xd8322a, roughness: 0.7, side: THREE.DoubleSide });
+    const fans = new THREE.InstancedMesh(fanGeo, fanMat, allTables.length * 8);
+    let ii = 0, ri = 0;
+    const d2 = new THREE.Object3D();
+    allTables.forEach(([tx, tz]) => {
+      for (let k = 0; k < 8; k++) {
+        const a = (k / 8) * Math.PI * 2;
+        const bx = tx + Math.cos(a) * 0.98, bz = tz + Math.sin(a) * 0.98;
+        for (const s of [-0.012, 0.012]) {
+          d2.position.set(bx + Math.cos(a + Math.PI / 2) * s, 0.805, bz + Math.sin(a + Math.PI / 2) * s);
+          d2.rotation.set(0, -a + Math.PI / 2, 0);
+          d2.updateMatrix();
+          chops.setMatrixAt(ii++, d2.matrix);
+        }
+        d2.position.set(bx + Math.cos(a) * 0.1, 0.81, bz + Math.sin(a) * 0.1);
+        d2.rotation.set(0, -a, 0); d2.updateMatrix();
+        rests.setMatrixAt(ri, d2.matrix);
+        // 折成扇形的餐巾立在盘上
+        d2.position.set(tx + Math.cos(a) * 0.78, 0.9, tz + Math.sin(a) * 0.78);
+        d2.rotation.set(0, -a + Math.PI, 0); d2.updateMatrix();
+        fans.setMatrixAt(ri, d2.matrix);
+        ri++;
+      }
+    });
+    scene.add(chops, rests, fans);
+  }
+  // —— 宴会厅：舞台花篮 ×2 + 立式话筒 ——
+  {
+    const basketMat = new THREE.MeshStandardMaterial({ color: 0x8a6034, roughness: 0.8 });
+    const petalMats = [0xd8322a, 0xe7b64c, 0xd86a9a].map(c => new THREE.MeshStandardMaterial({ color: c, roughness: 0.65 }));
+    [[-4.6, -17.2], [4.6, -17.2]].forEach(([x, z]) => {
+      const basket = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.13, 0.36, 10), basketMat);
+      basket.position.set(x, 0.78, z);
+      scene.add(basket);
+      const stand = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.14, 0.6, 8), M.steelDark);
+      stand.position.set(x, 0.3, z);
+      scene.add(stand);
+      TX.srand(x * 7 + 100);
+      for (let k = 0; k < 14; k++) {
+        const p = new THREE.Mesh(new THREE.SphereGeometry(0.05 + TX.rnd() * 0.035, 7, 6), petalMats[k % 3]);
+        p.position.set(x + (TX.rnd() - 0.5) * 0.4, 1.02 + TX.rnd() * 0.22, z + (TX.rnd() - 0.5) * 0.35);
+        p.scale.y = 0.8;
+        scene.add(p);
+      }
+    });
+  }
+
+  // —— 服务走廊：灭火器 + 打卡钟 + 湿痕水洼 + 管线滴渍 ——
+  {
+    const extMat = new THREE.MeshStandardMaterial({ color: 0xa01218, roughness: 0.35, envMapIntensity: 0.9 });
+    const ext = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.4, 10), extMat);
+    ext.position.set(18.5, 0.62, -7.72); scene.add(ext);
+    const nozzle = new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.014, 0.12, 6), M.steelDark);
+    nozzle.position.set(18.55, 0.86, -7.7); nozzle.rotation.z = 0.7; scene.add(nozzle);
+    plane(0.3, 0.36, new THREE.MeshStandardMaterial({ map: TX.signage('灭火器', '#e8e2d2', '#8e1016', 100), roughness: 0.9 }), 18.5, 1.35, -7.79, 0);
+    // 打卡钟（东段墙上——员工动线的证据）
+    box(0.28, 0.36, 0.12, new THREE.MeshStandardMaterial({ color: 0x3a4048, roughness: 0.5 }), 39.9, 1.5, 12.5, {});
+    plane(0.5, 0.2, new THREE.MeshStandardMaterial({ map: TX.signage('上工打卡', '#d8d2c2', '#2e3630', 72), roughness: 0.9 }), 39.83, 1.85, 12.5, -Math.PI / 2);
+    // 卡槽架
+    for (let r = 0; r < 2; r++) for (let cix = 0; cix < 5; cix++) {
+      const cardm = new THREE.Mesh(new THREE.BoxGeometry(0.008, 0.12, 0.07),
+        new THREE.MeshStandardMaterial({ color: 0xd8cfb8, roughness: 0.9 }));
+      cardm.position.set(39.9, 1.1 - r * 0.18, 12.2 + cix * 0.12);
+      scene.add(cardm);
+    }
+    // 湿痕水洼（走廊里两处反光洼）
+    const wetMat = new THREE.MeshStandardMaterial({ color: 0x14181a, roughness: 0.04, metalness: 0.4, envMapIntensity: 2.2, transparent: true, opacity: 0.72 });
+    [[21, -5.2, 1.1], [36.8, 6.5, 1.4]].forEach(([x, z, s]) => {
+      const p = new THREE.Mesh(new THREE.CircleGeometry(1, 18), wetMat);
+      p.rotation.x = -Math.PI / 2; p.scale.set(s, s * 0.5, 1);
+      p.position.set(x, 0.015, z);
+      scene.add(p);
+    });
+    // 管线滴渍（管下墙面的深色垂痕）
+    const dripMat = new THREE.MeshStandardMaterial({ color: 0x3c342a, roughness: 0.95, transparent: true, opacity: 0.5 });
+    for (let i = 0; i < 4; i++) {
+      const dp = plane(0.14 + Math.random() * 0.2, 0.7 + Math.random() * 1.2, dripMat, 19 + i * 5.2, 2.4, -7.79, 0);
+      dp.rotation.z = (Math.random() - 0.5) * 0.06;
+    }
+  }
+
+  // —— 大堂：总台道具 + 行李车 + 立牌 + 柱面红绸结 ——
+  {
+    // 总台：登记簿 + 红包摞 + 热水瓶 + 算盘
+    box(0.34, 0.03, 0.24, new THREE.MeshStandardMaterial({ color: 0xd8cfb8, roughness: 0.9 }), 45.4, 1.2, 22.8, {});
+    box(0.3, 0.015, 0.2, new THREE.MeshStandardMaterial({ color: 0x8e1016, roughness: 0.8 }), 45.42, 1.225, 22.78, { ry: 0.12 });
+    for (let k = 0; k < 4; k++) {
+      box(0.16, 0.012, 0.09, new THREE.MeshStandardMaterial({ color: 0xb3121c, roughness: 0.7 }), 45.45, 1.2 + k * 0.014, 21.4 + (k % 2) * 0.02, { ry: k * 0.14 });
+    }
+    const thermos = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.08, 0.34, 12),
+      new THREE.MeshStandardMaterial({ color: 0x2e8048, roughness: 0.3, envMapIntensity: 1.2 }));
+    thermos.position.set(45.6, 1.35, 25.2); scene.add(thermos);
+    const abacus = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.03, 0.14), M.wood);
+    abacus.position.set(45.35, 1.19, 23.6); abacus.rotation.y = -0.2; scene.add(abacus);
+    // 立式铜牌「喜宴 · 宴会厅 →」
+    const standSign = new THREE.Group();
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.03, 1.35, 10), M.gold);
+    pole.position.y = 0.68; standSign.add(pole);
+    const sbase = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.24, 0.05, 12), M.gold);
+    sbase.position.y = 0.03; standSign.add(sbase);
+    const sboard = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.5, 0.03),
+      new THREE.MeshStandardMaterial({ map: TX.signage('喜宴 · 宴会厅 →', '#e7c25c', '#6e0d12', 56), roughness: 0.5, metalness: 0.3 }));
+    sboard.position.y = 1.45; standSign.add(sboard);
+    standSign.position.set(33.5, 0, 20.5); standSign.rotation.y = 0.5;
+    scene.add(standSign);
+    collide(33.2, 20.2, 33.8, 20.8);
+    // 行李推车（黄铜弓架）
+    const cart2 = new THREE.Group();
+    const deck = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.06, 0.6), M.wood);
+    deck.position.y = 0.28; cart2.add(deck);
+    for (const s of [-0.5, 0.5]) {
+      const arch = new THREE.Mesh(new THREE.TorusGeometry(0.55, 0.022, 8, 20, Math.PI), M.gold);
+      arch.position.set(s, 0.3, 0); arch.rotation.y = Math.PI / 2;
+      cart2.add(arch);
+    }
+    const bar = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 1.1, 8), M.gold);
+    bar.rotation.z = Math.PI / 2; bar.position.y = 0.85; cart2.add(bar);
+    for (const [sx, sy, sz, c] of [[-0.25, 0.42, 0, 0x4a3828], [0.2, 0.4, 0.1, 0x35424e], [0.05, 0.62, -0.05, 0x6e4a2e]]) {
+      const sc = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.22, 0.34), new THREE.MeshStandardMaterial({ color: c, roughness: 0.85 }));
+      sc.position.set(sx, sy, sz); sc.rotation.y = sx;
+      cart2.add(sc);
+    }
+    cart2.position.set(29.5, 0, 16.5); cart2.rotation.y = -0.4;
+    scene.add(cart2);
+    collide(28.9, 16, 30.1, 17);
+    // 镜面柱红绸结（婚宴布置的痕迹）
+    [[30, 18], [42, 18], [30, 26], [42, 26]].forEach(([x, z]) => {
+      const bowMat = new THREE.MeshStandardMaterial({ color: 0xb3121c, roughness: 0.6, emissive: 0x200406 });
+      const knot = new THREE.Mesh(new THREE.SphereGeometry(0.09, 8, 8), bowMat);
+      knot.position.set(x, 2.6, z + 0.56); scene.add(knot);
+      for (const s of [-1, 1]) {
+        const loop = new THREE.Mesh(new THREE.TorusGeometry(0.12, 0.035, 6, 12), bowMat);
+        loop.position.set(x + s * 0.13, 2.62, z + 0.56);
+        loop.rotation.y = s * 0.7; loop.rotation.z = s * 0.5;
+        scene.add(loop);
+        const ribbon = new THREE.Mesh(new THREE.PlaneGeometry(0.09, 0.5), bowMat);
+        ribbon.position.set(x + s * 0.09, 2.3, z + 0.55);
+        ribbon.rotation.z = s * 0.25; ribbon.rotation.y = 0.2;
+        scene.add(ribbon);
+      }
+      const belt = new THREE.Mesh(new THREE.CylinderGeometry(0.57, 0.57, 0.14, 20, 1, true), bowMat);
+      belt.position.set(x, 2.6, z); scene.add(belt);
+    });
+    // 价目板（总台后墙）
+    const priceT = inlineTex(256, 200, (ctx, w2, h2) => {
+      ctx.fillStyle = '#26201a'; ctx.fillRect(0, 0, w2, h2);
+      ctx.strokeStyle = '#8a6a34'; ctx.lineWidth = 4; ctx.strokeRect(6, 6, w2 - 12, h2 - 12);
+      ctx.fillStyle = '#d8c9a2'; ctx.font = '22px "Noto Sans SC","Microsoft YaHei",sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('客 房 价 目', w2 / 2, 34);
+      ctx.font = '15px "Noto Sans SC","Microsoft YaHei",sans-serif';
+      ctx.textAlign = 'left';
+      ['标准间 …… 128 元', '豪华间 …… 188 元', '套　房 …… 288 元', '钟点房 …… 40 元'].forEach((s, i) => {
+        ctx.fillText(s, 30, 72 + i * 30);
+      });
+      ctx.fillStyle = '#9a8a6a'; ctx.font = '12px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('今日喜宴包场 · 恕不接待散客', w2 / 2, h2 - 16);
+    });
+    plane(1.15, 0.9, new THREE.MeshStandardMaterial({ map: priceT, roughness: 0.85 }), 47.8, 3.4, 24.6, -Math.PI / 2);
+  }
+
+  // —— 海洋馆：沉没吊灯/圆桌残影 + 漂游盖头 + 票务栏杆 ——
+  {
+    const silMat2 = new THREE.MeshBasicMaterial({ color: 0x021013, transparent: true, opacity: 0.85, depthWrite: false });
+    // 沉没的枝形吊灯（婚宴掉进海里的部分——和大厅同款的轮廓）
+    const sunkCh = new THREE.Group();
+    const ring1 = new THREE.Mesh(new THREE.TorusGeometry(0.9, 0.07, 6, 20), silMat2);
+    ring1.rotation.x = Math.PI / 2 + 0.5; sunkCh.add(ring1);
+    const ring2 = new THREE.Mesh(new THREE.TorusGeometry(0.5, 0.06, 6, 16), silMat2);
+    ring2.rotation.x = Math.PI / 2 + 0.5; ring2.position.y = 0.35; sunkCh.add(ring2);
+    const chain2 = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 2.4, 5), silMat2);
+    chain2.position.y = 1.4; chain2.rotation.z = 0.3; sunkCh.add(chain2);
+    sunkCh.position.set(-11, 1.6, 26.4);
+    scene.add(sunkCh);
+    // 漂游的红盖头（水里唯一的红——缓慢翻卷）
+    const veilDriftMat = new THREE.MeshBasicMaterial({ color: 0x6e0d12, transparent: true, opacity: 0.55, side: THREE.DoubleSide, depthWrite: false });
+    const veilDrift = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.9, 4, 4), veilDriftMat);
+    veilDrift.position.set(8, 2.2, 26.0);
+    scene.add(veilDrift);
+    L.dyn.veilDrift = veilDrift;
+    // 票务隔离带（不锈钢立柱 + 红绒带——非绳网，deco）
+    [[19.5, 21.4], [17.5, 21.4]].forEach(([x, z]) => {
+      const post = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.9, 8), M.steel);
+      post.position.set(x, 0.45, z); scene.add(post);
+      const cap = new THREE.Mesh(new THREE.SphereGeometry(0.045, 8, 6), M.steel);
+      cap.position.set(x, 0.92, z); scene.add(cap);
+    });
+    const beltPts = [];
+    for (let k = 0; k <= 8; k++) {
+      const t = k / 8;
+      beltPts.push(new THREE.Vector3(19.5 - t * 2, 0.86 - Math.sin(t * Math.PI) * 0.1, 21.4));
+    }
+    const belt2 = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(beltPts), 10, 0.035, 6),
+      new THREE.MeshStandardMaterial({ color: 0x6e1013, roughness: 0.8 }));
+    scene.add(belt2);
+    // 玻璃钢框底部锈痕
+    const rustMat = new THREE.MeshStandardMaterial({ color: 0x4a3020, roughness: 0.95, transparent: true, opacity: 0.6 });
+    for (let i = 0; i < 12; i++) {
+      const r = plane(0.32, 0.4 + Math.random() * 0.3, rustMat, -17.2 + i * 3.6 + 1.78, 0.28, 23.9, Math.PI);
+      r.rotation.z = (Math.random() - 0.5) * 0.2;
+    }
+  }
+
+  // —— 员工连廊：搪瓷货架 + 褪色标语 + 盘管 ——
+  {
+    // 三层货架（搪瓷盆/罐头/纸箱）
+    const shelfMat = new THREE.MeshStandardMaterial({ color: 0x4a4640, metalness: 0.6, roughness: 0.6 });
+    for (let lv = 0; lv < 3; lv++) box(0.4, 0.04, 2.4, shelfMat, -18.7, 0.4 + lv * 0.55, 16.5, {});
+    for (const s of [-1.15, 1.15]) box(0.05, 1.7, 0.05, shelfMat, -18.7, 0.85, 16.5 + s, {});
+    collide(-19, 15.2, -18.4, 17.8);
+    TX.srand(505);
+    for (let k = 0; k < 7; k++) {
+      const lv = k % 3;
+      const kind = k % 3;
+      if (kind === 0) {
+        const basin = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.1, 0.09, 12),
+          new THREE.MeshStandardMaterial({ color: 0xe8e4da, roughness: 0.25, envMapIntensity: 1.0 }));
+        basin.position.set(-18.7, 0.47 + lv * 0.55, 15.6 + TX.rnd() * 1.8);
+        scene.add(basin);
+      } else if (kind === 1) {
+        const jar = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.16, 10),
+          new THREE.MeshStandardMaterial({ color: 0x8a7a4a, roughness: 0.4 }));
+        jar.position.set(-18.7, 0.5 + lv * 0.55, 15.6 + TX.rnd() * 1.8);
+        scene.add(jar);
+      } else {
+        const bx2 = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.2, 0.34),
+          new THREE.MeshStandardMaterial({ color: 0x7a5c38, roughness: 0.95 }));
+        bx2.position.set(-18.7, 0.53 + lv * 0.55, 15.7 + TX.rnd() * 1.6);
+        bx2.rotation.y = TX.rnd() * 0.4;
+        scene.add(bx2);
+      }
+    }
+    // 褪色安全标语（旧冷库时代的）
+    plane(2.2, 0.5, new THREE.MeshStandardMaterial({
+      map: TX.signage('安全生产 · 人人有责', '#9aa294', '#3a4038', 60), roughness: 0.95,
+      transparent: true, opacity: 0.8,
+    }), -15.38, 2.2, 4, -Math.PI / 2);
+    // 盘起的消防水带
+    const hose = new THREE.Mesh(new THREE.TorusGeometry(0.22, 0.055, 8, 20), new THREE.MeshStandardMaterial({ color: 0x6e2018, roughness: 0.8 }));
+    hose.position.set(-15.4, 1.4, 12); hose.rotation.y = Math.PI / 2;
+    scene.add(hose);
+    box(0.06, 0.7, 0.7, new THREE.MeshStandardMaterial({ color: 0x8e1016, roughness: 0.7 }), -15.36, 1.4, 12, {});
+  }
+
+  // —— 门外散场空地：车棚剪影 + 路灯 ——
+  {
+    const carMat = new THREE.MeshStandardMaterial({ color: 0x0c0e10, roughness: 0.6, metalness: 0.3 });
+    [[-5.5, 14.5, 0.3], [0.5, 15.5, -0.2], [5.5, 14, 0.15]].forEach(([x, z, ry]) => {
+      const carBody = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.5, 4.2), carMat);
+      carBody.position.set(x, 0.45, z); carBody.rotation.y = ry;
+      scene.add(carBody);
+      const cab = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.42, 2.2), carMat);
+      cab.position.set(x, 0.9, z + 0.2); cab.rotation.y = ry;
+      scene.add(cab);
+    });
   }
 
   // ============================================================

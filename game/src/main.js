@@ -429,11 +429,26 @@ function updateAmbience(dt, t) {
     b.group.rotation.x = Math.sin(t * 1.1 + b.phase) * 0.14;
     b.group.rotation.z = Math.cos(t * 0.9 + b.phase) * 0.1;
   }
-  // 红灯笼微摆（点火后摆幅加大——像有水流过大厅）
+  // 红灯笼微摆（点火后摆幅加大——像有水流过大厅）+ 烛心呼吸
   const lanSway = agenda.beat >= 3 ? 0.12 : 0.04;
   for (const ln of L.dyn.lanterns) {
     ln.group.rotation.x = Math.sin(t * 0.7 + ln.phase) * lanSway;
     ln.group.rotation.z = Math.cos(t * 0.55 + ln.phase) * lanSway * 0.7;
+    if (ln.glowMat) ln.glowMat.opacity = 0.8 + Math.sin(t * 2.3 + ln.phase * 3) * 0.12 + Math.sin(t * 7.1 + ln.phase) * 0.06;
+  }
+  // 桌面红烛焰苗（摇曳 + 微缩放）
+  if (L.dyn.flames) for (const f of L.dyn.flames) {
+    const s = 1 + Math.sin(t * 9 + f.phase) * 0.12 + Math.sin(t * 23 + f.phase * 2) * 0.07;
+    f.mesh.scale.set(s, 1 / s * (1 + Math.sin(t * 5.7 + f.phase) * 0.1), 1);
+    f.mesh.position.y = f.y0 + Math.sin(t * 11 + f.phase) * 0.004;
+    f.mat.opacity = 0.85 + Math.sin(t * 13 + f.phase) * 0.12;
+  }
+  // 海里漂游的红盖头（缓慢翻卷下沉又浮起）
+  if (L.dyn.veilDrift) {
+    const v = L.dyn.veilDrift;
+    v.rotation.x = t * 0.11; v.rotation.y = Math.sin(t * 0.07) * 1.2; v.rotation.z = t * 0.05;
+    v.position.y = 2.0 + Math.sin(t * 0.13) * 0.5;
+    v.position.x = 8 + Math.sin(t * 0.05) * 2.5;
   }
   // 海草摆动
   if (L.dyn.kelps) for (const k of L.dyn.kelps) {
