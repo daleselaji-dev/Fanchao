@@ -401,7 +401,7 @@ function updateThreatAudio() {
     const d = w.group.position.distanceTo(player.pos);
     if (d < bd) { bd = d; best = w; }
   }
-  if (!best || bd > 14) { audio.setThreat(0, 0); audio.setCordHum(0, 0); ui.threat(0, 0); return; }
+  if (!best || bd > 14) { audio.setThreat(0, 0); audio.setCordHum(0, 0); audio.setBreath(0, 0); ui.threat(0, 0); return; }
   // 方位（右为正）
   _tv.copy(best.group.position).sub(player.pos);
   const f = player.forward;
@@ -411,6 +411,8 @@ function updateThreatAudio() {
   audio.setThreat(chasing ? Math.min(1, v * 1.6 + 0.25) : v * 0.4, pan);
   // 绳鸣：贴近载客红绳
   audio.setCordHum(best.state === 'ride' ? v * v : 0, pan);
+  // 近身呼吸：4.5m 内他的吸气比脚步先到——耳机上方位极准
+  audio.setBreath(THREE.MathUtils.clamp(1 - bd / 4.5, 0, 1), pan);
   // 屏缘威胁指示：追逐中按方位泛红（听觉之外的第二读法）
   ui.threat(chasing ? Math.min(1, v * 1.3 + 0.15) : 0, pan);
 }
@@ -427,7 +429,7 @@ function updateBarriers() {
 }
 
 // ---------- 环境动态演出 ----------
-let creakTimer = 5, glassTimer = 7;
+let creakTimer = 5, glassTimer = 7, lynchTimer = 16;
 function updateAmbience(dt, t) {
   // 荧光灯闪
   for (const tube of L.dyn.tubes) {
@@ -498,6 +500,15 @@ function updateAmbience(dt, t) {
   // 区域触发音
   const rn = regionNameAt(player.pos);
   audio.setLayer('water', rn === '海洋馆连廊' ? 0.05 : 0.0, 1.5);
+  // 空间自适应混响：换房间时耳朵先知道（瓷砖短亮/大堂厚软/海洋馆长暗）
+  audio.setSpace(rn);
+  // 低频不安随议程逐拍加深；收声期间反而更沉（静默是压着的，不是空的）
+  {
+    const b = agenda.beat;
+    let dread = b >= 5 ? 0.85 : b >= 4 ? 0.62 : b >= 3 ? 0.48 : b >= 2 ? 0.3 : 0.16;
+    if (audio.hushed) dread = Math.min(1, dread + 0.3);
+    audio.setDread(dread);
+  }
   // 区域电影曝光：喜宴过亮的日常 vs 服务区过暗的通道（林奇双态）
   {
     const late = agenda.beat >= 5;
@@ -511,6 +522,14 @@ function updateAmbience(dt, t) {
   if (rn === '员工连廊') {
     creakTimer -= dt;
     if (creakTimer <= 0) { creakTimer = 4 + Math.random() * 6; audio.creakLow(); }
+  }
+  // 林奇氛围事件（低频率，不解释）：隔墙笑声戛然而止 / 永不开门的电梯到站铃 / 暗处水滴
+  lynchTimer -= dt;
+  if (lynchTimer <= 0 && !audio.hushed) {
+    lynchTimer = 20 + Math.random() * 26;
+    if (rn === '大堂') audio.elevatorDing(Math.random() < 0.5 ? -0.7 : 0.7);
+    else if (rn === '宴会厅' && agenda.beat >= 2) audio.distantLaugh((Math.random() - 0.5) * 1.2);
+    else if (rn === '服务走廊') audio.drip((Math.random() - 0.5) * 1.4);
   }
   if (rn === '海洋馆连廊' && agenda.beat >= 4) {
     glassTimer -= dt;

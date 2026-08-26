@@ -34,7 +34,8 @@ export class Agenda {
     post.letterboxTarget = 1;   // 广播 = 电影时刻
     this.after(2.2, () => audio.paChime());
     this.after(3.4, () => {
-      audio.broadcast(sylls, 104 + this.beat * 4);
+      // 远厅回声延迟随同步律收拢：开局迟 ~1.7s（声画错位），终局趋近同步
+      audio.broadcast(sylls, 104 + this.beat * 4, null, 0.35 + 1.4 * (1 - mc.sync));
       ui.subtitle('【广播】' + text, Math.max(3.5, sylls * 0.4));
       if (cardTitle) ui.card(cardTitle, cardSub);
       mc.speak(Math.max(3, sylls * 0.42)); // 口部钙化颗粒随声蠕动（声不由口出）
@@ -447,7 +448,7 @@ export class Agenda {
     ui.cutRing(0);
     ui.fade(1, 1.2);
     post.letterboxTarget = 1;
-    audio.broadcast(6, 92);
+    audio.broadcast(6, 92, null, 0.08); // 终局：回声几乎同步——世界终于对上了拍
     audio.sting(0.5);
     L.dyn.cardYou.mat.map = L.dyn.cardYou.flip;
     L.dyn.cardYou.mat.needsUpdate = true;
