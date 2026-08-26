@@ -23,6 +23,8 @@ export class Player {
     this.ePressed = false;   // 单帧按下
     this.kickV = 0;          // 相机冲击（摘/挂/巨响反馈）
     this.kickRoll = 0;
+    this.fovKick = 0;        // 视场冲击（抓握瞬间的呼吸感）
+    this._baseFov = camera.fov;
     window.addEventListener('keydown', (e) => {
       this.keys[e.code] = true;
       if (e.code === 'KeyE' && !this.eDown) { this.eDown = true; this.ePressed = true; }
@@ -64,6 +66,8 @@ export class Player {
     this.kickV = v;
     this.kickRoll = roll;
   }
+  // 视场冲击：负值瞬间收窄（摘绳的「拽」），正值瞬间放宽（挂绳的「放」）
+  punchFov(v) { this.fovKick = v; }
 
   update(dt, colliders, regionAt) {
     this.ePressedThisFrame = this.ePressed;
@@ -130,6 +134,15 @@ export class Player {
     // 冲击衰减（弹簧回弹）
     this.kickV *= Math.max(0, 1 - dt * 7);
     this.kickRoll *= Math.max(0, 1 - dt * 5);
+    if (Math.abs(this.fovKick) > 0.02) {
+      this.fovKick *= Math.max(0, 1 - dt * 6);
+      this.camera.fov = this._baseFov + this.fovKick;
+      this.camera.updateProjectionMatrix();
+    } else if (this.fovKick !== 0) {
+      this.fovKick = 0;
+      this.camera.fov = this._baseFov;
+      this.camera.updateProjectionMatrix();
+    }
     this.camera.position.set(
       this.pos.x + bobX * Math.cos(this.yaw),
       this.pos.y + this.eyeHeight + bobY,

@@ -260,7 +260,7 @@ export class Agenda {
     this.announce('各位来宾，欢迎光临周府喜宴。请各位来宾——入席。', 14, '议程二 · 入席');
     guests.turnTo(0, -18);
     this.after(8, () => ui.subtitle('周絮的母亲塞给你一张单子："乖，去后头帮拿喜糖。走廊直走就是。"', 6.5));
-    this.after(15, () => ui.objective('从<b>东门</b>去服务走廊 —— 门被<b>拦门绳</b>拴着：对准红绳端头按 E <b>摘</b>下，再对准旁边的空钩按 E <b>挂</b>上'));
+    this.after(15, () => ui.objective('从<b>东门</b>去服务走廊 —— 门被<b>拦门绳</b>拴着。看准绳端按 <b>E</b> 摘，再挂上旁边的空钩'));
   }
 
   _beat2开席() {

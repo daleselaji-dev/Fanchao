@@ -334,13 +334,31 @@ function updateInteract(dt) {
       return;
     }
   }
-  // 摘/挂
+  // 摘/挂（带滞回吸附：一旦锁定，视线稍偏也不丢——手感不「滑脱」）
   const camPos = camera.position;
-  const target = sys.nearestTarget(camPos, player.lookDir, 2.8);
+  let target = sys.nearestTarget(camPos, player.lookDir, 2.8);
+  if (!target && _lastTarget) {
+    // 滞回：旧目标仍在范围内且视线偏差不大 → 保持锁定
+    const p = _lastTarget.type === 'cordEnd' ? _lastTarget.cord.endPos(_lastTarget.end) : _lastTarget.hook.pos;
+    const v = p.clone().sub(camPos);
+    const d = v.length();
+    const stillValid = _lastTarget.type === 'cordEnd'
+      ? (!sys.held && sys.cords.includes(_lastTarget.cord) && _lastTarget.cord.fixedEnd !== _lastTarget.end)
+      : (!!sys.held && !_lastTarget.hook.locked && _lastTarget.hook.cords.length < 3);
+    if (stillValid && d < 2.9 && v.normalize().dot(player.lookDir) > 0.5) {
+      target = { ..._lastTarget, pos: p, dist: d };
+    }
+  }
+  _lastTarget = target;
   sys.hooks.forEach(h => h.setHighlight(false));
+  // 目标绳结呼吸放大（所有结先复位）
+  _interactT += dt;
+  for (const c of sys.cords) { c.knotA.scale.setScalar(1); c.knotB.scale.setScalar(1); }
   if (target) {
     if (target.type === 'cordEnd') {
       target.cord.mat.emissiveIntensity = 2.8;
+      const kn = target.end === 'a' ? target.cord.knotA : target.cord.knotB;
+      kn.scale.setScalar(1.35 + Math.sin(_interactT * 9) * 0.14);
       ui.reticle('grab');
       const tagTip = { doorE: '（拦门绳）', doorC: '（拦门绳）', gate: '（闸门吊绳）', seatlock: '（捆席绳）' }[target.cord.tag] || '';
       ui.prompt(`<b>摘</b>下红绳${tagTip}`, 'E');
@@ -348,6 +366,8 @@ function updateInteract(dt) {
         sys.grab(target.cord, target.end);
         audio.whoosh(0.14);
         player.kick(-0.035, 0.012);
+        player.punchFov(-3.2);
+        ui.ripple();
       }
     } else if (target.type === 'hook') {
       target.hook.setHighlight(true);
@@ -357,6 +377,8 @@ function updateInteract(dt) {
       if (player.ePressedThisFrame) {
         sys.hang(target.hook);
         player.kick(0.028, -0.01);
+        player.punchFov(2.6);
+        ui.ripple();
       }
     }
   } else if (sys.held) {
@@ -367,6 +389,8 @@ function updateInteract(dt) {
     ui.prompt('');
   }
 }
+let _lastTarget = null;
+let _interactT = 0;
 
 // ---------- 威胁声像：最近的活动侍应（耳机可辨方位） ----------
 const _tv = new THREE.Vector3();
@@ -377,7 +401,7 @@ function updateThreatAudio() {
     const d = w.group.position.distanceTo(player.pos);
     if (d < bd) { bd = d; best = w; }
   }
-  if (!best || bd > 14) { audio.setThreat(0, 0); audio.setCordHum(0, 0); return; }
+  if (!best || bd > 14) { audio.setThreat(0, 0); audio.setCordHum(0, 0); ui.threat(0, 0); return; }
   // 方位（右为正）
   _tv.copy(best.group.position).sub(player.pos);
   const f = player.forward;
@@ -387,6 +411,8 @@ function updateThreatAudio() {
   audio.setThreat(chasing ? Math.min(1, v * 1.6 + 0.25) : v * 0.4, pan);
   // 绳鸣：贴近载客红绳
   audio.setCordHum(best.state === 'ride' ? v * v : 0, pan);
+  // 屏缘威胁指示：追逐中按方位泛红（听觉之外的第二读法）
+  ui.threat(chasing ? Math.min(1, v * 1.3 + 0.15) : 0, pan);
 }
 
 // ---------- 屏障随绳网开合 ----------

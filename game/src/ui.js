@@ -5,7 +5,7 @@ export class UI {
   constructor() {
     this.el = {};
     for (const id of ['subtitle', 'objective', 'prompt', 'card', 'fade', 'end', 'endTitle', 'endBody', 'endBtn',
-      'timerbar', 'timerfill', 'callHint', 'reticleWrap', 'cutring', 'endCard']) {
+      'timerbar', 'timerfill', 'callHint', 'reticleWrap', 'cutring', 'endCard', 'ripple', 'threatL', 'threatR']) {
       this.el[id] = document.getElementById(id);
     }
     this.ringFg = this.el.cutring.querySelector('.fg');
@@ -40,6 +40,22 @@ export class UI {
     if (this._retState === state) return;
     this._retState = state;
     this.el.reticleWrap.className = state ? 'ret-' + state : '';
+  }
+  // 抓握涟漪：E 键成功交互的一圈金环扩散
+  ripple() {
+    const e = this.el.ripple;
+    if (!e) return;
+    e.classList.remove('go');
+    void e.offsetWidth;
+    e.classList.add('go');
+  }
+  // 屏缘威胁指示：intensity 0~1，pan -1(左)~1(右)
+  threat(intensity, pan) {
+    const L = this.el.threatL, R = this.el.threatR;
+    if (!L || !R) return;
+    const base = intensity * 0.55;
+    L.style.opacity = (base * (pan < 0 ? 1 : 1 - pan * 0.85)).toFixed(2);
+    R.style.opacity = (base * (pan > 0 ? 1 : 1 + pan * 0.85)).toFixed(2);
   }
   // 剪缆进度环（frac 0~1；<=0 隐藏）
   cutRing(frac) {
