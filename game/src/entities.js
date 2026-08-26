@@ -6,7 +6,7 @@ import * as TX from './textures.js';
 const skinMat = (kind) => new THREE.MeshStandardMaterial({ map: TX.skinFace(kind), roughness: 0.6 });
 
 // ---------- 通用人形装配 ----------
-function humanoid({ suit = 0x28221e, shirt = 0xd8d4c8, skin = 'waiter', hair = 0x14100c, dress = false, armMat = null }) {
+function humanoid({ suit = 0x28221e, shirt = 0xd8d4c8, skin = 'waiter', hair = 0x14100c, dress = false, armMat = null, gloves = null, lapelTrim = null }) {
   const g = new THREE.Group();
   const suitMat = new THREE.MeshStandardMaterial({ color: suit, roughness: 0.82 });
   const shirtMat = new THREE.MeshStandardMaterial({ color: shirt, roughness: 0.85 });
@@ -32,6 +32,10 @@ function humanoid({ suit = 0x28221e, shirt = 0xd8d4c8, skin = 'waiter', hair = 0
       const shoe = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.07, 0.24), new THREE.MeshStandardMaterial({ color: 0x0d0b09, roughness: 0.4 }));
       shoe.position.set(s * 0.1, 0.045, 0.04);
       g.add(shoe);
+      // 裤脚折线
+      const cuff = new THREE.Mesh(new THREE.CylinderGeometry(0.088, 0.088, 0.03, 8), new THREE.MeshStandardMaterial({ color: 0x14100e, roughness: 0.95 }));
+      cuff.position.set(s * 0.1, 0.1, 0);
+      g.add(cuff);
     }
     // 上身（西装/马甲）
     const tpts = [];
@@ -46,10 +50,36 @@ function humanoid({ suit = 0x28221e, shirt = 0xd8d4c8, skin = 'waiter', hair = 0
     const v = new THREE.Mesh(new THREE.PlaneGeometry(0.12, 0.26), shirtMat);
     v.position.set(0, 1.14, 0.155);
     g.add(v);
+    // 西装翻领（左右两片，微外翻；可选缎面镶边）
+    const lapelMat = new THREE.MeshStandardMaterial({ color: suit, roughness: 0.6, envMapIntensity: 0.8 });
+    for (const s of [-1, 1]) {
+      const lapel = new THREE.Mesh(new THREE.PlaneGeometry(0.085, 0.24), lapelMat);
+      lapel.position.set(s * 0.085, 1.16, 0.165);
+      lapel.rotation.z = s * -0.32;
+      lapel.rotation.y = s * 0.28;
+      g.add(lapel);
+      if (lapelTrim) {
+        const trim = new THREE.Mesh(new THREE.PlaneGeometry(0.016, 0.24),
+          new THREE.MeshStandardMaterial({ color: lapelTrim, metalness: 0.65, roughness: 0.35 }));
+        trim.position.set(s * 0.052, 1.16, 0.172);
+        trim.rotation.z = s * -0.32;
+        trim.rotation.y = s * 0.28;
+        g.add(trim);
+      }
+    }
+    // 前襟扣（三粒）
+    const btnMat = new THREE.MeshStandardMaterial({ color: 0x0c0a08, metalness: 0.4, roughness: 0.4 });
+    for (let k = 0; k < 3; k++) {
+      const btn = new THREE.Mesh(new THREE.CylinderGeometry(0.011, 0.011, 0.006, 8), btnMat);
+      btn.rotation.x = Math.PI / 2;
+      btn.position.set(0.015, 1.0 - k * 0.09, 0.185 - k * 0.012);
+      g.add(btn);
+    }
   }
   // 手臂
   const armM = armMat || suitMat;
   const arms = {};
+  const handMat = gloves ? new THREE.MeshStandardMaterial({ color: gloves, roughness: 0.55 }) : skinMat(skin);
   for (const s of [-1, 1]) {
     const shoulder = new THREE.Group();
     shoulder.position.set(s * 0.24, 1.3, 0);
@@ -61,8 +91,13 @@ function humanoid({ suit = 0x28221e, shirt = 0xd8d4c8, skin = 'waiter', hair = 0
     const fore = new THREE.Mesh(new THREE.CylinderGeometry(0.042, 0.038, 0.3, 8), armM);
     fore.position.y = -0.15;
     elbow.add(fore);
-    const hand = new THREE.Mesh(new THREE.SphereGeometry(0.05, 8, 8), skinMat(skin));
+    // 袖口衬衫白边
+    const cuffline = new THREE.Mesh(new THREE.CylinderGeometry(0.041, 0.041, 0.022, 8), shirtMat);
+    cuffline.position.y = -0.29;
+    elbow.add(cuffline);
+    const hand = new THREE.Mesh(new THREE.SphereGeometry(0.05, 8, 8), handMat);
     hand.position.y = -0.32;
+    hand.scale.set(0.85, 1.1, 0.95);
     elbow.add(hand);
     shoulder.add(elbow);
     shoulder.rotation.z = s * 0.1;
@@ -80,10 +115,31 @@ function humanoid({ suit = 0x28221e, shirt = 0xd8d4c8, skin = 'waiter', hair = 0
   skull.rotation.y = Math.PI / 2; // 面部贴图朝 +Z
   skull.castShadow = true;
   head.add(skull);
-  const hairM = new THREE.Mesh(new THREE.SphereGeometry(0.12, 12, 10, 0, Math.PI * 2, 0, Math.PI * 0.55), hairMat);
-  hairM.scale.set(0.95, 1.05, 1.0);
-  hairM.position.set(0, 0.015, -0.015);
+  // 耳（左右小球，贴肤色）
+  for (const s of [-1, 1]) {
+    const ear = new THREE.Mesh(new THREE.SphereGeometry(0.022, 6, 6), skinMat(skin));
+    ear.position.set(s * 0.105, -0.01, -0.01);
+    ear.scale.set(0.5, 1, 0.7);
+    head.add(ear);
+  }
+  // 后梳发型：顶盖后移露出前额，后脑另加半球包住（不再全方位包到眼线）
+  const hairM = new THREE.Mesh(new THREE.SphereGeometry(0.118, 12, 10, 0, Math.PI * 2, 0, Math.PI * 0.42), hairMat);
+  hairM.scale.set(0.96, 1.0, 1.06);
+  hairM.position.set(0, 0.03, -0.035);
+  hairM.rotation.x = -0.22;
   head.add(hairM);
+  const hairBack = new THREE.Mesh(new THREE.SphereGeometry(0.119, 12, 10, Math.PI * 0.55, Math.PI * 0.9, 0, Math.PI * 0.8), hairMat);
+  hairBack.rotation.y = Math.PI; // 开口朝前
+  hairBack.scale.set(0.98, 1.03, 1.0);
+  hairBack.position.set(0, 0.014, -0.012);
+  head.add(hairBack);
+  // 鬓角（两小片，让头发不像帽子）
+  for (const s of [-1, 1]) {
+    const sb = new THREE.Mesh(new THREE.PlaneGeometry(0.03, 0.06), hairMat);
+    sb.position.set(s * 0.108, -0.03, 0.02);
+    sb.rotation.y = s * Math.PI / 2;
+    head.add(sb);
+  }
   g.add(head);
   return { group: g, arms, head };
 }
@@ -91,7 +147,7 @@ function humanoid({ suit = 0x28221e, shirt = 0xd8d4c8, skin = 'waiter', hair = 0
 // ---------- 司仪（Hero 实体：口封而声不止） ----------
 export class MC {
   constructor(scene) {
-    const h = humanoid({ suit: 0x6e1013, shirt: 0xe8e0d0, skin: 'mc', hair: 0x0d0a08 });
+    const h = humanoid({ suit: 0x6e1013, shirt: 0xe8e0d0, skin: 'mc', hair: 0x0d0a08, lapelTrim: 0xc79a3a });
     this.group = h.group;
     this.arms = h.arms;
     this.head = h.head;
@@ -102,6 +158,18 @@ export class MC {
       wing.rotation.z = s * Math.PI / 2;
       wing.position.set(s * 0.035, 1.37, 0.13);
       this.group.add(wing);
+    }
+    // 口袋巾（红绸一角）+ 袖扣
+    const pocketSq = new THREE.Mesh(new THREE.PlaneGeometry(0.045, 0.05),
+      new THREE.MeshStandardMaterial({ color: 0xb01218, roughness: 0.5, emissive: 0x1c0304 }));
+    pocketSq.position.set(-0.14, 1.2, 0.168);
+    pocketSq.rotation.z = 0.5;
+    this.group.add(pocketSq);
+    for (const s of [-1, 1]) {
+      const link = new THREE.Mesh(new THREE.SphereGeometry(0.008, 6, 6), bowMat);
+      link.position.y = -0.29;
+      link.position.x = s * 0.043;
+      this.arms[s < 0 ? 'left' : 'right'].elbow.add(link);
     }
     // 胸花（红绢花 + 绿叶——喜宴工位证）
     {
@@ -173,21 +241,43 @@ export class MC {
     this.gestureT = -1;
     this.sync = 0;         // 同步律：0=声先手后 → 1=完全同步（终局）
     this.silenced = false; // 剪缆后失声
+    this.speakT = 0;       // 广播播放中：口部钙化颗粒随「声」蠕动（声不由口出，但口在动）
     this._t = 0;
+    this._bowT = -1;       // 周期性鞠躬（对空席行礼——没有人回应）
+    this._nextBow = 11 + Math.random() * 8;
   }
   gesture() { this.gestureT = 0; }
+  speak(dur) { this.speakT = Math.max(this.speakT, dur); }
   update(dt, playerPos) {
     this._t += dt;
     // 呼吸
     const b = 1 + Math.sin(this._t * 1.1) * 0.008;
     this.group.scale.set(1.06, 1.06 * b, 1.06);
-    // 头缓慢追踪玩家（只在宴会厅内）
+    // 站立重心微移（左右缓慢换脚——活人的证据，或者说像活人的证据）
+    this.group.rotation.z = Math.sin(this._t * 0.23) * 0.012;
+    // 头缓慢追踪玩家（只在宴会厅内；同步律越高，追踪越快越死）
     const inHall = playerPos.z < 1 && Math.abs(playerPos.x) < 16;
     if (inHall && !this.silenced) {
       const dx = playerPos.x - this.group.position.x;
       const dz = playerPos.z - this.group.position.z;
       const yaw = Math.atan2(dx, dz);
-      this.head.rotation.y += (THREE.MathUtils.clamp(yaw, -0.9, 0.9) - this.head.rotation.y) * dt * 0.4;
+      const trackSpeed = 0.4 + this.sync * 2.2;
+      this.head.rotation.y += (THREE.MathUtils.clamp(yaw, -0.9, 0.9) - this.head.rotation.y) * dt * trackSpeed;
+      // 身体也随之极缓慢转（永远慢头半拍）
+      this.group.rotation.y += (THREE.MathUtils.clamp(yaw * 0.3, -0.25, 0.25) - this.group.rotation.y) * dt * 0.15;
+    }
+    // 广播中：口周钙化颗粒蠕动 + 微弱下颌开合（声源在天花板，但他的口跟着动）
+    if (this.speakT > 0 && !this.silenced) {
+      this.speakT -= dt;
+      const chew = Math.sin(this._t * 11) * 0.5 + Math.sin(this._t * 17.3) * 0.3;
+      this.roe.material.emissiveIntensity = 0.4 + Math.max(0, chew) * 1.6;
+      this.roe.material.emissive.setHex(0x3a2e18);
+      this.head.rotation.x = 0.04 + Math.max(0, chew) * 0.045;
+      this.roe.scale.setScalar(1 + Math.max(0, chew) * 0.05);
+    } else if (!this.silenced) {
+      this.roe.material.emissiveIntensity += (1 - this.roe.material.emissiveIntensity) * dt * 3;
+      this.roe.scale.setScalar(1);
+      this.head.rotation.x += (0 - this.head.rotation.x) * dt * 2;
     }
     // 报幕手势（声先手后：广播开始后由 agenda 延时调用 gesture）
     if (this.gestureT >= 0) {
@@ -195,13 +285,32 @@ export class MC {
       const k = Math.min(1, this.gestureT / 0.8);
       const lift = Math.sin(k * Math.PI) * 0.9;
       this.arms.left.shoulder.rotation.x = -lift;
+      // 手势末端多一个「定格」——像被拍照
       if (this.gestureT > 2.2) { this.gestureT = -1; this.arms.left.shoulder.rotation.x = 0; }
     }
+    // 周期性鞠躬：对着无人的宴会厅深深行礼，两秒，然后若无其事
+    if (!this.silenced && this.gestureT < 0 && this.speakT <= 0) {
+      if (this._bowT < 0) {
+        this._nextBow -= dt;
+        if (this._nextBow <= 0) { this._bowT = 0; this._nextBow = 16 + Math.random() * 14; }
+      } else {
+        this._bowT += dt;
+        const k = Math.min(1, this._bowT / 2.4);
+        const bend = Math.sin(k * Math.PI) * 0.42;
+        this.group.rotation.x = bend;
+        if (this._bowT >= 2.4) { this._bowT = -1; this.group.rotation.x = 0; }
+      }
+    }
+    // 麦克风手的微调（真人拿麦会不自觉地转腕）
+    if (!this.silenced) {
+      this.arms.right.elbow.rotation.z = Math.sin(this._t * 0.7) * 0.04;
+    }
     if (this.silenced) {
-      // 失声后：垂手，头低下
+      // 失声后：垂手，头低下，口部颗粒黯淡
       this.head.rotation.x += (0.5 - this.head.rotation.x) * dt;
       this.arms.right.shoulder.rotation.x += (0 - this.arms.right.shoulder.rotation.x) * dt * 2;
       this.arms.right.elbow.rotation.x += (0 - this.arms.right.elbow.rotation.x) * dt * 2;
+      this.roe.material.emissiveIntensity += (0.05 - this.roe.material.emissiveIntensity) * dt;
     }
   }
 }
@@ -212,7 +321,7 @@ export class Waiter {
     this.id = id;
     const driftTex = TX.drift();
     const armMat = new THREE.MeshStandardMaterial({ ...driftTex });
-    const h = humanoid({ suit: 0x17181c, shirt: 0xe4e0d4, skin: 'waiter', hair: 0x100d0a, armMat });
+    const h = humanoid({ suit: 0x17181c, shirt: 0xe4e0d4, skin: 'waiter', hair: 0x100d0a, armMat, gloves: 0xe8e6de });
     this.group = h.group;
     this.arms = h.arms;
     this.head = h.head;
@@ -220,6 +329,29 @@ export class Waiter {
     const collar = new THREE.Mesh(new THREE.CylinderGeometry(0.052, 0.055, 0.06, 8), armMat);
     collar.position.y = 1.44;
     this.group.add(collar);
+    // 黑领结（正装侍应）
+    const tieMat = new THREE.MeshStandardMaterial({ color: 0x0c0c10, roughness: 0.6 });
+    for (const s of [-1, 1]) {
+      const wing = new THREE.Mesh(new THREE.ConeGeometry(0.03, 0.06, 6), tieMat);
+      wing.rotation.z = s * Math.PI / 2;
+      wing.position.set(s * 0.03, 1.37, 0.135);
+      this.group.add(wing);
+    }
+    // 胸牌（工号——编号故意跳号：08 / 11 / 14，缺席的号码没人提）
+    const tagNo = ['08', '11', '14'][id] || String(id);
+    const tag = new THREE.Mesh(new THREE.PlaneGeometry(0.055, 0.026),
+      new THREE.MeshStandardMaterial({ map: TX.signage('宴·' + tagNo, '#e8e0cc', '#403830', 22), roughness: 0.4, metalness: 0.3 }));
+    tag.position.set(0.12, 1.26, 0.163);
+    tag.rotation.y = 0.06;
+    this.group.add(tag);
+    // 马甲缘线（黑马甲 V 边——两道深色窄条，把胸口切出层次）
+    const vestEdgeMat = new THREE.MeshStandardMaterial({ color: 0x0a0b0e, roughness: 0.7 });
+    for (const s of [-1, 1]) {
+      const edge = new THREE.Mesh(new THREE.PlaneGeometry(0.02, 0.3), vestEdgeMat);
+      edge.position.set(s * 0.062, 1.1, 0.162);
+      edge.rotation.z = s * -0.18;
+      this.group.add(edge);
+    }
     // 托盘（端得极稳——无论怎么走，托盘永远水平）——三人菜色各异
     const tray = new THREE.Group();
     const plate = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.22, 0.02, 14), new THREE.MeshStandardMaterial({ color: 0x9aa0a6, metalness: 0.9, roughness: 0.3 }));
@@ -250,6 +382,7 @@ export class Waiter {
     }
     tray.position.set(-0.22, 1.08, 0.24);
     this.group.add(tray);
+    this.tray = tray;
     // 腰围黑围裙
     const apron = new THREE.Mesh(new THREE.PlaneGeometry(0.34, 0.42),
       new THREE.MeshStandardMaterial({ color: 0x0f0f12, roughness: 0.9, side: THREE.DoubleSide }));
@@ -322,7 +455,7 @@ export class Waiter {
     const g = this.group;
     let moving = false, mv = new THREE.Vector3();
     if (this.state === 'alert') {
-      // 定住——只有头部锁向玩家
+      // 定住——只有头部锁向玩家；托盘上的瓷器开始细颤（可听见的预告）
       this.alertTimer -= dt;
       const dx = playerPos.x - g.position.x, dz = playerPos.z - g.position.z;
       const targetYaw = Math.atan2(dx, dz);
@@ -330,10 +463,14 @@ export class Waiter {
       while (dd > Math.PI) dd -= Math.PI * 2;
       while (dd < -Math.PI) dd += Math.PI * 2;
       this.head.rotation.y += (THREE.MathUtils.clamp(dd, -1.2, 1.2) - this.head.rotation.y) * Math.min(1, dt * 14);
-      if (!this._alertSting) { this._alertSting = true; audio?.sting(0.3); }
+      this.tray.position.y = 1.08 + Math.sin(this._bob * 46) * 0.004;
+      this.tray.rotation.z = Math.sin(this._bob * 39) * 0.012;
+      if (!this._alertSting) { this._alertSting = true; audio?.sting(0.3); audio?.porcelainRattle?.(0.9); }
       if (this.alertTimer <= 0) { this.state = 'chase'; this._alertSting = false; }
     } else if (this.head.rotation.y !== 0 && this.state !== 'chase') {
       this.head.rotation.y += (0 - this.head.rotation.y) * dt * 3;
+      this.tray.position.y += (1.08 - this.tray.position.y) * dt * 6;
+      this.tray.rotation.z += (0 - this.tray.rotation.z) * dt * 6;
     }
     if (this.state === 'ride' && this.cord) {
       if (!sys.cords.includes(this.cord) || !this.cord.a || !this.cord.b) {
@@ -411,9 +548,20 @@ export class Waiter {
     }
     // 匀速滑行的非人感：轻浮 + 不迈步
     g.position.y = Math.sin(this._bob * 2.6) * 0.018 + 0.01;
+    // 前倾角随状态：滑行微倾 / 追逐前扑；托盘永远水平（无论身体怎么倾——非人的稳）
+    const leanTarget = this.state === 'chase' ? 0.16 : 0.045;
+    g.rotation.x += (leanTarget - g.rotation.x) * dt * 3;
+    this.tray.rotation.x = -g.rotation.x;
+    // 追逐时托盘略上举（像端给你的最后一道菜）
+    const trayY = this.state === 'chase' ? 1.16 : 1.08;
+    if (this.state !== 'alert') this.tray.position.y += (trayY - this.tray.position.y) * dt * 2.5;
     // 抓绳手只在乘绳时上举
     const rideArm = this.state === 'ride' ? Math.PI - 0.2 : -0.1;
     this.arms.right.shoulder.rotation.x += (rideArm - this.arms.right.shoulder.rotation.x) * dt * 4;
+    // 滑行中衣摆下摆微飘（头发也向后压——被无形气流梳过）
+    if (this.state === 'ride') {
+      this.head.rotation.x = -0.03 + Math.sin(this._bob * 1.9) * 0.015;
+    }
   }
 }
 
@@ -430,10 +578,12 @@ export class Guests {
     this.heads = new THREE.InstancedMesh(headGeo, headMat, count);
     this.bodies.castShadow = true;
     const palette = [0x6a4a52, 0x4a5468, 0x8e3038, 0x5c5648, 0x3c3644, 0x9a4a42];
+    const skins = [0xd8b094, 0xc9a184, 0xe2bda0, 0xcfa88b, 0xbf9678];
     this.data = [];
     TX.srand(777);
     for (let i = 0; i < count; i++) {
       this.bodies.setColorAt(i, new THREE.Color(palette[(TX.rnd() * palette.length) | 0]));
+      this.heads.setColorAt(i, new THREE.Color(skins[(TX.rnd() * skins.length) | 0]));
       this.data.push({
         pos: new THREE.Vector3(), yaw: TX.rnd() * Math.PI * 2, targetYaw: null,
         phase: TX.rnd() * 6.28, scale: 0.94 + TX.rnd() * 0.12,
@@ -442,6 +592,7 @@ export class Guests {
     scene.add(this.bodies, this.heads);
     this._dum = new THREE.Object3D();
     this.mode = 'hidden';
+    this._glitchTimer = 14 + Math.random() * 10; // 稀有事件：某位宾客毫无过渡地换了朝向
   }
   // 布席：宴会态（围桌散站）
   layoutParty(tables) {
@@ -485,6 +636,14 @@ export class Guests {
     const vis = this.mode !== 'hidden';
     this.bodies.visible = this.heads.visible = vis;
     if (!vis) return;
+    // 稀有帧跳变：随机一位宾客瞬间换朝向——没有动画，上一帧他还背对着你
+    this._glitchTimer -= dt;
+    if (this._glitchTimer <= 0) {
+      this._glitchTimer = 17 + Math.random() * 16;
+      const d = this.data[(Math.random() * this.count) | 0];
+      d.yaw += Math.PI * (0.55 + Math.random() * 0.6) * (Math.random() > 0.5 ? 1 : -1);
+      d.targetYaw = null;
+    }
     const dum = this._dum;
     for (let i = 0; i < this.count; i++) {
       const d = this.data[i];
@@ -524,11 +683,22 @@ export class Gazer {
     const mat2 = mat.clone(); mat2.opacity = 0.14;
     const dressGeo = new THREE.LatheGeometry(
       [[0.26, 0], [0.2, 0.5], [0.17, 0.95], [0.2, 1.2], [0.17, 1.35], [0.04, 1.45]].map(([r, y]) => new THREE.Vector2(r, y)), 10);
+    // 暗色底影（正常混合）：亮背景前也读得出剪影——她挡住光，而不只是发光
+    const matShadow = new THREE.MeshBasicMaterial({
+      color: 0x0a0e12, transparent: true, opacity: 0.0, depthWrite: false,
+    });
+    const bShadow = new THREE.Mesh(dressGeo, matShadow);
+    bShadow.scale.setScalar(0.985);
+    this.group.add(bShadow);
+    const headShadow = new THREE.Mesh(new THREE.SphereGeometry(0.098, 10, 8), matShadow);
+    headShadow.position.y = 1.58;
+    this.group.add(headShadow);
     const b1 = new THREE.Mesh(dressGeo, mat);
     this.group.add(b1);
     const b2 = new THREE.Mesh(dressGeo, mat2);
     b2.position.set(0.04, 0, -0.02);
     this.group.add(b2); // 多重曝光
+    this.matShadow = matShadow;
     const head = new THREE.Mesh(new THREE.SphereGeometry(0.1, 10, 8), mat);
     head.position.y = 1.58;
     this.group.add(head);
@@ -541,18 +711,22 @@ export class Gazer {
     longHair.position.set(0, 1.15, -0.14);
     longHair.rotation.x = 0.08;
     this.group.add(longHair);
+    this.longHair = longHair;
     // 腕上剪断的旧绳头
     const stub = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.2, 5),
       new THREE.MeshBasicMaterial({ color: 0x8e1418, transparent: true, opacity: 0.6 }));
     stub.position.set(0.24, 0.95, 0.05);
     stub.rotation.z = 0.4;
     this.group.add(stub);
+    this.stub = stub;
+    this.b2 = b2;
     this.group.visible = false;
     scene.add(this.group);
     this.opacity = 0;
     this.mats = [mat, mat2];
     this.fixedYaw = null;
     this.dissolving = false;
+    this.lookDot = 0; // 玩家视线与她的夹角（main 每帧喂入）——被直视时她「退」进空气里
   }
   appearAt(x, z, fixedYaw = null) {
     this.group.position.set(x, 0.05, z);
@@ -573,13 +747,24 @@ export class Gazer {
       if (d < 2.6) this.dissolving = true; // 不可接近：走近即散
     }
     const flicker = 0.8 + Math.sin(t * 9.7) * 0.1 + Math.sin(t * 23.3) * 0.06;
-    this.mats[0].opacity = 0.42 * this.opacity * flicker;
-    this.mats[1].opacity = 0.2 * this.opacity * flicker;
+    // 被正眼看：光度掉两成（余光里她最实——林奇式「不许直视」，但不至于看不见）
+    const gazePenalty = 1 - Math.max(0, this.lookDot - 0.96) * 5;
+    this.mats[0].opacity = 0.5 * this.opacity * flicker * gazePenalty;
+    this.mats[1].opacity = 0.24 * this.opacity * flicker * gazePenalty;
+    this.matShadow.opacity = 0.34 * this.opacity * gazePenalty;
     // 永远回眸看向玩家（或凝视固定方向——终局指向锚点）
     const yaw = this.fixedYaw !== null ? this.fixedYaw
       : Math.atan2(playerPos.x - this.group.position.x, playerPos.z - this.group.position.z);
     this.group.rotation.y += (yaw - this.group.rotation.y) * dt * 2;
     this.group.position.y = 0.05 + Math.sin(t * 0.9) * 0.03;
+    // 长发被水下的流慢慢推（她不在水里，但她的头发在）
+    this.longHair.rotation.z = Math.sin(t * 0.6) * 0.16;
+    this.longHair.rotation.x = 0.08 + Math.sin(t * 0.43) * 0.1;
+    // 双重曝光的错位呼吸（两个身影没对齐，且在慢慢错开又合上）
+    this.b2.position.x = 0.04 + Math.sin(t * 0.31) * 0.03;
+    this.b2.position.z = -0.02 + Math.cos(t * 0.27) * 0.02;
+    // 断绳头在滴什么（微颤）
+    this.stub.rotation.z = 0.4 + Math.sin(t * 5.3) * 0.05;
   }
 }
 
@@ -599,6 +784,7 @@ export class Bride {
       new THREE.MeshStandardMaterial({ map: TX.veilSilk(), roughness: 0.5, side: THREE.DoubleSide, emissive: 0x30060a }));
     veil.position.y = 1.22;
     this.group.add(veil);
+    this.veil = veil;
     // 凤冠（金带 + 珠串垂旒，微颤）
     const gold = new THREE.MeshStandardMaterial({ color: 0xc79a3a, metalness: 0.85, roughness: 0.3, envMapIntensity: 1.6 });
     const band = new THREE.Mesh(new THREE.TorusGeometry(0.14, 0.018, 6, 18), gold);
@@ -627,6 +813,13 @@ export class Bride {
     this.group.add(hand);
     const hand2 = hand.clone(); hand2.position.x = -0.1;
     this.group.add(hand2);
+    this.hands = [hand, hand2];
+    // 腕上一圈红绳（和玩家腕上那根同款——读到这一层的人会停下来）
+    const wristCord = new THREE.Mesh(new THREE.TorusGeometry(0.055, 0.008, 5, 10),
+      new THREE.MeshStandardMaterial({ color: 0xa50f16, emissive: 0x3d0407, roughness: 0.8 }));
+    wristCord.position.set(0.1, 0.56, 0.2);
+    wristCord.rotation.x = Math.PI / 2.2;
+    this.group.add(wristCord);
     this.group.visible = false;
     scene.add(this.group);
     this._t = 0;
@@ -655,15 +848,37 @@ export class Bride {
       this.scene.add(this._knot);
     }
   }
-  update(dt) {
+  update(dt, playerPos = null) {
     if (!this.group.visible) return;
     this._t += dt;
     const b = 1 + Math.sin(this._t * 0.8) * 0.01;
     this.group.scale.set(1, b, 1);
-    // 珠旒微颤——她在极轻地抖
+    // 玩家凑近：颤抖变明显、盖头极缓慢地向你偏过来一点（她知道你在）
+    let near = 0;
+    if (playerPos) {
+      const d = this.group.position.distanceTo(playerPos);
+      near = THREE.MathUtils.clamp(1 - (d - 1.2) / 2.6, 0, 1);
+      if (near > 0.05) {
+        const dx = playerPos.x - this.group.position.x;
+        const dz = playerPos.z - this.group.position.z;
+        const localYaw = Math.atan2(dx, dz) - this.group.rotation.y;
+        const target = THREE.MathUtils.clamp(Math.sin(localYaw), -1, 1) * 0.14 * near;
+        this.veil.rotation.y += (target - this.veil.rotation.y) * dt * 0.5;
+      } else {
+        this.veil.rotation.y += (0 - this.veil.rotation.y) * dt * 0.8;
+      }
+    }
+    // 珠旒微颤——她在极轻地抖；你越近抖得越细密
+    const trembleAmp = 0.06 + near * 0.08;
+    const trembleFreq = 1 + near * 0.7;
     for (const bd of this.beads) {
-      bd.g.rotation.x = Math.sin(this._t * 7.3 + bd.phase) * 0.06;
-      bd.g.rotation.z = Math.cos(this._t * 8.1 + bd.phase) * 0.05;
+      bd.g.rotation.x = Math.sin(this._t * 7.3 * trembleFreq + bd.phase) * trembleAmp;
+      bd.g.rotation.z = Math.cos(this._t * 8.1 * trembleFreq + bd.phase) * trembleAmp * 0.85;
+    }
+    // 膝上的手：近距离时指尖微蜷（缩放脉动模拟）
+    for (let i = 0; i < this.hands.length; i++) {
+      const s = 1 + Math.sin(this._t * (9 + i * 2.3)) * 0.05 * near;
+      this.hands[i].scale.setScalar(s);
     }
   }
 }

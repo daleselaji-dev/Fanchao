@@ -450,6 +450,23 @@ export class AudioEngine {
     o.start(t); o.stop(t + 0.05);
   }
 
+  // 瓷器细颤（侍应警戒前摇：托盘上碗沿彼此磕碰的细密声——0.9 秒）
+  porcelainRattle(dur = 0.9) {
+    if (!this.started) return;
+    const c = this.ctx, t = c.currentTime;
+    const n = Math.floor(dur * 14);
+    for (let i = 0; i < n; i++) {
+      const tt = t + (i / n) * dur + Math.random() * 0.02;
+      const o = c.createOscillator(); o.type = 'sine';
+      o.frequency.value = 2400 + Math.random() * 1800;
+      const g = c.createGain();
+      g.gain.setValueAtTime(0.014 + Math.random() * 0.02, tt);
+      g.gain.exponentialRampToValueAtTime(0.0008, tt + 0.03);
+      o.connect(g); g.connect(this.master); g.connect(this.verb);
+      o.start(tt); o.stop(tt + 0.04);
+    }
+  }
+
   // 水滴（走廊/连廊随机氛围）
   drip(pan = 0) {
     if (!this.started) return;

@@ -37,6 +37,7 @@ export class Agenda {
       audio.broadcast(sylls, 104 + this.beat * 4);
       ui.subtitle('【广播】' + text, Math.max(3.5, sylls * 0.4));
       if (cardTitle) ui.card(cardTitle, cardSub);
+      mc.speak(Math.max(3, sylls * 0.42)); // 口部钙化颗粒随声蠕动（声不由口出）
       // 声先手后：司仪手势滞后（同步律——终局趋近 0）
       const lag = 1.4 * (1 - mc.sync);
       this.after(3.4 + lag, () => mc.gesture());
@@ -67,6 +68,7 @@ export class Agenda {
     const rn = REGION_CALL[region] || region;
     this.after(1.2, () => {
       audio.broadcast(9, 96);
+      this.g.mc.speak(3.8);
       ui.subtitle(`【广播】${rn}的这位来宾——请入席。`, 4);
     });
     ui.callHint(true);
@@ -285,6 +287,7 @@ export class Agenda {
       audio.paChime();
       this.after(1.2, () => {
         audio.broadcast(12, 100);
+        this.g.mc.speak(5);
         ui.subtitle('【广播】有请新人，向各位来宾——敬酒。', 5);
         ui.card('议程四 · 敬酒', '返潮');
       });

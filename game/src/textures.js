@@ -652,18 +652,22 @@ export function skinFace(kind = 'mc') {
     ctx.beginPath(); ctx.moveTo(w * 0.55, h * 0.405 + asym);
     ctx.quadraticCurveTo(w * 0.62, h * 0.385 + asym, w * 0.69, h * 0.405 + asym); ctx.stroke();
   } else {
-    // 侍应：闭目——两道安静的睑线 + 礼貌的浅笑
-    ctx.strokeStyle = 'rgba(88,58,48,0.85)'; ctx.lineWidth = 3.4;
+    // 侍应：闭目——两道安静的睑线 + 礼貌的浅笑（线宽加粗：3 米外也要读得出「他闭着眼」）
+    ctx.strokeStyle = 'rgba(74,46,38,0.95)'; ctx.lineWidth = 5.5;
     ctx.beginPath(); ctx.moveTo(w * 0.3, h * 0.42);
-    ctx.quadraticCurveTo(w * 0.38, h * 0.445, w * 0.46, h * 0.42); ctx.stroke();
+    ctx.quadraticCurveTo(w * 0.38, h * 0.45, w * 0.46, h * 0.42); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(w * 0.54, h * 0.42);
-    ctx.quadraticCurveTo(w * 0.62, h * 0.445, w * 0.7, h * 0.42); ctx.stroke();
+    ctx.quadraticCurveTo(w * 0.62, h * 0.45, w * 0.7, h * 0.42); ctx.stroke();
     // 睫毛影
-    ctx.strokeStyle = 'rgba(88,58,48,0.35)'; ctx.lineWidth = 6;
-    ctx.beginPath(); ctx.moveTo(w * 0.31, h * 0.435);
-    ctx.quadraticCurveTo(w * 0.38, h * 0.455, w * 0.45, h * 0.435); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(w * 0.55, h * 0.435);
-    ctx.quadraticCurveTo(w * 0.62, h * 0.455, w * 0.69, h * 0.435); ctx.stroke();
+    ctx.strokeStyle = 'rgba(88,58,48,0.4)'; ctx.lineWidth = 9;
+    ctx.beginPath(); ctx.moveTo(w * 0.31, h * 0.44);
+    ctx.quadraticCurveTo(w * 0.38, h * 0.465, w * 0.45, h * 0.44); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(w * 0.55, h * 0.44);
+    ctx.quadraticCurveTo(w * 0.62, h * 0.465, w * 0.69, h * 0.44); ctx.stroke();
+    // 颊侧立体阴影（脸不再是一张白纸）
+    ctx.fillStyle = 'rgba(140,96,76,0.22)';
+    ctx.beginPath(); ctx.ellipse(w * 0.27, h * 0.56, 26, 44, 0.2, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(w * 0.73, h * 0.56, 26, 44, -0.2, 0, Math.PI * 2); ctx.fill();
   }
   // 眉
   ctx.strokeStyle = 'rgba(46,32,26,0.8)'; ctx.lineWidth = 5;
@@ -703,12 +707,16 @@ export function skinFace(kind = 'mc') {
     ctx.beginPath(); ctx.arc(w * 0.5, h * 0.68, 110, 0, Math.PI * 2); ctx.fill();
   } else {
     // 侍应：安静的浅笑（弧度礼貌到不自然）
-    ctx.strokeStyle = 'rgba(110,70,60,0.85)'; ctx.lineWidth = 4;
+    ctx.strokeStyle = 'rgba(96,58,48,0.95)'; ctx.lineWidth = 5.5;
     ctx.beginPath(); ctx.moveTo(w * 0.4, h * 0.68);
     ctx.quadraticCurveTo(w * 0.5, h * 0.735, w * 0.6, h * 0.68); ctx.stroke();
-    ctx.strokeStyle = 'rgba(190,140,120,0.4)'; ctx.lineWidth = 2;
+    ctx.strokeStyle = 'rgba(190,140,120,0.5)'; ctx.lineWidth = 2.5;
     ctx.beginPath(); ctx.moveTo(w * 0.41, h * 0.695);
     ctx.quadraticCurveTo(w * 0.5, h * 0.75, w * 0.59, h * 0.695); ctx.stroke();
+    // 嘴角两点浅涡（笑得太标准了）
+    ctx.fillStyle = 'rgba(120,76,62,0.5)';
+    ctx.beginPath(); ctx.arc(w * 0.385, h * 0.682, 3.4, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(w * 0.615, h * 0.682, 3.4, 0, Math.PI * 2); ctx.fill();
   }
   // 油湿高光（额头/鼻梁/颧骨）
   [[0.5, 0.28, 60, 26], [0.5, 0.5, 10, 34], [0.33, 0.5, 20, 10], [0.67, 0.5, 20, 10]].forEach(([fx, fy, rx, ry]) => {
@@ -718,6 +726,44 @@ export function skinFace(kind = 'mc') {
     ctx.fillStyle = g;
     ctx.beginPath(); ctx.ellipse(w * fx, h * fy, rx, ry, 0, 0, Math.PI * 2); ctx.fill();
   });
+  if (kind === 'mc') {
+    // 司仪：下颌青灰胡茬（细密点阵）+ 太阳穴汗珠沟（长时间主持的湿）
+    for (let i = 0; i < 900; i++) {
+      const x = w * (0.3 + rnd() * 0.4), y = h * (0.74 + rnd() * 0.16);
+      const dx = (x - w * 0.5) / (w * 0.22), dy = (y - h * 0.8) / (h * 0.12);
+      if (dx * dx + dy * dy > 1.4) continue;
+      ctx.fillStyle = `rgba(52,44,40,${0.1 + rnd() * 0.14})`;
+      ctx.fillRect(x, y, 1.2, 1.6);
+    }
+    for (const [fx, fy] of [[0.24, 0.36], [0.76, 0.37], [0.27, 0.46]]) {
+      ctx.strokeStyle = 'rgba(255,244,228,0.28)';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.moveTo(w * fx, h * fy);
+      ctx.quadraticCurveTo(w * fx + 3, h * (fy + 0.05), w * fx - 2, h * (fy + 0.1)); ctx.stroke();
+      ctx.fillStyle = 'rgba(255,248,236,0.5)';
+      ctx.beginPath(); ctx.arc(w * fx - 2, h * (fy + 0.1), 2.2, 0, Math.PI * 2); ctx.fill();
+    }
+    // 泛红的耳缘（长时间供灯烤着）
+    ctx.fillStyle = 'rgba(196,96,72,0.3)';
+    ctx.beginPath(); ctx.ellipse(w * 0.09, h * 0.5, 18, 30, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(w * 0.91, h * 0.5, 18, 30, 0, 0, Math.PI * 2); ctx.fill();
+  } else {
+    // 侍应：左眼下一道干涸的水线（哭过？溅过？没人问过）
+    ctx.strokeStyle = 'rgba(180,180,190,0.22)';
+    ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(w * 0.375, h * 0.455);
+    ctx.quadraticCurveTo(w * 0.37, h * 0.55, w * 0.385, h * 0.64); ctx.stroke();
+    ctx.strokeStyle = 'rgba(150,140,150,0.14)';
+    ctx.lineWidth = 6;
+    ctx.beginPath(); ctx.moveTo(w * 0.376, h * 0.47);
+    ctx.quadraticCurveTo(w * 0.372, h * 0.55, w * 0.386, h * 0.62); ctx.stroke();
+    // 颈侧一小片盐渍白霜（海水干了之后留下的）
+    for (let i = 0; i < 60; i++) {
+      const x = w * (0.62 + rnd() * 0.14), y = h * (0.86 + rnd() * 0.1);
+      ctx.fillStyle = `rgba(228,224,214,${0.08 + rnd() * 0.1})`;
+      ctx.fillRect(x, y, 1.5 + rnd() * 2, 1.2);
+    }
+  }
   return tex(c, 1, 1);
 }
 
@@ -735,17 +781,39 @@ export function veilSilk() {
     ctx.fillStyle = `rgba(255,120,110,${0.03 + rnd() * 0.05})`;
     ctx.fillRect(x, 0, 3, h);
   }
-  // 绣金囍纹（环形排布）
-  ctx.fillStyle = 'rgba(216,168,58,0.9)';
-  ctx.font = '28px serif';
+  // 绣金囍纹（环形排布——针脚感：字下衬一圈暗金锁边）
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   for (let i = 0; i < 6; i++) {
-    ctx.fillText('囍', 24 + i * 42, h * 0.35 + (i % 2) * 26);
+    const x = 24 + i * 42, y = h * 0.35 + (i % 2) * 26;
+    ctx.fillStyle = 'rgba(120,84,20,0.8)';
+    ctx.font = '30px serif';
+    ctx.fillText('囍', x + 1, y + 1.5);
+    ctx.fillStyle = 'rgba(224,176,64,0.95)';
+    ctx.font = '28px serif';
+    ctx.fillText('囍', x, y);
+    // 金线反光点（刺绣的高光颗粒）
+    for (let k = 0; k < 7; k++) {
+      ctx.fillStyle = `rgba(255,226,150,${0.3 + rnd() * 0.4})`;
+      ctx.fillRect(x - 12 + rnd() * 24, y - 12 + rnd() * 24, 1.4, 1.4);
+    }
   }
-  // 底缘金线 + 垂穗
+  // 缠枝纹暗绣（同色深纹——只有转动时能看见）
+  ctx.strokeStyle = 'rgba(120,10,16,0.55)';
+  ctx.lineWidth = 2.5;
+  for (let i = 0; i < 4; i++) {
+    ctx.beginPath();
+    ctx.moveTo(0, h * 0.55 + i * 18);
+    for (let x = 0; x <= w; x += 8) {
+      ctx.lineTo(x, h * 0.55 + i * 18 + Math.sin(x * 0.11 + i * 2) * 6);
+    }
+    ctx.stroke();
+  }
+  // 底缘金线（双道）+ 垂穗
   ctx.strokeStyle = '#d8a83a'; ctx.lineWidth = 4;
   ctx.beginPath(); ctx.moveTo(0, h - 26); ctx.lineTo(w, h - 26); ctx.stroke();
-  ctx.lineWidth = 2;
+  ctx.strokeStyle = '#a87c22'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(0, h - 31); ctx.lineTo(w, h - 31); ctx.stroke();
+  ctx.strokeStyle = '#d8a83a'; ctx.lineWidth = 2;
   for (let x = 6; x < w; x += 13) {
     ctx.beginPath(); ctx.moveTo(x, h - 24); ctx.lineTo(x + (rnd() - 0.5) * 4, h - 4); ctx.stroke();
   }

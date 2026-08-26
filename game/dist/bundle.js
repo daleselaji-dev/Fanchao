@@ -30558,26 +30558,33 @@ void main() {
       ctx.quadraticCurveTo(w * 0.62, h * 0.385 + asym, w * 0.69, h * 0.405 + asym);
       ctx.stroke();
     } else {
-      ctx.strokeStyle = "rgba(88,58,48,0.85)";
-      ctx.lineWidth = 3.4;
+      ctx.strokeStyle = "rgba(74,46,38,0.95)";
+      ctx.lineWidth = 5.5;
       ctx.beginPath();
       ctx.moveTo(w * 0.3, h * 0.42);
-      ctx.quadraticCurveTo(w * 0.38, h * 0.445, w * 0.46, h * 0.42);
+      ctx.quadraticCurveTo(w * 0.38, h * 0.45, w * 0.46, h * 0.42);
       ctx.stroke();
       ctx.beginPath();
       ctx.moveTo(w * 0.54, h * 0.42);
-      ctx.quadraticCurveTo(w * 0.62, h * 0.445, w * 0.7, h * 0.42);
+      ctx.quadraticCurveTo(w * 0.62, h * 0.45, w * 0.7, h * 0.42);
       ctx.stroke();
-      ctx.strokeStyle = "rgba(88,58,48,0.35)";
-      ctx.lineWidth = 6;
+      ctx.strokeStyle = "rgba(88,58,48,0.4)";
+      ctx.lineWidth = 9;
       ctx.beginPath();
-      ctx.moveTo(w * 0.31, h * 0.435);
-      ctx.quadraticCurveTo(w * 0.38, h * 0.455, w * 0.45, h * 0.435);
+      ctx.moveTo(w * 0.31, h * 0.44);
+      ctx.quadraticCurveTo(w * 0.38, h * 0.465, w * 0.45, h * 0.44);
       ctx.stroke();
       ctx.beginPath();
-      ctx.moveTo(w * 0.55, h * 0.435);
-      ctx.quadraticCurveTo(w * 0.62, h * 0.455, w * 0.69, h * 0.435);
+      ctx.moveTo(w * 0.55, h * 0.44);
+      ctx.quadraticCurveTo(w * 0.62, h * 0.465, w * 0.69, h * 0.44);
       ctx.stroke();
+      ctx.fillStyle = "rgba(140,96,76,0.22)";
+      ctx.beginPath();
+      ctx.ellipse(w * 0.27, h * 0.56, 26, 44, 0.2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.ellipse(w * 0.73, h * 0.56, 26, 44, -0.2, 0, Math.PI * 2);
+      ctx.fill();
     }
     ctx.strokeStyle = "rgba(46,32,26,0.8)";
     ctx.lineWidth = 5;
@@ -30629,18 +30636,25 @@ void main() {
       ctx.arc(w * 0.5, h * 0.68, 110, 0, Math.PI * 2);
       ctx.fill();
     } else {
-      ctx.strokeStyle = "rgba(110,70,60,0.85)";
-      ctx.lineWidth = 4;
+      ctx.strokeStyle = "rgba(96,58,48,0.95)";
+      ctx.lineWidth = 5.5;
       ctx.beginPath();
       ctx.moveTo(w * 0.4, h * 0.68);
       ctx.quadraticCurveTo(w * 0.5, h * 0.735, w * 0.6, h * 0.68);
       ctx.stroke();
-      ctx.strokeStyle = "rgba(190,140,120,0.4)";
-      ctx.lineWidth = 2;
+      ctx.strokeStyle = "rgba(190,140,120,0.5)";
+      ctx.lineWidth = 2.5;
       ctx.beginPath();
       ctx.moveTo(w * 0.41, h * 0.695);
       ctx.quadraticCurveTo(w * 0.5, h * 0.75, w * 0.59, h * 0.695);
       ctx.stroke();
+      ctx.fillStyle = "rgba(120,76,62,0.5)";
+      ctx.beginPath();
+      ctx.arc(w * 0.385, h * 0.682, 3.4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(w * 0.615, h * 0.682, 3.4, 0, Math.PI * 2);
+      ctx.fill();
     }
     [[0.5, 0.28, 60, 26], [0.5, 0.5, 10, 34], [0.33, 0.5, 20, 10], [0.67, 0.5, 20, 10]].forEach(([fx, fy, rx, ry]) => {
       const g2 = ctx.createRadialGradient(w * fx, h * fy, 0, w * fx, h * fy, Math.max(rx, ry));
@@ -30651,6 +30665,52 @@ void main() {
       ctx.ellipse(w * fx, h * fy, rx, ry, 0, 0, Math.PI * 2);
       ctx.fill();
     });
+    if (kind === "mc") {
+      for (let i = 0; i < 900; i++) {
+        const x = w * (0.3 + rnd() * 0.4), y = h * (0.74 + rnd() * 0.16);
+        const dx = (x - w * 0.5) / (w * 0.22), dy = (y - h * 0.8) / (h * 0.12);
+        if (dx * dx + dy * dy > 1.4) continue;
+        ctx.fillStyle = `rgba(52,44,40,${0.1 + rnd() * 0.14})`;
+        ctx.fillRect(x, y, 1.2, 1.6);
+      }
+      for (const [fx, fy] of [[0.24, 0.36], [0.76, 0.37], [0.27, 0.46]]) {
+        ctx.strokeStyle = "rgba(255,244,228,0.28)";
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.moveTo(w * fx, h * fy);
+        ctx.quadraticCurveTo(w * fx + 3, h * (fy + 0.05), w * fx - 2, h * (fy + 0.1));
+        ctx.stroke();
+        ctx.fillStyle = "rgba(255,248,236,0.5)";
+        ctx.beginPath();
+        ctx.arc(w * fx - 2, h * (fy + 0.1), 2.2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.fillStyle = "rgba(196,96,72,0.3)";
+      ctx.beginPath();
+      ctx.ellipse(w * 0.09, h * 0.5, 18, 30, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.ellipse(w * 0.91, h * 0.5, 18, 30, 0, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      ctx.strokeStyle = "rgba(180,180,190,0.22)";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(w * 0.375, h * 0.455);
+      ctx.quadraticCurveTo(w * 0.37, h * 0.55, w * 0.385, h * 0.64);
+      ctx.stroke();
+      ctx.strokeStyle = "rgba(150,140,150,0.14)";
+      ctx.lineWidth = 6;
+      ctx.beginPath();
+      ctx.moveTo(w * 0.376, h * 0.47);
+      ctx.quadraticCurveTo(w * 0.372, h * 0.55, w * 0.386, h * 0.62);
+      ctx.stroke();
+      for (let i = 0; i < 60; i++) {
+        const x = w * (0.62 + rnd() * 0.14), y = h * (0.86 + rnd() * 0.1);
+        ctx.fillStyle = `rgba(228,224,214,${0.08 + rnd() * 0.1})`;
+        ctx.fillRect(x, y, 1.5 + rnd() * 2, 1.2);
+      }
+    }
     return tex(c, 1, 1);
   }
   function veilSilk() {
@@ -30668,12 +30728,30 @@ void main() {
       ctx.fillStyle = `rgba(255,120,110,${0.03 + rnd() * 0.05})`;
       ctx.fillRect(x, 0, 3, h);
     }
-    ctx.fillStyle = "rgba(216,168,58,0.9)";
-    ctx.font = "28px serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     for (let i = 0; i < 6; i++) {
-      ctx.fillText("\u56CD", 24 + i * 42, h * 0.35 + i % 2 * 26);
+      const x = 24 + i * 42, y = h * 0.35 + i % 2 * 26;
+      ctx.fillStyle = "rgba(120,84,20,0.8)";
+      ctx.font = "30px serif";
+      ctx.fillText("\u56CD", x + 1, y + 1.5);
+      ctx.fillStyle = "rgba(224,176,64,0.95)";
+      ctx.font = "28px serif";
+      ctx.fillText("\u56CD", x, y);
+      for (let k = 0; k < 7; k++) {
+        ctx.fillStyle = `rgba(255,226,150,${0.3 + rnd() * 0.4})`;
+        ctx.fillRect(x - 12 + rnd() * 24, y - 12 + rnd() * 24, 1.4, 1.4);
+      }
+    }
+    ctx.strokeStyle = "rgba(120,10,16,0.55)";
+    ctx.lineWidth = 2.5;
+    for (let i = 0; i < 4; i++) {
+      ctx.beginPath();
+      ctx.moveTo(0, h * 0.55 + i * 18);
+      for (let x = 0; x <= w; x += 8) {
+        ctx.lineTo(x, h * 0.55 + i * 18 + Math.sin(x * 0.11 + i * 2) * 6);
+      }
+      ctx.stroke();
     }
     ctx.strokeStyle = "#d8a83a";
     ctx.lineWidth = 4;
@@ -30681,6 +30759,13 @@ void main() {
     ctx.moveTo(0, h - 26);
     ctx.lineTo(w, h - 26);
     ctx.stroke();
+    ctx.strokeStyle = "#a87c22";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(0, h - 31);
+    ctx.lineTo(w, h - 31);
+    ctx.stroke();
+    ctx.strokeStyle = "#d8a83a";
     ctx.lineWidth = 2;
     for (let x = 6; x < w; x += 13) {
       ctx.beginPath();
@@ -32613,7 +32698,7 @@ void main() {
 
   // src/entities.js
   var skinMat = (kind) => new MeshStandardMaterial({ map: skinFace(kind), roughness: 0.6 });
-  function humanoid({ suit = 2630174, shirt = 14210248, skin = "waiter", hair = 1314828, dress = false, armMat = null }) {
+  function humanoid({ suit = 2630174, shirt = 14210248, skin = "waiter", hair = 1314828, dress = false, armMat = null, gloves = null, lapelTrim = null }) {
     const g2 = new Group();
     const suitMat = new MeshStandardMaterial({ color: suit, roughness: 0.82 });
     const shirtMat = new MeshStandardMaterial({ color: shirt, roughness: 0.85 });
@@ -32637,6 +32722,9 @@ void main() {
         const shoe = new Mesh(new BoxGeometry(0.11, 0.07, 0.24), new MeshStandardMaterial({ color: 854793, roughness: 0.4 }));
         shoe.position.set(s * 0.1, 0.045, 0.04);
         g2.add(shoe);
+        const cuff = new Mesh(new CylinderGeometry(0.088, 0.088, 0.03, 8), new MeshStandardMaterial({ color: 1314830, roughness: 0.95 }));
+        cuff.position.set(s * 0.1, 0.1, 0);
+        g2.add(cuff);
       }
       const tpts = [];
       const prof = [[0.16, 0], [0.19, 0.12], [0.2, 0.3], [0.185, 0.44], [0.21, 0.5], [0.05, 0.56]];
@@ -32649,9 +32737,35 @@ void main() {
       const v = new Mesh(new PlaneGeometry(0.12, 0.26), shirtMat);
       v.position.set(0, 1.14, 0.155);
       g2.add(v);
+      const lapelMat = new MeshStandardMaterial({ color: suit, roughness: 0.6, envMapIntensity: 0.8 });
+      for (const s of [-1, 1]) {
+        const lapel = new Mesh(new PlaneGeometry(0.085, 0.24), lapelMat);
+        lapel.position.set(s * 0.085, 1.16, 0.165);
+        lapel.rotation.z = s * -0.32;
+        lapel.rotation.y = s * 0.28;
+        g2.add(lapel);
+        if (lapelTrim) {
+          const trim = new Mesh(
+            new PlaneGeometry(0.016, 0.24),
+            new MeshStandardMaterial({ color: lapelTrim, metalness: 0.65, roughness: 0.35 })
+          );
+          trim.position.set(s * 0.052, 1.16, 0.172);
+          trim.rotation.z = s * -0.32;
+          trim.rotation.y = s * 0.28;
+          g2.add(trim);
+        }
+      }
+      const btnMat = new MeshStandardMaterial({ color: 789e3, metalness: 0.4, roughness: 0.4 });
+      for (let k = 0; k < 3; k++) {
+        const btn = new Mesh(new CylinderGeometry(0.011, 0.011, 6e-3, 8), btnMat);
+        btn.rotation.x = Math.PI / 2;
+        btn.position.set(0.015, 1 - k * 0.09, 0.185 - k * 0.012);
+        g2.add(btn);
+      }
     }
     const armM = armMat || suitMat;
     const arms = {};
+    const handMat = gloves ? new MeshStandardMaterial({ color: gloves, roughness: 0.55 }) : skinMat(skin);
     for (const s of [-1, 1]) {
       const shoulder = new Group();
       shoulder.position.set(s * 0.24, 1.3, 0);
@@ -32663,8 +32777,12 @@ void main() {
       const fore = new Mesh(new CylinderGeometry(0.042, 0.038, 0.3, 8), armM);
       fore.position.y = -0.15;
       elbow.add(fore);
-      const hand = new Mesh(new SphereGeometry(0.05, 8, 8), skinMat(skin));
+      const cuffline = new Mesh(new CylinderGeometry(0.041, 0.041, 0.022, 8), shirtMat);
+      cuffline.position.y = -0.29;
+      elbow.add(cuffline);
+      const hand = new Mesh(new SphereGeometry(0.05, 8, 8), handMat);
       hand.position.y = -0.32;
+      hand.scale.set(0.85, 1.1, 0.95);
       elbow.add(hand);
       shoulder.add(elbow);
       shoulder.rotation.z = s * 0.1;
@@ -32681,16 +32799,34 @@ void main() {
     skull.rotation.y = Math.PI / 2;
     skull.castShadow = true;
     head.add(skull);
-    const hairM = new Mesh(new SphereGeometry(0.12, 12, 10, 0, Math.PI * 2, 0, Math.PI * 0.55), hairMat);
-    hairM.scale.set(0.95, 1.05, 1);
-    hairM.position.set(0, 0.015, -0.015);
+    for (const s of [-1, 1]) {
+      const ear = new Mesh(new SphereGeometry(0.022, 6, 6), skinMat(skin));
+      ear.position.set(s * 0.105, -0.01, -0.01);
+      ear.scale.set(0.5, 1, 0.7);
+      head.add(ear);
+    }
+    const hairM = new Mesh(new SphereGeometry(0.118, 12, 10, 0, Math.PI * 2, 0, Math.PI * 0.42), hairMat);
+    hairM.scale.set(0.96, 1, 1.06);
+    hairM.position.set(0, 0.03, -0.035);
+    hairM.rotation.x = -0.22;
     head.add(hairM);
+    const hairBack = new Mesh(new SphereGeometry(0.119, 12, 10, Math.PI * 0.55, Math.PI * 0.9, 0, Math.PI * 0.8), hairMat);
+    hairBack.rotation.y = Math.PI;
+    hairBack.scale.set(0.98, 1.03, 1);
+    hairBack.position.set(0, 0.014, -0.012);
+    head.add(hairBack);
+    for (const s of [-1, 1]) {
+      const sb = new Mesh(new PlaneGeometry(0.03, 0.06), hairMat);
+      sb.position.set(s * 0.108, -0.03, 0.02);
+      sb.rotation.y = s * Math.PI / 2;
+      head.add(sb);
+    }
     g2.add(head);
     return { group: g2, arms, head };
   }
   var MC = class {
     constructor(scene2) {
-      const h = humanoid({ suit: 7213075, shirt: 15261904, skin: "mc", hair: 854536 });
+      const h = humanoid({ suit: 7213075, shirt: 15261904, skin: "mc", hair: 854536, lapelTrim: 13081146 });
       this.group = h.group;
       this.arms = h.arms;
       this.head = h.head;
@@ -32700,6 +32836,19 @@ void main() {
         wing.rotation.z = s * Math.PI / 2;
         wing.position.set(s * 0.035, 1.37, 0.13);
         this.group.add(wing);
+      }
+      const pocketSq = new Mesh(
+        new PlaneGeometry(0.045, 0.05),
+        new MeshStandardMaterial({ color: 11538968, roughness: 0.5, emissive: 1835780 })
+      );
+      pocketSq.position.set(-0.14, 1.2, 0.168);
+      pocketSq.rotation.z = 0.5;
+      this.group.add(pocketSq);
+      for (const s of [-1, 1]) {
+        const link = new Mesh(new SphereGeometry(8e-3, 6, 6), bowMat);
+        link.position.y = -0.29;
+        link.position.x = s * 0.043;
+        this.arms[s < 0 ? "left" : "right"].elbow.add(link);
       }
       {
         const fl = new Group();
@@ -32772,21 +32921,42 @@ void main() {
       this.gestureT = -1;
       this.sync = 0;
       this.silenced = false;
+      this.speakT = 0;
       this._t = 0;
+      this._bowT = -1;
+      this._nextBow = 11 + Math.random() * 8;
     }
     gesture() {
       this.gestureT = 0;
+    }
+    speak(dur) {
+      this.speakT = Math.max(this.speakT, dur);
     }
     update(dt, playerPos) {
       this._t += dt;
       const b = 1 + Math.sin(this._t * 1.1) * 8e-3;
       this.group.scale.set(1.06, 1.06 * b, 1.06);
+      this.group.rotation.z = Math.sin(this._t * 0.23) * 0.012;
       const inHall = playerPos.z < 1 && Math.abs(playerPos.x) < 16;
       if (inHall && !this.silenced) {
         const dx = playerPos.x - this.group.position.x;
         const dz = playerPos.z - this.group.position.z;
         const yaw = Math.atan2(dx, dz);
-        this.head.rotation.y += (MathUtils.clamp(yaw, -0.9, 0.9) - this.head.rotation.y) * dt * 0.4;
+        const trackSpeed = 0.4 + this.sync * 2.2;
+        this.head.rotation.y += (MathUtils.clamp(yaw, -0.9, 0.9) - this.head.rotation.y) * dt * trackSpeed;
+        this.group.rotation.y += (MathUtils.clamp(yaw * 0.3, -0.25, 0.25) - this.group.rotation.y) * dt * 0.15;
+      }
+      if (this.speakT > 0 && !this.silenced) {
+        this.speakT -= dt;
+        const chew = Math.sin(this._t * 11) * 0.5 + Math.sin(this._t * 17.3) * 0.3;
+        this.roe.material.emissiveIntensity = 0.4 + Math.max(0, chew) * 1.6;
+        this.roe.material.emissive.setHex(3812888);
+        this.head.rotation.x = 0.04 + Math.max(0, chew) * 0.045;
+        this.roe.scale.setScalar(1 + Math.max(0, chew) * 0.05);
+      } else if (!this.silenced) {
+        this.roe.material.emissiveIntensity += (1 - this.roe.material.emissiveIntensity) * dt * 3;
+        this.roe.scale.setScalar(1);
+        this.head.rotation.x += (0 - this.head.rotation.x) * dt * 2;
       }
       if (this.gestureT >= 0) {
         this.gestureT += dt;
@@ -32798,10 +32968,32 @@ void main() {
           this.arms.left.shoulder.rotation.x = 0;
         }
       }
+      if (!this.silenced && this.gestureT < 0 && this.speakT <= 0) {
+        if (this._bowT < 0) {
+          this._nextBow -= dt;
+          if (this._nextBow <= 0) {
+            this._bowT = 0;
+            this._nextBow = 16 + Math.random() * 14;
+          }
+        } else {
+          this._bowT += dt;
+          const k = Math.min(1, this._bowT / 2.4);
+          const bend = Math.sin(k * Math.PI) * 0.42;
+          this.group.rotation.x = bend;
+          if (this._bowT >= 2.4) {
+            this._bowT = -1;
+            this.group.rotation.x = 0;
+          }
+        }
+      }
+      if (!this.silenced) {
+        this.arms.right.elbow.rotation.z = Math.sin(this._t * 0.7) * 0.04;
+      }
       if (this.silenced) {
         this.head.rotation.x += (0.5 - this.head.rotation.x) * dt;
         this.arms.right.shoulder.rotation.x += (0 - this.arms.right.shoulder.rotation.x) * dt * 2;
         this.arms.right.elbow.rotation.x += (0 - this.arms.right.elbow.rotation.x) * dt * 2;
+        this.roe.material.emissiveIntensity += (0.05 - this.roe.material.emissiveIntensity) * dt;
       }
     }
   };
@@ -32810,13 +33002,35 @@ void main() {
       this.id = id;
       const driftTex = drift();
       const armMat = new MeshStandardMaterial({ ...driftTex });
-      const h = humanoid({ suit: 1513500, shirt: 14999764, skin: "waiter", hair: 1051914, armMat });
+      const h = humanoid({ suit: 1513500, shirt: 14999764, skin: "waiter", hair: 1051914, armMat, gloves: 15263454 });
       this.group = h.group;
       this.arms = h.arms;
       this.head = h.head;
       const collar = new Mesh(new CylinderGeometry(0.052, 0.055, 0.06, 8), armMat);
       collar.position.y = 1.44;
       this.group.add(collar);
+      const tieMat = new MeshStandardMaterial({ color: 789520, roughness: 0.6 });
+      for (const s of [-1, 1]) {
+        const wing = new Mesh(new ConeGeometry(0.03, 0.06, 6), tieMat);
+        wing.rotation.z = s * Math.PI / 2;
+        wing.position.set(s * 0.03, 1.37, 0.135);
+        this.group.add(wing);
+      }
+      const tagNo = ["08", "11", "14"][id] || String(id);
+      const tag = new Mesh(
+        new PlaneGeometry(0.055, 0.026),
+        new MeshStandardMaterial({ map: signage("\u5BB4\xB7" + tagNo, "#e8e0cc", "#403830", 22), roughness: 0.4, metalness: 0.3 })
+      );
+      tag.position.set(0.12, 1.26, 0.163);
+      tag.rotation.y = 0.06;
+      this.group.add(tag);
+      const vestEdgeMat = new MeshStandardMaterial({ color: 658190, roughness: 0.7 });
+      for (const s of [-1, 1]) {
+        const edge = new Mesh(new PlaneGeometry(0.02, 0.3), vestEdgeMat);
+        edge.position.set(s * 0.062, 1.1, 0.162);
+        edge.rotation.z = s * -0.18;
+        this.group.add(edge);
+      }
       const tray = new Group();
       const plate = new Mesh(new CylinderGeometry(0.24, 0.22, 0.02, 14), new MeshStandardMaterial({ color: 10133670, metalness: 0.9, roughness: 0.3 }));
       tray.add(plate);
@@ -32845,6 +33059,7 @@ void main() {
       }
       tray.position.set(-0.22, 1.08, 0.24);
       this.group.add(tray);
+      this.tray = tray;
       const apron = new Mesh(
         new PlaneGeometry(0.34, 0.42),
         new MeshStandardMaterial({ color: 986898, roughness: 0.9, side: DoubleSide })
@@ -32934,9 +33149,12 @@ void main() {
         while (dd > Math.PI) dd -= Math.PI * 2;
         while (dd < -Math.PI) dd += Math.PI * 2;
         this.head.rotation.y += (MathUtils.clamp(dd, -1.2, 1.2) - this.head.rotation.y) * Math.min(1, dt * 14);
+        this.tray.position.y = 1.08 + Math.sin(this._bob * 46) * 4e-3;
+        this.tray.rotation.z = Math.sin(this._bob * 39) * 0.012;
         if (!this._alertSting) {
           this._alertSting = true;
           audio2?.sting(0.3);
+          audio2?.porcelainRattle?.(0.9);
         }
         if (this.alertTimer <= 0) {
           this.state = "chase";
@@ -32944,6 +33162,8 @@ void main() {
         }
       } else if (this.head.rotation.y !== 0 && this.state !== "chase") {
         this.head.rotation.y += (0 - this.head.rotation.y) * dt * 3;
+        this.tray.position.y += (1.08 - this.tray.position.y) * dt * 6;
+        this.tray.rotation.z += (0 - this.tray.rotation.z) * dt * 6;
       }
       if (this.state === "ride" && this.cord) {
         if (!sys2.cords.includes(this.cord) || !this.cord.a || !this.cord.b) {
@@ -33031,8 +33251,16 @@ void main() {
         g2.rotation.y = this.yaw;
       }
       g2.position.y = Math.sin(this._bob * 2.6) * 0.018 + 0.01;
+      const leanTarget = this.state === "chase" ? 0.16 : 0.045;
+      g2.rotation.x += (leanTarget - g2.rotation.x) * dt * 3;
+      this.tray.rotation.x = -g2.rotation.x;
+      const trayY = this.state === "chase" ? 1.16 : 1.08;
+      if (this.state !== "alert") this.tray.position.y += (trayY - this.tray.position.y) * dt * 2.5;
       const rideArm = this.state === "ride" ? Math.PI - 0.2 : -0.1;
       this.arms.right.shoulder.rotation.x += (rideArm - this.arms.right.shoulder.rotation.x) * dt * 4;
+      if (this.state === "ride") {
+        this.head.rotation.x = -0.03 + Math.sin(this._bob * 1.9) * 0.015;
+      }
     }
   };
   var Guests = class {
@@ -33049,10 +33277,12 @@ void main() {
       this.heads = new InstancedMesh(headGeo, headMat, count);
       this.bodies.castShadow = true;
       const palette = [6965842, 4871272, 9318456, 6051400, 3946052, 10111554];
+      const skins = [14200980, 13214084, 14859680, 13609099, 12555896];
       this.data = [];
       srand(777);
       for (let i = 0; i < count; i++) {
         this.bodies.setColorAt(i, new Color(palette[rnd() * palette.length | 0]));
+        this.heads.setColorAt(i, new Color(skins[rnd() * skins.length | 0]));
         this.data.push({
           pos: new Vector3(),
           yaw: rnd() * Math.PI * 2,
@@ -33064,6 +33294,7 @@ void main() {
       scene2.add(this.bodies, this.heads);
       this._dum = new Object3D();
       this.mode = "hidden";
+      this._glitchTimer = 14 + Math.random() * 10;
     }
     // 布席：宴会态（围桌散站）
     layoutParty(tables) {
@@ -33109,6 +33340,13 @@ void main() {
       const vis = this.mode !== "hidden";
       this.bodies.visible = this.heads.visible = vis;
       if (!vis) return;
+      this._glitchTimer -= dt;
+      if (this._glitchTimer <= 0) {
+        this._glitchTimer = 17 + Math.random() * 16;
+        const d = this.data[Math.random() * this.count | 0];
+        d.yaw += Math.PI * (0.55 + Math.random() * 0.6) * (Math.random() > 0.5 ? 1 : -1);
+        d.targetYaw = null;
+      }
       const dum = this._dum;
       for (let i = 0; i < this.count; i++) {
         const d = this.data[i];
@@ -33151,11 +33389,24 @@ void main() {
         [[0.26, 0], [0.2, 0.5], [0.17, 0.95], [0.2, 1.2], [0.17, 1.35], [0.04, 1.45]].map(([r, y]) => new Vector2(r, y)),
         10
       );
+      const matShadow = new MeshBasicMaterial({
+        color: 658962,
+        transparent: true,
+        opacity: 0,
+        depthWrite: false
+      });
+      const bShadow = new Mesh(dressGeo, matShadow);
+      bShadow.scale.setScalar(0.985);
+      this.group.add(bShadow);
+      const headShadow = new Mesh(new SphereGeometry(0.098, 10, 8), matShadow);
+      headShadow.position.y = 1.58;
+      this.group.add(headShadow);
       const b1 = new Mesh(dressGeo, mat);
       this.group.add(b1);
       const b2 = new Mesh(dressGeo, mat2);
       b2.position.set(0.04, 0, -0.02);
       this.group.add(b2);
+      this.matShadow = matShadow;
       const head = new Mesh(new SphereGeometry(0.1, 10, 8), mat);
       head.position.y = 1.58;
       this.group.add(head);
@@ -33167,6 +33418,7 @@ void main() {
       longHair.position.set(0, 1.15, -0.14);
       longHair.rotation.x = 0.08;
       this.group.add(longHair);
+      this.longHair = longHair;
       const stub = new Mesh(
         new CylinderGeometry(0.012, 0.012, 0.2, 5),
         new MeshBasicMaterial({ color: 9311256, transparent: true, opacity: 0.6 })
@@ -33174,12 +33426,15 @@ void main() {
       stub.position.set(0.24, 0.95, 0.05);
       stub.rotation.z = 0.4;
       this.group.add(stub);
+      this.stub = stub;
+      this.b2 = b2;
       this.group.visible = false;
       scene2.add(this.group);
       this.opacity = 0;
       this.mats = [mat, mat2];
       this.fixedYaw = null;
       this.dissolving = false;
+      this.lookDot = 0;
     }
     appearAt(x, z, fixedYaw = null) {
       this.group.position.set(x, 0.05, z);
@@ -33205,11 +33460,18 @@ void main() {
         if (d < 2.6) this.dissolving = true;
       }
       const flicker = 0.8 + Math.sin(t * 9.7) * 0.1 + Math.sin(t * 23.3) * 0.06;
-      this.mats[0].opacity = 0.42 * this.opacity * flicker;
-      this.mats[1].opacity = 0.2 * this.opacity * flicker;
+      const gazePenalty = 1 - Math.max(0, this.lookDot - 0.96) * 5;
+      this.mats[0].opacity = 0.5 * this.opacity * flicker * gazePenalty;
+      this.mats[1].opacity = 0.24 * this.opacity * flicker * gazePenalty;
+      this.matShadow.opacity = 0.34 * this.opacity * gazePenalty;
       const yaw = this.fixedYaw !== null ? this.fixedYaw : Math.atan2(playerPos.x - this.group.position.x, playerPos.z - this.group.position.z);
       this.group.rotation.y += (yaw - this.group.rotation.y) * dt * 2;
       this.group.position.y = 0.05 + Math.sin(t * 0.9) * 0.03;
+      this.longHair.rotation.z = Math.sin(t * 0.6) * 0.16;
+      this.longHair.rotation.x = 0.08 + Math.sin(t * 0.43) * 0.1;
+      this.b2.position.x = 0.04 + Math.sin(t * 0.31) * 0.03;
+      this.b2.position.z = -0.02 + Math.cos(t * 0.27) * 0.02;
+      this.stub.rotation.z = 0.4 + Math.sin(t * 5.3) * 0.05;
     }
   };
   var Bride = class {
@@ -33229,6 +33491,7 @@ void main() {
       );
       veil.position.y = 1.22;
       this.group.add(veil);
+      this.veil = veil;
       const gold = new MeshStandardMaterial({ color: 13081146, metalness: 0.85, roughness: 0.3, envMapIntensity: 1.6 });
       const band = new Mesh(new TorusGeometry(0.14, 0.018, 6, 18), gold);
       band.rotation.x = Math.PI / 2;
@@ -33256,6 +33519,14 @@ void main() {
       const hand2 = hand.clone();
       hand2.position.x = -0.1;
       this.group.add(hand2);
+      this.hands = [hand, hand2];
+      const wristCord = new Mesh(
+        new TorusGeometry(0.055, 8e-3, 5, 10),
+        new MeshStandardMaterial({ color: 10817302, emissive: 3998727, roughness: 0.8 })
+      );
+      wristCord.position.set(0.1, 0.56, 0.2);
+      wristCord.rotation.x = Math.PI / 2.2;
+      this.group.add(wristCord);
       this.group.visible = false;
       scene2.add(this.group);
       this._t = 0;
@@ -33283,14 +33554,34 @@ void main() {
         this.scene.add(this._knot);
       }
     }
-    update(dt) {
+    update(dt, playerPos = null) {
       if (!this.group.visible) return;
       this._t += dt;
       const b = 1 + Math.sin(this._t * 0.8) * 0.01;
       this.group.scale.set(1, b, 1);
+      let near = 0;
+      if (playerPos) {
+        const d = this.group.position.distanceTo(playerPos);
+        near = MathUtils.clamp(1 - (d - 1.2) / 2.6, 0, 1);
+        if (near > 0.05) {
+          const dx = playerPos.x - this.group.position.x;
+          const dz = playerPos.z - this.group.position.z;
+          const localYaw = Math.atan2(dx, dz) - this.group.rotation.y;
+          const target = MathUtils.clamp(Math.sin(localYaw), -1, 1) * 0.14 * near;
+          this.veil.rotation.y += (target - this.veil.rotation.y) * dt * 0.5;
+        } else {
+          this.veil.rotation.y += (0 - this.veil.rotation.y) * dt * 0.8;
+        }
+      }
+      const trembleAmp = 0.06 + near * 0.08;
+      const trembleFreq = 1 + near * 0.7;
       for (const bd of this.beads) {
-        bd.g.rotation.x = Math.sin(this._t * 7.3 + bd.phase) * 0.06;
-        bd.g.rotation.z = Math.cos(this._t * 8.1 + bd.phase) * 0.05;
+        bd.g.rotation.x = Math.sin(this._t * 7.3 * trembleFreq + bd.phase) * trembleAmp;
+        bd.g.rotation.z = Math.cos(this._t * 8.1 * trembleFreq + bd.phase) * trembleAmp * 0.85;
+      }
+      for (let i = 0; i < this.hands.length; i++) {
+        const s = 1 + Math.sin(this._t * (9 + i * 2.3)) * 0.05 * near;
+        this.hands[i].scale.setScalar(s);
       }
     }
   };
@@ -33901,6 +34192,26 @@ void main() {
       g22.connect(this.master);
       o.start(t);
       o.stop(t + 0.05);
+    }
+    // 瓷器细颤（侍应警戒前摇：托盘上碗沿彼此磕碰的细密声——0.9 秒）
+    porcelainRattle(dur = 0.9) {
+      if (!this.started) return;
+      const c = this.ctx, t = c.currentTime;
+      const n = Math.floor(dur * 14);
+      for (let i = 0; i < n; i++) {
+        const tt = t + i / n * dur + Math.random() * 0.02;
+        const o = c.createOscillator();
+        o.type = "sine";
+        o.frequency.value = 2400 + Math.random() * 1800;
+        const g2 = c.createGain();
+        g2.gain.setValueAtTime(0.014 + Math.random() * 0.02, tt);
+        g2.gain.exponentialRampToValueAtTime(8e-4, tt + 0.03);
+        o.connect(g2);
+        g2.connect(this.master);
+        g2.connect(this.verb);
+        o.start(tt);
+        o.stop(tt + 0.04);
+      }
     }
     // 水滴（走廊/连廊随机氛围）
     drip(pan = 0) {
@@ -34706,6 +35017,7 @@ void main() {
         audio2.broadcast(sylls, 104 + this.beat * 4);
         ui2.subtitle("\u3010\u5E7F\u64AD\u3011" + text, Math.max(3.5, sylls * 0.4));
         if (cardTitle) ui2.card(cardTitle, cardSub);
+        mc2.speak(Math.max(3, sylls * 0.42));
         const lag = 1.4 * (1 - mc2.sync);
         this.after(3.4 + lag, () => mc2.gesture());
       });
@@ -34733,6 +35045,7 @@ void main() {
       const rn = REGION_CALL[region] || region;
       this.after(1.2, () => {
         audio2.broadcast(9, 96);
+        this.g.mc.speak(3.8);
         ui2.subtitle(`\u3010\u5E7F\u64AD\u3011${rn}\u7684\u8FD9\u4F4D\u6765\u5BBE\u2014\u2014\u8BF7\u5165\u5E2D\u3002`, 4);
       });
       ui2.callHint(true);
@@ -34963,6 +35276,7 @@ void main() {
         audio2.paChime();
         this.after(1.2, () => {
           audio2.broadcast(12, 100);
+          this.g.mc.speak(5);
           ui2.subtitle("\u3010\u5E7F\u64AD\u3011\u6709\u8BF7\u65B0\u4EBA\uFF0C\u5411\u5404\u4F4D\u6765\u5BBE\u2014\u2014\u656C\u9152\u3002", 5);
           ui2.card("\u8BAE\u7A0B\u56DB \xB7 \u656C\u9152", "\u8FD4\u6F6E");
         });
@@ -36031,8 +36345,12 @@ void main() {
       mc.update(dt, player.pos);
       for (const w of waiters) w.update(dt, sys, player.pos, onCatch, audio);
       guests.update(dt, t);
+      if (gazer.group.visible) {
+        const toG = gazer.group.position.clone().setY(1.3).sub(camera.position).normalize();
+        gazer.lookDot = toG.dot(player.lookDir);
+      }
       gazer.update(dt, player.pos, t);
-      bride.update(dt);
+      bride.update(dt, player.pos);
       crt.update(dt, player.pos);
       atmo.update(dt, agenda.lightMult);
     }

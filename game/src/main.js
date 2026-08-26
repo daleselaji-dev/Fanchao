@@ -575,8 +575,13 @@ function loop() {
     mc.update(dt, player.pos);
     for (const w of waiters) w.update(dt, sys, player.pos, onCatch, audio);
     guests.update(dt, t);
+    // 回眸客：喂入「被直视程度」——被正眼看时她会退进空气里
+    if (gazer.group.visible) {
+      const toG = gazer.group.position.clone().setY(1.3).sub(camera.position).normalize();
+      gazer.lookDot = toG.dot(player.lookDir);
+    }
     gazer.update(dt, player.pos, t);
-    bride.update(dt);
+    bride.update(dt, player.pos);
     crt.update(dt, player.pos);
     atmo.update(dt, agenda.lightMult);
   }
