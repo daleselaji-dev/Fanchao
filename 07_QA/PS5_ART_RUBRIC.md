@@ -45,7 +45,7 @@
 - 滞回吸附：锁定后视线偏 19.5° 目标不丢（断言 `sticky.afterDeviation` 保持锁定）；
 - 黑暗节拍中绳网自发光（emissiveIntensity>2 断言），侍应动线 100% 可追踪。
 
-**证据**：`game/media/art_grab_aim.png`（绳结放大+键帽提示）、`game/media/shots/05_cord_held.jpg`、`game/media/shots/06a_shock_corridor_blackout.jpg`（全黑中的自发光绳网）
+**证据**：`game/media/art_grab_aim.png`（绳结放大+键帽提示）、`game/media/art_threat_edge.png`（屏缘威胁红纱）、`game/media/shots/05_cord_held.jpg`、`game/media/shots/06a_shock_corridor_blackout.jpg`（全黑中的自发光绳网）
 
 ### 3. 材质/光影/后期（8.5 / PASS）
 
@@ -70,7 +70,11 @@
 - 回眸客：长发水流感摆动、双重曝光错位呼吸、暗色底影保证亮背景可读、被直视时消隐（软化曲线）、断绳残端细颤；
 - 新娘：凤冠珠旒近距细颤、盖头随玩家接近缓转、腕上红绳、绣金囍盖头双道金线+垂穗。
 
-**证据**：`game/media/art_mc.png`、`game/media/art_waiter.png`（见 `game/test/peek/r3_*.png` 原图）、`game/media/shots/13_finale_throat_hall.jpg`
+**证据**：`game/media/art_mc.png`（舞台特写：眼/口部钙化/金缘翻领/胸花）、`game/media/art_waiter.png`（正面特写：闭目浅笑/白手套/领结）、`game/media/art_waiter_scene.png`（前景侍应+背景聚光司仪）、`game/media/art_bride.png`（凤冠珠旒/盖头）、`game/media/art_gazer.png`
+
+**本轮修洞**：Round 6 发现并修复了一个隐藏美术 bug——全部人形的五官贴图自装配起朝向身后
+（球体贴图中心在 +X，`rotation.y=π/2` 误将其转到 -Z），后脑发包也错盖左脸。
+修复后司仪的眼睛、侍应的闭目浅笑首次真正面向镜头（上列特写即修复后实拍）。
 
 **扣分**：-1.5 分诚实边界——无骨骼动画系统，表演靠程序化顶点/组变换，近距离肢体过渡有机械感。
 
@@ -90,7 +94,7 @@
 
 **标准**：核心链路（摘/挂/寄挂/改道/闸门二择/剪缆/双结局）自动化全绿，无 JS 错误。
 
-**实测**：`game/test/run.mjs` 六拍全流程 20+ 断言全绿、`pageerror` 计数 0；`r4_verify.mjs` 真实键路径（keydown E）摘→挂→滞回→威胁指示全绿；`r5_verify.mjs` 音频 API 全调用无异常。三脚本可复跑。
+**实测**：`game/test/run.mjs` 六拍全流程 20+ 断言全绿、`pageerror` 计数 0；`r4_verify.mjs` 真实键路径（keydown E）摘→挂→滞回→威胁指示全绿；`call_verify.mjs` 点名寄挂（激活→腕绳亮→寄挂→段数递减）全绿；`r5_verify.mjs` 音频 API 全调用无异常。四脚本可复跑。
 
 **证据**：`game/media/qa_smoke_summary.txt`（断言输出存档）
 
@@ -145,8 +149,9 @@
 ```bash
 cd game
 npx esbuild src/main.js --bundle --outfile=dist/bundle.js --minify
-node test/run.mjs        # 六拍全流程冒烟（20+ 断言）
-node test/r4_verify.mjs  # 交互手感（真实键路径）
-node test/r5_verify.mjs  # 音频节点图与参数自动化
+node test/run.mjs         # 六拍全流程冒烟（20+ 断言）
+node test/r4_verify.mjs   # 交互手感（真实键路径）
+node test/call_verify.mjs # 点名寄挂机制
+node test/r5_verify.mjs   # 音频节点图与参数自动化
 node test/verify_pkg.mjs /tmp/pkg/app  # 发布壳启动验证（先按 RELEASE_NOTES 打包）
 ```

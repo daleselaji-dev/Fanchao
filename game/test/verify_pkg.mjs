@@ -13,12 +13,14 @@ await page.waitForFunction(() => !!window.__game && !!window.__agenda, null, { t
 await page.locator('#startBtn').dispatchEvent('click');
 const t0 = Date.now();
 let beat1 = false;
-while (Date.now() - t0 < 40000) {
+while (Date.now() - t0 < 90000) {
   if (await page.evaluate(() => window.__agenda.beat >= 1)) { beat1 = true; break; }
   await page.waitForTimeout(400);
 }
-await page.waitForTimeout(2500);
-await page.screenshot({ path: new URL('./shots/pkg_electron_boot.png', import.meta.url).pathname });
 const version = await page.evaluate(() => document.title);
 console.log(JSON.stringify({ beat1, title: version }));
+await page.waitForTimeout(2500);
+// 慢环境（软渲染 + CPU 竞争）下合成一帧可能远超默认 30s
+await page.screenshot({ path: new URL('./shots/pkg_electron_boot.png', import.meta.url).pathname, timeout: 180000 });
+console.log('screenshot ok');
 await app.close();
